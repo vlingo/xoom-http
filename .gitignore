@@ -1,0 +1,14 @@
+# General
+bin/
+target/
+.classpath
+.project
+.settings
+.DS_Store
+*.log
+*.log.*
+
+# Intellij
+.idea/
+*.iml
+*.iws
