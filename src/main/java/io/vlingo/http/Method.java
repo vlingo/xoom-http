@@ -7,7 +7,7 @@
 
 package io.vlingo.http;
 
-public enum HttpMethod {
+public enum Method {
   POST {
     @Override public boolean isPOST() { return true; }
   },
@@ -36,7 +36,7 @@ public enum HttpMethod {
     @Override public boolean isCONNECT() { return true; }
   };
 
-  public static HttpMethod from(final String methodNameText) {
+  public static Method from(final String methodNameText) {
     switch (methodNameText) {
     case "POST":
       return POST;
@@ -57,7 +57,7 @@ public enum HttpMethod {
     case "CONNECT":
       return CONNECT;
     default:
-      throw new IllegalArgumentException(HttpResponse.MethodNotAllowed + "\n\n" + methodNameText);
+      throw new IllegalArgumentException(Response.MethodNotAllowed + "\n\n" + methodNameText);
     }
   }
   

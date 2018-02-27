@@ -21,7 +21,7 @@ import org.junit.Test;
 import io.vlingo.wire.message.ByteBufferAllocator;
 import io.vlingo.wire.message.Converters;
 
-public class HttpRequestTest {
+public class RequestTest {
   private final ByteBuffer buffer = ByteBufferAllocator.allocate(1024);
   private String requestOneHeader;
   private String requestOneHeaderWithBody;
@@ -30,7 +30,7 @@ public class HttpRequestTest {
   
   @Test
   public void testThatRequestCanHaveOneHeader() throws Exception {
-    final HttpRequest request = HttpRequest.from(toByteBuffer(requestOneHeader));
+    final Request request = Request.from(toByteBuffer(requestOneHeader));
     
     assertNotNull(request);
     assertTrue(request.method.isGET());
@@ -42,7 +42,7 @@ public class HttpRequestTest {
   
   @Test
   public void testThatRequestCanHaveOneHeaderWithBody() throws Exception {
-    final HttpRequest request = HttpRequest.from(toByteBuffer(requestOneHeaderWithBody));
+    final Request request = Request.from(toByteBuffer(requestOneHeaderWithBody));
     
     assertNotNull(request);
     assertTrue(request.method.isGET());
@@ -56,7 +56,7 @@ public class HttpRequestTest {
   
   @Test
   public void testThatRequestCanHaveMutipleHeaders() throws Exception {
-    final HttpRequest request = HttpRequest.from(toByteBuffer(requestMultiHeaders));
+    final Request request = Request.from(toByteBuffer(requestMultiHeaders));
     
     assertNotNull(request);
     assertTrue(request.method.isGET());
@@ -68,7 +68,7 @@ public class HttpRequestTest {
   
   @Test
   public void testThatRequestCanHaveMutipleHeadersAndBody() throws Exception {
-    final HttpRequest request = HttpRequest.from(toByteBuffer(requestMultiHeadersWithBody));
+    final Request request = Request.from(toByteBuffer(requestMultiHeadersWithBody));
     
     assertNotNull(request);
     assertTrue(request.method.isGET());
@@ -78,52 +78,53 @@ public class HttpRequestTest {
     assertTrue(request.body.hasLines());
     assertNotNull(request.body.line(0));
     assertFalse(request.body.line(0).isEmpty());
+    assertEquals(request.body.toString(), "{ text:\"some text\"}");
   }
   
   @Test(expected=IllegalArgumentException.class)
   public void testRejectBogusMethodRequest() {
-    HttpRequest.from(toByteBuffer("BOGUS / HTTP/1.1\nHost: test.com\n\n"));
+    Request.from(toByteBuffer("BOGUS / HTTP/1.1\nHost: test.com\n\n"));
   }
   
   @Test(expected=IllegalArgumentException.class)
   public void testRejectUnsupportedVersionRequest() {
-    HttpRequest.from(toByteBuffer("GET / HTTP/1.0\nHost: test.com\n\n"));
+    Request.from(toByteBuffer("GET / HTTP/1.0\nHost: test.com\n\n"));
   }
   
   @Test(expected=IllegalArgumentException.class)
   public void testRejectBadRequestNoHeader() {
-    HttpRequest.from(toByteBuffer("GET / HTTP/1.1\n\n"));
+    Request.from(toByteBuffer("GET / HTTP/1.1\n\n"));
   }
   
   @Test(expected=IllegalArgumentException.class)
   public void testRejectBadRequestMissingLine() {
-    HttpRequest.from(toByteBuffer("GET / HTTP/1.1\nHost: test.com\n"));
+    Request.from(toByteBuffer("GET / HTTP/1.1\nHost: test.com\n"));
   }
   
   @Test
   public void testFindHeader() {
-    final HttpRequest request = HttpRequest.from(toByteBuffer(requestOneHeaderWithBody));
+    final Request request = Request.from(toByteBuffer(requestOneHeaderWithBody));
     
-    assertNotNull(request.headerOf(HttpRequestHeader.Host));
-    assertEquals(HttpRequestHeader.Host, request.headerOf(HttpRequestHeader.Host).name);
-    assertEquals("test.com", request.headerOf(HttpRequestHeader.Host).value);
+    assertNotNull(request.headerOf(RequestHeader.Host));
+    assertEquals(RequestHeader.Host, request.headerOf(RequestHeader.Host).name);
+    assertEquals("test.com", request.headerOf(RequestHeader.Host).value);
   }
   
   @Test
   public void testFindHeaders() {
-    final HttpRequest request = HttpRequest.from(toByteBuffer(requestMultiHeaders));
+    final Request request = Request.from(toByteBuffer(requestMultiHeaders));
     
-    assertNotNull(request.headerOf(HttpRequestHeader.Host));
-    assertEquals(HttpRequestHeader.Host, request.headerOf(HttpRequestHeader.Host).name);
-    assertEquals("test.com", request.headerOf(HttpRequestHeader.Host).value);
+    assertNotNull(request.headerOf(RequestHeader.Host));
+    assertEquals(RequestHeader.Host, request.headerOf(RequestHeader.Host).name);
+    assertEquals("test.com", request.headerOf(RequestHeader.Host).value);
     
-    assertNotNull(request.headerOf(HttpRequestHeader.Accept));
-    assertEquals(HttpRequestHeader.Accept, request.headerOf(HttpRequestHeader.Accept).name);
-    assertEquals("text/plain", request.headerOf(HttpRequestHeader.Accept).value);
+    assertNotNull(request.headerOf(RequestHeader.Accept));
+    assertEquals(RequestHeader.Accept, request.headerOf(RequestHeader.Accept).name);
+    assertEquals("text/plain", request.headerOf(RequestHeader.Accept).value);
     
-    assertNotNull(request.headerOf(HttpRequestHeader.CacheControl));
-    assertEquals(HttpRequestHeader.CacheControl, request.headerOf(HttpRequestHeader.CacheControl).name);
-    assertEquals("no-cache", request.headerOf(HttpRequestHeader.CacheControl).value);
+    assertNotNull(request.headerOf(RequestHeader.CacheControl));
+    assertEquals(RequestHeader.CacheControl, request.headerOf(RequestHeader.CacheControl).name);
+    assertEquals("no-cache", request.headerOf(RequestHeader.CacheControl).value);
   }
 
   @Before

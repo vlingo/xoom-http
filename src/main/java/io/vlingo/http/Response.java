@@ -7,10 +7,9 @@
 
 package io.vlingo.http;
 
-import java.util.Collections;
-import java.util.List;
+import io.vlingo.http.Header.Headers;
 
-public class HttpResponse {
+public class Response {
   // 1xx Informational responses
   public static final String Continue = "100 Continue";
   public static final String SwitchingProtocols = "101 Switching Protocols";
@@ -83,16 +82,28 @@ public class HttpResponse {
   public static final String NotExtended = "510 Not Extended";
   public static final String NetworkAuthenticationRequired = "511 Network Authentication Required";
 
-  public static HttpResponse from(final String statusCode, final List<HttpResponseHeader> headers, final String entity) {
-    return new HttpResponse(statusCode, headers, entity);
+  public static Response of(final String statusCode) {
+    return new Response(statusCode, Headers.empty(), "");
+  }
+
+  public static Response of(final String statusCode, final String entity) {
+    return new Response(statusCode, Headers.empty(), entity);
+  }
+
+  public static Response of(final String statusCode, final Headers<ResponseHeader> headers) {
+    return new Response(statusCode, headers, "");
+  }
+
+  public static Response of(final String statusCode, final Headers<ResponseHeader> headers, final String entity) {
+    return new Response(statusCode, headers, entity);
   }
 
   public final String statusCode;
-  public final List<HttpResponseHeader> headers;
+  public final Headers<ResponseHeader> headers;
   public final String entity;
 
-  public HttpHeader headerOf(final String name) {
-    for (final HttpHeader header : headers) {
+  public Header headerOf(final String name) {
+    for (final Header header : headers) {
       if (header.name.equals(name)) {
         return header;
       }
@@ -106,21 +117,21 @@ public class HttpResponse {
     
     // TODO: currently supports only HTTP/1.1
     
-    builder.append(HttpVersion.HTTP_1_1).append(" ").append(statusCode).append("\n");
+    builder.append(Version.HTTP_1_1).append(" ").append(statusCode).append("\n");
     appendAllHeadersTo(builder);
     builder.append("\n").append(entity);
     
     return builder.toString();
   }
   
-  HttpResponse(final String statusCode, final List<HttpResponseHeader> headers, final String entity) {
+  Response(final String statusCode, final Headers<ResponseHeader> headers, final String entity) {
     this.statusCode = statusCode;
-    this.headers = Collections.unmodifiableList(headers);
+    this.headers = headers;
     this.entity = entity;
   }
 
   private StringBuilder appendAllHeadersTo(final StringBuilder builder) {
-    for (final HttpResponseHeader header : headers) {
+    for (final ResponseHeader header : headers) {
       builder.append(header.name).append(": ").append(header.value).append("\n");
     }
     return builder;
@@ -128,7 +139,7 @@ public class HttpResponse {
 
   private int size() {
     int headersSize = 0;
-    for (final HttpResponseHeader header : headers) {
+    for (final ResponseHeader header : headers) {
       // name + ": " + value + "\n"
       headersSize += (header.name.length() + 2 + header.value.length() + 1);
     }

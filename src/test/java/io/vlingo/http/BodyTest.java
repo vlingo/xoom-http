@@ -15,11 +15,11 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-public class HttpBodyTest {
+public class BodyTest {
   
   @Test
   public void testThatBodyHasLines() {
-    final HttpBody body = HttpBody.from(Arrays.asList("line1", "line2", "line3"));
+    final Body body = Body.from(Arrays.asList("line1", "line2", "line3"));
     
     assertTrue(body.hasLines());
     assertEquals(3, body.lines.size());
@@ -30,7 +30,7 @@ public class HttpBodyTest {
   
   @Test
   public void testThatBodyHasNoLines() {
-    final HttpBody body = HttpBody.from(Arrays.asList());
+    final Body body = Body.from(Arrays.asList());
     
     assertFalse(body.hasLines());
   }

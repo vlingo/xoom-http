@@ -12,11 +12,11 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class HttpMethodTest {
+public class MethodTest {
 
   @Test
   public void testPOST() {
-    final HttpMethod method = HttpMethod.from("POST");
+    final Method method = Method.from("POST");
     assertTrue(method.isPOST());
     
     assertFalse(method.isCONNECT());
@@ -31,7 +31,7 @@ public class HttpMethodTest {
 
   @Test
   public void testGET() {
-    final HttpMethod method = HttpMethod.from("GET");
+    final Method method = Method.from("GET");
     assertTrue(method.isGET());
     
     assertFalse(method.isCONNECT());
@@ -46,7 +46,7 @@ public class HttpMethodTest {
 
   @Test
   public void testPUT() {
-    final HttpMethod method = HttpMethod.from("PUT");
+    final Method method = Method.from("PUT");
     assertTrue(method.isPUT());
     
     assertFalse(method.isCONNECT());
@@ -61,7 +61,7 @@ public class HttpMethodTest {
 
   @Test
   public void testPATCH() {
-    final HttpMethod method = HttpMethod.from("PATCH");
+    final Method method = Method.from("PATCH");
     assertTrue(method.isPATCH());
     
     assertFalse(method.isCONNECT());
@@ -76,7 +76,7 @@ public class HttpMethodTest {
 
   @Test
   public void testDELETE() {
-    final HttpMethod method = HttpMethod.from("DELETE");
+    final Method method = Method.from("DELETE");
     assertTrue(method.isDELETE());
     
     assertFalse(method.isCONNECT());
@@ -91,7 +91,7 @@ public class HttpMethodTest {
 
   @Test
   public void testHEAD() {
-    final HttpMethod method = HttpMethod.from("HEAD");
+    final Method method = Method.from("HEAD");
     assertTrue(method.isHEAD());
     
     assertFalse(method.isCONNECT());
@@ -106,7 +106,7 @@ public class HttpMethodTest {
 
   @Test
   public void testTRACE() {
-    final HttpMethod method = HttpMethod.from("TRACE");
+    final Method method = Method.from("TRACE");
     assertTrue(method.isTRACE());
     
     assertFalse(method.isCONNECT());
@@ -121,7 +121,7 @@ public class HttpMethodTest {
 
   @Test
   public void testOPTIONS() {
-    final HttpMethod method = HttpMethod.from("OPTIONS");
+    final Method method = Method.from("OPTIONS");
     assertTrue(method.isOPTIONS());
     
     assertFalse(method.isCONNECT());
@@ -136,7 +136,7 @@ public class HttpMethodTest {
 
   @Test
   public void testCONNECT() {
-    final HttpMethod method = HttpMethod.from("CONNECT");
+    final Method method = Method.from("CONNECT");
     assertTrue(method.isCONNECT());
     
     assertFalse(method.isDELETE());

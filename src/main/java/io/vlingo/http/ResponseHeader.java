@@ -7,7 +7,7 @@
 
 package io.vlingo.http;
 
-public class HttpResponseHeader extends HttpHeader {
+public class ResponseHeader extends Header {
   public static final String AccessControlAllowOrigin = "Access-Control-Allow-Origin";
   public static final String AccessControlAllowCredentials = "Access-Control-Allow-Credentials";
   public static final String AccessControlExposeHeaders = "Access-Control-Expose-Headers";
@@ -69,11 +69,19 @@ public class HttpResponseHeader extends HttpHeader {
   public static final String XUACompatible = "X-UA-Compatible";
   public static final String XXSSProtection = "X-XSS-Protection";
 
-  public static HttpResponseHeader of(final String name, final String value) {
-    return new HttpResponseHeader(name, value);
+  public static Headers<ResponseHeader> headers(final String name, final String value) {
+    return Headers.of(of(name, value));
   }
 
-  private HttpResponseHeader(final String name, final String value) {
+  public static Headers<ResponseHeader> headers(final ResponseHeader header) {
+    return Headers.of(header);
+  }
+
+  public static ResponseHeader of(final String name, final String value) {
+    return new ResponseHeader(name, value);
+  }
+
+  private ResponseHeader(final String name, final String value) {
     super(name, value);
   }
 }

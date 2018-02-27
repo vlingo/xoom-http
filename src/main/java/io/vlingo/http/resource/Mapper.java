@@ -5,14 +5,9 @@
 // was not distributed with this file, You can obtain
 // one at https://mozilla.org/MPL/2.0/.
 
-package io.vlingo.http;
+package io.vlingo.http.resource;
 
-public abstract class HttpHeader {
-  public final String name;
-  public final String value;
-
-  protected HttpHeader(final String name, final String value) {
-    this.name = name;
-    this.value = value;
-  }
+public interface Mapper {
+  <T> T from(final String data, final Class<T> type);
+  <T> String from(final T data);
 }

@@ -7,7 +7,7 @@
 
 package io.vlingo.http;
 
-public class HttpRequestHeader extends HttpHeader {
+public class RequestHeader extends Header {
   public static final String Accept = "Accept";
   public static final String AcceptCharset = "Accept-Charset";
   public static final String AcceptEncoding = "Accept-Encoding";
@@ -60,21 +60,21 @@ public class HttpRequestHeader extends HttpHeader {
   public static final String XRequestID = "X-Request-ID";
   public static final String XCorrelationID = "X-Correlation-ID";
 
-  public static HttpRequestHeader from(final String textLine) {
+  public static RequestHeader from(final String textLine) {
     final int colonIndex = textLine.indexOf(":");
     
     if (colonIndex == -1) {
       throw new IllegalArgumentException("Not a header: " + textLine);
     }
     
-    return new HttpRequestHeader(textLine.substring(0, colonIndex).trim(), textLine.substring(colonIndex+1).trim());
+    return new RequestHeader(textLine.substring(0, colonIndex).trim(), textLine.substring(colonIndex+1).trim());
   }
 
-  public static HttpRequestHeader of(final String name, final String value) {
-    return new HttpRequestHeader(name, value);
+  public static RequestHeader of(final String name, final String value) {
+    return new RequestHeader(name, value);
   }
 
-  private HttpRequestHeader(final String name, final String value) {
+  private RequestHeader(final String name, final String value) {
     super(name, value);
   }
 }

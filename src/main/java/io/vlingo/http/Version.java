@@ -7,7 +7,7 @@
 
 package io.vlingo.http;
 
-public enum HttpVersion {
+public enum Version {
   Http1_1 {
     @Override public boolean isHttp1_1() { return true; }
   },
@@ -19,7 +19,7 @@ public enum HttpVersion {
   public static final String HTTP_1_1 = "HTTP/1.1";
   public static final String HTTP_2_0 = "HTTP/2.0";
   
-  public static HttpVersion from(final String version) {
+  public static Version from(final String version) {
     if (version.equals(HTTP_1_1)) {
       return Http1_1;
     } else if (version.equals(HTTP_2_0)) {

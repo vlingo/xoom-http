@@ -7,18 +7,20 @@
 
 package io.vlingo.http;
 
+import static io.vlingo.http.Response.Ok;
+import static io.vlingo.http.ResponseHeader.CacheControl;
+import static io.vlingo.http.ResponseHeader.ETag;
+import static io.vlingo.http.ResponseHeader.headers;
+import static io.vlingo.http.ResponseHeader.of;
 import static org.junit.Assert.assertEquals;
-
-import java.util.Arrays;
-import java.util.List;
 
 import org.junit.Test;
 
-public class HttpResponseTest {
+public class ResponseTest {
 
   @Test
   public void testResponseWithOneHeaderNoEntity() {
-    final HttpResponse response = HttpResponse.from(HttpResponse.Ok, oneHeader(), "");
+    final Response response = Response.of(Ok, headers(CacheControl, "max-age=3600"));
     
     final String facsimile = "HTTP/1.1 200 OK\nCache-Control: max-age=3600\n\n";
     
@@ -27,7 +29,7 @@ public class HttpResponseTest {
 
   @Test
   public void testResponseWithOneHeaderAndEntity() {
-    final HttpResponse response = HttpResponse.from(HttpResponse.Ok, oneHeader(), "{ text : \"some text\" }");
+    final Response response = Response.of(Ok, headers(CacheControl, "max-age=3600"), "{ text : \"some text\" }");
     
     final String facsimile = "HTTP/1.1 200 OK\nCache-Control: max-age=3600\n\n{ text : \"some text\" }";
     
@@ -36,7 +38,7 @@ public class HttpResponseTest {
 
   @Test
   public void testResponseWithMultipleHeadersNoEntity() {
-    final HttpResponse response = HttpResponse.from(HttpResponse.Ok, mutipleHeaders(), "");
+    final Response response = Response.of(Ok, headers(of(ETag, "123ABC")).and(of(CacheControl, "max-age=3600")));
     
     final String facsimile = "HTTP/1.1 200 OK\nETag: 123ABC\nCache-Control: max-age=3600\n\n";
     
@@ -45,20 +47,10 @@ public class HttpResponseTest {
 
   @Test
   public void testResponseWithMultipleHeadersAndEntity() {
-    final HttpResponse response = HttpResponse.from(HttpResponse.Ok, mutipleHeaders(), "{ text : \"some text\" }");
+    final Response response = Response.of(Ok, headers(of(ETag, "123ABC")).and(of(CacheControl, "max-age=3600")), "{ text : \"some text\" }");
     
     final String facsimile = "HTTP/1.1 200 OK\nETag: 123ABC\nCache-Control: max-age=3600\n\n{ text : \"some text\" }";
     
     assertEquals(facsimile, response.toString());
-  }
-
-  private List<HttpResponseHeader> oneHeader() {
-    return Arrays.asList(HttpResponseHeader.of(HttpResponseHeader.CacheControl, "max-age=3600"));
-  }
-
-  private List<HttpResponseHeader> mutipleHeaders() {
-    return Arrays.asList(
-            HttpResponseHeader.of(HttpResponseHeader.ETag, "123ABC"),
-            HttpResponseHeader.of(HttpResponseHeader.CacheControl, "max-age=3600"));
   }
 }
