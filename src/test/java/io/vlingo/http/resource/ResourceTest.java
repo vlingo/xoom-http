@@ -26,7 +26,9 @@ import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.google.gson.reflect.TypeToken;
 
@@ -327,6 +329,10 @@ public class ResourceTest extends BaseTest {
   
   @After
   public void tearDown() {
+    server.stop();
+    
+    world.terminate();
+    
     UserRepository.reset();
   }
 }

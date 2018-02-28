@@ -14,16 +14,11 @@ import io.vlingo.http.resource.Action.MappedParameters;
 import io.vlingo.http.resource.Action.MatchResults;
 
 public class Dispatcher {
-  private static Dispatcher instance;
-  
   private final Resources resources;
   private final Stage stage;
 
-  public static synchronized Dispatcher startWith(final Stage stage, final Resources resources) {
-    if (instance == null) {
-      instance = new Dispatcher(stage, resources);
-    }
-    return instance;
+  static Dispatcher startWith(final Stage stage, final Resources resources) {
+    return new Dispatcher(stage, resources);
   }
 
   void dispatchFor(final Context context) {
@@ -36,6 +31,9 @@ public class Dispatcher {
       }
     }
     throw new IllegalArgumentException("No matching resource for method " + context.request.method + " and URI " + context.request.uri);
+  }
+
+  void stop() {
   }
 
   private Dispatcher(final Stage stage, final Resources resources) {

@@ -10,19 +10,18 @@ package io.vlingo.http.resource;
 import io.vlingo.http.Context;
 
 public class Server {
-  static Server instance;
-
   private final Dispatcher dispatcher;
 
-  public static synchronized Server startWith(final Dispatcher dispatcher) {
-    if (instance == null) {
-      instance = new Server(dispatcher);
-    }
-    return instance;
+  public static Server startWith(final Dispatcher dispatcher) {
+    return new Server(dispatcher);
   }
 
   public void dispatchFor(final Context context) {
     dispatcher.dispatchFor(context);
+  }
+
+  public void stop() {
+    dispatcher.stop();
   }
 
   private Server(final Dispatcher dispatcher) {
