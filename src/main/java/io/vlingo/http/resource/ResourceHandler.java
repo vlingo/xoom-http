@@ -11,7 +11,7 @@ import io.vlingo.actors.Completes;
 import io.vlingo.http.Context;
 import io.vlingo.http.Response;
 
-public class ResourceHandler {
+public abstract class ResourceHandler {
   protected Context context;
 
   protected ResourceHandler() {
