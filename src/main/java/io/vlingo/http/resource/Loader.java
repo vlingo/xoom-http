@@ -7,24 +7,19 @@
 
 package io.vlingo.http.resource;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 public class Loader {
 
-  private static final String propertiesFile = "/vlingo-http.properties";
   private static final String resourceNamePrefix = "resource.name.";
 
-  public static Map<String,Resource<?>> loadResources() {
-    final Properties properties = loadProperties();
-
+  public static Resources loadResources(final java.util.Properties properties) {
     final Map<String,Resource<?>> namedResources = new HashMap<>();
     
     for (String resource : findResources(properties)) {
@@ -33,10 +28,10 @@ public class Loader {
       namedResources.put(loaded.name, loaded);
     }
     
-    return namedResources;
+    return new Resources(namedResources);
   }
 
-  private static Set<String> findResources(final Properties properties) {
+  private static Set<String> findResources(final java.util.Properties properties) {
     final Set<String> resource = new HashSet<String>();
 
     for (Enumeration<?> e = properties.keys(); e.hasMoreElements(); ) {
@@ -49,19 +44,7 @@ public class Loader {
     return resource;
   }
 
-  private static Properties loadProperties() {
-    final Properties properties = new Properties();
-
-    try {
-      properties.load(Loader.class.getResourceAsStream(propertiesFile));
-    } catch (IOException e) {
-      throw new IllegalStateException("Must provide properties file on classpath: " + propertiesFile);
-    }
-
-    return properties;
-  }
-
-  private static Resource<?> loadResource(final Properties properties, final String resourceNameKey) {
+  private static Resource<?> loadResource(final java.util.Properties properties, final String resourceNameKey) {
     final String resourceName = resourceNameKey.substring(resourceNamePrefix.length());
     final String[] resourceActionNames = actionNamesFrom(properties.getProperty(resourceNameKey), resourceNameKey);
     final String resourceHandlerKey = "resource." + resourceName + ".handler";
@@ -110,7 +93,7 @@ public class Loader {
   }
 
   private static List<Action> resourceActionsOf(
-          final Properties properties,
+          final java.util.Properties properties,
           final String resourceName,
           final String[] resourceActionNames,
           final boolean disallowPathParametersWithSlash) {

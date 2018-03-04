@@ -12,7 +12,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 public class ResourcesTest {
-  private final Resources resources = new Resources(Loader.loadResources());
+  private final Resources resources = Loader.loadResources(Properties.loadProperties());
   
   @Test
   public void testLoadResources() {

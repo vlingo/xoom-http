@@ -53,7 +53,6 @@ public class ResourceTest extends BaseTest {
   private Resource<?> resource;
   private Class<? extends ResourceHandler> resourceHandlerClass;
   private Resources resources;
-  private Dispatcher dispatcher;
   private Server server;
   
   private final UserData johnDoeUserData =
@@ -332,9 +331,7 @@ public class ResourceTest extends BaseTest {
     
     resources = new Resources(oneResource);
     
-    dispatcher = Dispatcher.startWith(world.stage(), resources);
-    
-    server = Server.startWith(dispatcher);
+    server = Server.startWith(resources, world.stage(), 10);
   }
   
   @After

@@ -7,11 +7,27 @@
 
 package io.vlingo.http.resource;
 
+import java.io.IOException;
+
 public class Properties {
+  private static final String propertiesFile = "/vlingo-http.properties";
+  
   private final String name;
   private final java.util.Properties properties;
 
-  public Properties(final String name, final java.util.Properties properties) {
+  static java.util.Properties loadProperties() {
+    final java.util.Properties properties = new java.util.Properties();
+
+    try {
+      properties.load(Properties.class.getResourceAsStream(propertiesFile));
+    } catch (IOException e) {
+      throw new IllegalStateException("Must provide properties file on classpath: " + propertiesFile);
+    }
+
+    return properties;
+  }
+
+  Properties(final String name, final java.util.Properties properties) {
     this.name = name;
     this.properties = properties;
   }
