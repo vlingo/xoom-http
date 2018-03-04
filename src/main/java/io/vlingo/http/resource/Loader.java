@@ -8,7 +8,6 @@
 package io.vlingo.http.resource;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -24,11 +23,14 @@ public class Loader {
   private static final String resourceNamePrefix = "resource.name.";
 
   public static Map<String,Resource<?>> loadResources() {
+    System.out.println("LOADING RESOURCES");
     final Properties properties = loadProperties();
 
     final Map<String,Resource<?>> namedResources = new HashMap<>();
     
     for (String resource : findResources(properties)) {
+      System.out.println("LOADING: " + resource);
+      
       final Resource<?> loaded = loadResource(properties, resource);
       
       namedResources.put(loaded.name, loaded);
@@ -65,8 +67,6 @@ public class Loader {
   private static Resource<?> loadResource(final Properties properties, final String resourceNameKey) {
     final String resourceName = resourceNameKey.substring(resourceNamePrefix.length());
     final String[] resourceActionNames = actionNamesFrom(properties.getProperty(resourceNameKey), resourceNameKey);
-    final String dispatcherKey = "resource." + resourceName + ".dispatcher";
-    final String dispatcherClassname = properties.getProperty(dispatcherKey);
     final String resourceHandlerKey = "resource." + resourceName + ".handler";
     final String resourceHandlerClassname = properties.getProperty(resourceHandlerKey);
     final String handlerPoolKey = "resource." + resourceName + ".pool";
@@ -77,26 +77,23 @@ public class Loader {
     
     final List<Action> resourceActions = resourceActionsOf(properties, resourceName, resourceActionNames, disallowPathParametersWithSlash);
     
-    final Object[] ctorParams = new Object[] { resourceName, resourceHandlerClassname, handlerPoolSize, resourceActions };
-    
-    return resourceDispatcher(dispatcherClassname, ctorParams);
+    final Class<? extends ResourceHandler> resourceHandlerClass = Resource.newResourceHandlerClassFor(resourceHandlerClassname);
+
+    return resourceFor(resourceName, resourceHandlerClass, handlerPoolSize, resourceActions);
   }
 
-  private static Resource<?> resourceDispatcher(final String dispatcherClassname, final Object[] params) {
+  private static Resource<?> resourceFor(
+          final String resourceName,
+          final Class<? extends ResourceHandler> resourceHandlerClass,
+          final int handlerPoolSize,
+          final List<Action> resourceActions) {
     try {
-      final Class<?> resourceDispatcherClass = Class.forName(dispatcherClassname);
-      for (final Constructor<?> ctor : resourceDispatcherClass.getConstructors()) {
-        if (ctor.getParameterCount() == params.length) {
-          final Resource<?> resourecDispatcher = (Resource<?>) ctor.newInstance(params);
-          return resourecDispatcher;
-        }
-      }
-    } catch (ClassNotFoundException e) {
-      throw new IllegalStateException("Resource dispatcher class not found: " + dispatcherClassname);
+      System.out.println("RESOURCE FOR: " + resourceName + " CLASS: " + resourceHandlerClass.getName() + " POOL SIZE: " + handlerPoolSize + " ACTIONS: " + resourceActions);
+      final Resource<?> resource = Resource.newResourceFor(resourceName, resourceHandlerClass, handlerPoolSize, resourceActions);
+      return resource;
     } catch (Exception e) {
-      // fall through
+      throw new IllegalStateException("Resource cannot be created for: " + resourceHandlerClass.getName());
     }
-    throw new IllegalStateException("No constructor matches the required number of parameters: " + dispatcherClassname);
   }
 
   private static String[] actionNamesFrom(final String actionNamesProperty, final String key) {

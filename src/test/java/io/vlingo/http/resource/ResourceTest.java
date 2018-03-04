@@ -31,17 +31,15 @@ import org.junit.Test;
 import com.google.gson.reflect.TypeToken;
 
 import io.vlingo.actors.World;
+import io.vlingo.actors.testkit.TestUntil;
 import io.vlingo.http.BaseTest;
 import io.vlingo.http.Context;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
-import io.vlingo.http.resource.Action.MappedParameters;
 import io.vlingo.http.resource.Action.MatchResults;
 import io.vlingo.http.sample.user.ContactData;
 import io.vlingo.http.sample.user.NameData;
 import io.vlingo.http.sample.user.UserData;
-import io.vlingo.http.sample.user.UserResource;
-import io.vlingo.http.sample.user.UserResourceDispatcher;
 import io.vlingo.http.sample.user.model.UserRepository;
 
 public class ResourceTest extends BaseTest {
@@ -52,7 +50,8 @@ public class ResourceTest extends BaseTest {
   private Action actionGetUsers;
 
   private World world;
-  private Resource<UserResource> resource;
+  private Resource<?> resource;
+  private Class<? extends ResourceHandler> resourceHandlerClass;
   private Resources resources;
   private Dispatcher dispatcher;
   private Server server;
@@ -78,9 +77,9 @@ public class ResourceTest extends BaseTest {
     final Request request = Request.from(toByteBuffer(postJohnDoeUserMessage));
     final MockCompletesResponse completes = new MockCompletesResponse();
     
+    MockCompletesResponse.untilWith = TestUntil.happenings(1);
     server.dispatchFor(new Context(request, completes));
-    
-    pause(250);
+    MockCompletesResponse.untilWith.completes();
     
     assertNotNull(completes.response);
     
@@ -102,15 +101,20 @@ public class ResourceTest extends BaseTest {
   public void testThatGetUserDispatches() {
     final Request postRequest = Request.from(toByteBuffer(postJohnDoeUserMessage));
     final MockCompletesResponse postCompletes = new MockCompletesResponse();
+    
+    MockCompletesResponse.untilWith = TestUntil.happenings(1);
     server.dispatchFor(new Context(postRequest, postCompletes));
-    pause(250);
+    MockCompletesResponse.untilWith.completes();
+    
     assertNotNull(postCompletes.response);
     
     final String getUserMessage = "GET " + postCompletes.response.headerOf(Location).value + " HTTP/1.1\nHost: vlingo.io\n\n";
     final Request getRequest = Request.from(toByteBuffer(getUserMessage));
     final MockCompletesResponse getCompletes = new MockCompletesResponse();
+    
+    MockCompletesResponse.untilWith = TestUntil.happenings(1);
     server.dispatchFor(new Context(getRequest, getCompletes));
-    pause(250);
+    MockCompletesResponse.untilWith.completes();
     
     assertNotNull(getCompletes.response);
     assertEquals(Ok, getCompletes.response.statusCode);
@@ -126,20 +130,28 @@ public class ResourceTest extends BaseTest {
   public void testThatGetAllUsersDispatches() {
     final Request postRequest1 = Request.from(toByteBuffer(postJohnDoeUserMessage));
     final MockCompletesResponse postCompletes1 = new MockCompletesResponse();
+    
+    MockCompletesResponse.untilWith = TestUntil.happenings(1);
     server.dispatchFor(new Context(postRequest1, postCompletes1));
-    pause(250);
+    MockCompletesResponse.untilWith.completes();
+
     assertNotNull(postCompletes1.response);
     final Request postRequest2 = Request.from(toByteBuffer(postJaneDoeUserMessage));
     final MockCompletesResponse postCompletes2 = new MockCompletesResponse();
+
+    MockCompletesResponse.untilWith = TestUntil.happenings(1);
     server.dispatchFor(new Context(postRequest2, postCompletes2));
-    pause(250);
+    MockCompletesResponse.untilWith.completes();
+
     assertNotNull(postCompletes2.response);
     
     final String getUserMessage = "GET /users HTTP/1.1\nHost: vlingo.io\n\n";
     final Request getRequest = Request.from(toByteBuffer(getUserMessage));
     final MockCompletesResponse getCompletes = new MockCompletesResponse();
+
+    MockCompletesResponse.untilWith = TestUntil.happenings(1);
     server.dispatchFor(new Context(getRequest, getCompletes));
-    pause(250);
+    MockCompletesResponse.untilWith.completes();
     
     assertNotNull(getCompletes.response);
     assertEquals(Ok, getCompletes.response.statusCode);
@@ -166,13 +178,20 @@ public class ResourceTest extends BaseTest {
   public void testThatPatchNameWorks() {
     final Request postRequest1 = Request.from(toByteBuffer(postJohnDoeUserMessage));
     final MockCompletesResponse postCompletes1 = new MockCompletesResponse();
+    
+    MockCompletesResponse.untilWith = TestUntil.happenings(1);
     server.dispatchFor(new Context(postRequest1, postCompletes1));
-    pause(250);
+    MockCompletesResponse.untilWith.completes();
+    
     assertNotNull(postCompletes1.response);
+    
     final Request postRequest2 = Request.from(toByteBuffer(postJaneDoeUserMessage));
     final MockCompletesResponse postCompletes2 = new MockCompletesResponse();
+    
+    MockCompletesResponse.untilWith = TestUntil.happenings(1);
     server.dispatchFor(new Context(postRequest2, postCompletes2));
-    pause(250);
+    MockCompletesResponse.untilWith.completes();
+
     assertNotNull(postCompletes2.response);
     
     // John Doe and Jane Doe marry and change their family name to, of course, Doe-Doe
@@ -181,8 +200,10 @@ public class ResourceTest extends BaseTest {
             "PATCH " + postCompletes1.response.headerOf(Location).value + "/name HTTP/1.1\nHost: vlingo.io\n\n" + serialized(johnNameData);
     final Request patchRequest1 = Request.from(toByteBuffer(patchJohnDoeUserMessage));
     final MockCompletesResponse patchCompletes1 = new MockCompletesResponse();
+    
+    MockCompletesResponse.untilWith = TestUntil.happenings(1);
     server.dispatchFor(new Context(patchRequest1, patchCompletes1));
-    pause(250);
+    MockCompletesResponse.untilWith.completes();
 
     assertNotNull(patchCompletes1.response);
     assertEquals(Ok, patchCompletes1.response.statusCode);
@@ -197,8 +218,10 @@ public class ResourceTest extends BaseTest {
             "PATCH " + postCompletes2.response.headerOf(Location).value + "/name HTTP/1.1\nHost: vlingo.io\n\n" + serialized(janeNameData);
     final Request patchRequest2 = Request.from(toByteBuffer(patchJaneDoeUserMessage));
     final MockCompletesResponse patchCompletes2 = new MockCompletesResponse();
+    
+    MockCompletesResponse.untilWith = TestUntil.happenings(1);
     server.dispatchFor(new Context(patchRequest2, patchCompletes2));
-    pause(250);
+    MockCompletesResponse.untilWith.completes();
 
     assertNotNull(patchCompletes2.response);
     assertEquals(Ok, patchCompletes2.response.statusCode);
@@ -258,16 +281,7 @@ public class ResourceTest extends BaseTest {
                     actionGetUser,
                     actionGetUserEmailAddress);
     
-    final Resource<?> resource =
-            new Resource<Object>(
-                    "user",
-                    "io.vlingo.http.sample.user.UserResource",
-                    10,
-                    actions) {
-        @Override
-        public void dispatchToHandlerWith(Context context, MappedParameters mappedParameters) {
-        }
-    };
+    final Resource<?> resource = Resource.newResourceFor("user", resourceHandlerClass, 5, actions);
 
     final MatchResults actionGetUsersMatch = resource.matchWith(Method.GET, new URI("/users"));
     assertTrue(actionGetUsersMatch.isMatched());
@@ -308,11 +322,9 @@ public class ResourceTest extends BaseTest {
                     actionGetUser,
                     actionGetUsers);
 
-    resource = new UserResourceDispatcher(
-                    "user",
-                    "io.vlingo.http.sample.user.UserResource",
-                    5,
-                    actions);
+    resourceHandlerClass = Resource.newResourceHandlerClassFor("io.vlingo.http.sample.user.UserResource");
+    
+    resource = Resource.newResourceFor("user", resourceHandlerClass, 5, actions);
     
     final Map<String,Resource<?>> oneResource = new HashMap<>(1);
     

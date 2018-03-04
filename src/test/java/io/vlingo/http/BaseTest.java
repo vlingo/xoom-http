@@ -15,15 +15,6 @@ import io.vlingo.wire.message.Converters;
 public abstract class BaseTest {
   private final ByteBuffer buffer = ByteBufferAllocator.allocate(1024);
 
-  protected void pause(final int millis) {
-    try { Thread.sleep(millis); } catch (Exception e) { }
-    
-  }
-
-  protected void pause() {
-    pause(500);
-  }
-
   protected ByteBuffer toByteBuffer(final String requestContent) {
     buffer.clear();
     buffer.put(Converters.textToBytes(requestContent));

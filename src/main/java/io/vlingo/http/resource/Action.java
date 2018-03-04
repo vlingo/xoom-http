@@ -23,15 +23,17 @@ public final class Action {
   public final int id;
   public final Method method;
   public final String uri;
+  public final String originalTo;
   public final ToSpec to;
   public final Mapper mapper;
   private final Matchable matchable;
 
-  Action(final int id, final String method, final String uri, final String to, final String mapper, final boolean disallowPathParametersWithSlash) {
+  public Action(final int id, final String method, final String uri, final String to, final String mapper, final boolean disallowPathParametersWithSlash) {
     this.id = id;
     this.method = Method.from(method);
     this.uri = uri;
     this.to = new ToSpec(to);
+    this.originalTo = to;
     this.mapper = mapper == null ? DefaultMapper.instance : mapperFrom(mapper);
     this.disallowPathParametersWithSlash = disallowPathParametersWithSlash;
     this.matchable = new Matchable(uri);
@@ -506,9 +508,17 @@ public final class Action {
   // ToSpec
   //=====================================
 
-  private static class ToSpec {
+  public static class ToSpec {
     private final String methodName;
     private final List<MethodParameter> parameters;
+    
+    public final String methodName() {
+      return methodName;
+    }
+
+    public final List<MethodParameter> parameters() {
+      return Collections.unmodifiableList(parameters);
+    }
     
     @Override
     public String toString() {

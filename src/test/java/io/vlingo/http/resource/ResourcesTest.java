@@ -38,7 +38,6 @@ public class ResourcesTest {
     
     assertEquals(5, countUserActions);
     
-    
     final Resource<?> profile = resources.resourceOf("profile");
     
     assertNotNull(profile);
