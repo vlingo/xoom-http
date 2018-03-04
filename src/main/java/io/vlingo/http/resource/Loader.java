@@ -23,14 +23,11 @@ public class Loader {
   private static final String resourceNamePrefix = "resource.name.";
 
   public static Map<String,Resource<?>> loadResources() {
-    System.out.println("LOADING RESOURCES");
     final Properties properties = loadProperties();
 
     final Map<String,Resource<?>> namedResources = new HashMap<>();
     
     for (String resource : findResources(properties)) {
-      System.out.println("LOADING: " + resource);
-      
       final Resource<?> loaded = loadResource(properties, resource);
       
       namedResources.put(loaded.name, loaded);
@@ -88,7 +85,6 @@ public class Loader {
           final int handlerPoolSize,
           final List<Action> resourceActions) {
     try {
-      System.out.println("RESOURCE FOR: " + resourceName + " CLASS: " + resourceHandlerClass.getName() + " POOL SIZE: " + handlerPoolSize + " ACTIONS: " + resourceActions);
       final Resource<?> resource = Resource.newResourceFor(resourceName, resourceHandlerClass, handlerPoolSize, resourceActions);
       return resource;
     } catch (Exception e) {
