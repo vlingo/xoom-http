@@ -19,8 +19,7 @@ import org.junit.Test;
 
 import io.vlingo.http.resource.Action;
 import io.vlingo.http.resource.Resource;
-import io.vlingo.http.resource.generator.ResourceDispatcherGenerator;
-import io.vlingo.http.resource.generator.ResourceDispatcherGenerator.Result;
+import io.vlingo.http.resource.ResourceDispatcherGenerator.Result;
 
 public class ResourceDispatcherGeneratorTest {
   private Action actionPostUser;

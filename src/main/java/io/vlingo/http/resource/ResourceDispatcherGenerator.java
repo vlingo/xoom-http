@@ -5,7 +5,7 @@
 // was not distributed with this file, You can obtain
 // one at https://mozilla.org/MPL/2.0/.
 
-package io.vlingo.http.resource.generator;
+package io.vlingo.http.resource;
 
 import static io.vlingo.common.compiler.DynaFile.GeneratedSources;
 import static io.vlingo.common.compiler.DynaFile.GeneratedTestSources;
@@ -25,7 +25,6 @@ import java.util.List;
 
 import io.vlingo.common.compiler.DynaFile;
 import io.vlingo.common.compiler.DynaType;
-import io.vlingo.http.resource.Action;
 import io.vlingo.http.resource.Action.MethodParameter;
 import io.vlingo.http.resource.Action.ToSpec;
 
@@ -52,11 +51,11 @@ public class ResourceDispatcherGenerator implements AutoCloseable {
   private final DynaType type;
   private final URLClassLoader urlClassLoader;
 
-  public static ResourceDispatcherGenerator forMain(final List<Action> actions, final boolean persist) throws Exception {
+  static ResourceDispatcherGenerator forMain(final List<Action> actions, final boolean persist) throws Exception {
     return new ResourceDispatcherGenerator(actions, RootOfMainClasses, DynaType.Main, persist);
   }
 
-  public static ResourceDispatcherGenerator forTest(final List<Action> actions, final boolean persist) throws Exception {
+  static ResourceDispatcherGenerator forTest(final List<Action> actions, final boolean persist) throws Exception {
     return new ResourceDispatcherGenerator(actions, RootOfTestClasses, DynaType.Test, persist);
   }
 
@@ -66,7 +65,7 @@ public class ResourceDispatcherGenerator implements AutoCloseable {
   }
 
 
-  public Result generateFor(final String handlerProtocol) {
+  Result generateFor(final String handlerProtocol) {
     System.out.println("vlingo/http: Generating handler dispatcher for " + (type == DynaType.Main ? "main":"test") + ": " + handlerProtocol);
     
     final String relativePathToClass = toFullPath(handlerProtocol);
@@ -77,10 +76,10 @@ public class ResourceDispatcherGenerator implements AutoCloseable {
       try {
         final Class<?> handlerInterface = readHandlerInterface(handlerProtocol);
         final String dispatcherClassSource = dispatcherClassSource(handlerInterface);
-        final String fullyQualifiedClassname = fullyQualifiedClassnameFor(handlerInterface, "Dispatcher");
+        final String fullyQualifiedClassname = fullyQualifiedClassnameFor(handlerInterface, Resource.DispatcherPostixName);
         final String relativeTargetFile = toFullPath(fullyQualifiedClassname);
         final File sourceFile = persist ? persistDispatcherClassSource(handlerProtocol, relativeTargetFile, dispatcherClassSource) : new File(relativeTargetFile);
-        return new Result(fullyQualifiedClassname, classnameFor(handlerInterface, "Dispatcher"), dispatcherClassSource, sourceFile);
+        return new Result(fullyQualifiedClassname, classnameFor(handlerInterface, Resource.DispatcherPostixName), dispatcherClassSource, sourceFile);
       } catch (Exception e) {
         throw new IllegalArgumentException("Cannot generate resource dispatcher class for: " + handlerProtocol, e);
       }
@@ -89,11 +88,11 @@ public class ResourceDispatcherGenerator implements AutoCloseable {
     }
   }
 
-  public DynaType type() {
+  DynaType type() {
     return type;
   }
 
-  public URLClassLoader urlClassLoader() {
+  URLClassLoader urlClassLoader() {
     return urlClassLoader;
   }
 
@@ -138,13 +137,13 @@ public class ResourceDispatcherGenerator implements AutoCloseable {
   }
 
   private String classStatement(final Class<?> handlerInterface) {
-    return MessageFormat.format("public class {0} extends Resource<{1}> '{'\n", classnameFor(handlerInterface, "Dispatcher"), handlerInterface.getSimpleName());
+    return MessageFormat.format("public class {0} extends Resource<{1}> '{'\n", classnameFor(handlerInterface, Resource.DispatcherPostixName), handlerInterface.getSimpleName());
   }
 
   private String constructor(final Class<?> protocolInterface) {
     final StringBuilder builder = new StringBuilder();
 
-    final String signature0 = MessageFormat.format("  public {0}(\n", classnameFor(protocolInterface, "Dispatcher"));
+    final String signature0 = MessageFormat.format("  public {0}(\n", classnameFor(protocolInterface, Resource.DispatcherPostixName));
     final String signature1 = "          final String name,\n";
     final String signature2 = "          final Class<? extends ResourceHandler> resourceHandlerClass,\n";
     final String signature3 = "          final int handlerPoolSize,\n";

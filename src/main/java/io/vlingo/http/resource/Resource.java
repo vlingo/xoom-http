@@ -22,8 +22,7 @@ import io.vlingo.http.Context;
 import io.vlingo.http.Method;
 import io.vlingo.http.resource.Action.MappedParameters;
 import io.vlingo.http.resource.Action.MatchResults;
-import io.vlingo.http.resource.generator.ResourceDispatcherGenerator;
-import io.vlingo.http.resource.generator.ResourceDispatcherGenerator.Result;
+import io.vlingo.http.resource.ResourceDispatcherGenerator.Result;
 
 public abstract class Resource<T> {
   static final String DispatcherPostixName = "Dispatcher";
