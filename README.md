@@ -1,9 +1,8 @@
 # vlingo-http
 Reactive, scalable, and resilient HTTP servers and RESTful services running on vlingo/cluster and vlingo/actors.
 
-- Mostly completed: actor-based request handlers
+- Needed: network communications
 - Needed: asynchronous responses
-- Needed: resource dispatcher code generation
 
 License (See LICENSE file for full license)
 -------------------------------------------
