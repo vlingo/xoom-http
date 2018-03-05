@@ -12,7 +12,7 @@ import io.vlingo.http.Context;
 import io.vlingo.http.Response;
 
 public abstract class ResourceHandler {
-  protected Context context;
+  Context context;
 
   protected ResourceHandler() {
   }
