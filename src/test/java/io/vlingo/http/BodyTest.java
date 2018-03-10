@@ -8,30 +8,29 @@
 package io.vlingo.http;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
+import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 
 public class BodyTest {
   
   @Test
-  public void testThatBodyHasLines() {
-    final Body body = Body.from(Arrays.asList("line1", "line2", "line3"));
+  public void testThatBodyHasContent() {
+    final String content = "{ text:\\\"some text\\\"}\"";
     
-    assertTrue(body.hasLines());
-    assertEquals(3, body.lines.size());
-    assertEquals("line1", body.line(0));
-    assertEquals("line2", body.line(1));
-    assertEquals("line3", body.line(2));
+    final Body body = Body.from(content);
+    
+    assertNotNull(body);
+    assertNotNull(body.content);
+    assertEquals(content, body.content);
   }
   
   @Test
-  public void testThatBodyHasNoLines() {
-    final Body body = Body.from(Arrays.asList());
+  public void testThatBodyHasNoContent() {
+    final Body body = Body.from("");
     
-    assertFalse(body.hasLines());
+    assertNotNull(body);
+    assertNotNull(body.content);
+    assertEquals("", body.content);
   }
 }

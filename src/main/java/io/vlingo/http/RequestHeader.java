@@ -74,6 +74,11 @@ public class RequestHeader extends Header {
     return new RequestHeader(name, value);
   }
 
+  int ifContentLength() {
+    if (name.equals(ContentLength)) return Integer.parseInt(value);
+    return 0;
+  }
+
   private RequestHeader(final String name, final String value) {
     super(name, value);
   }

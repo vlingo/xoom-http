@@ -24,7 +24,7 @@ import io.vlingo.wire.message.Converters;
 public class RequestTest {
   private final ByteBuffer buffer = ByteBufferAllocator.allocate(1024);
   private String requestOneHeader;
-  private String requestOneHeaderWithBody;
+  private String requestTwoHeadersWithBody;
   private String requestMultiHeaders;
   private String requestMultiHeadersWithBody;
   
@@ -37,21 +37,21 @@ public class RequestTest {
     assertEquals(new URI("/"), request.uri);
     assertTrue(request.version.isHttp1_1());
     assertEquals(1, request.headers.size());
-    assertFalse(request.body.hasLines());
+    assertFalse(request.body.hasContent());
   }
   
   @Test
   public void testThatRequestCanHaveOneHeaderWithBody() throws Exception {
-    final Request request = Request.from(toByteBuffer(requestOneHeaderWithBody));
+    final Request request = Request.from(toByteBuffer(requestTwoHeadersWithBody));
     
     assertNotNull(request);
-    assertTrue(request.method.isGET());
+    assertTrue(request.method.isPUT());
     assertEquals(new URI("/one/two/three"), request.uri);
     assertTrue(request.version.isHttp1_1());
-    assertEquals(1, request.headers.size());
-    assertTrue(request.body.hasLines());
-    assertNotNull(request.body.line(0));
-    assertFalse(request.body.line(0).isEmpty());
+    assertEquals(2, request.headers.size());
+    assertTrue(request.body.hasContent());
+    assertNotNull(request.body.content);
+    assertFalse(request.body.content.isEmpty());
   }
   
   @Test
@@ -63,7 +63,7 @@ public class RequestTest {
     assertEquals(new URI("/one"), request.uri);
     assertTrue(request.version.isHttp1_1());
     assertEquals(3, request.headers.size());
-    assertFalse(request.body.hasLines());
+    assertFalse(request.body.hasContent());
   }
   
   @Test
@@ -71,13 +71,17 @@ public class RequestTest {
     final Request request = Request.from(toByteBuffer(requestMultiHeadersWithBody));
     
     assertNotNull(request);
-    assertTrue(request.method.isGET());
+    assertTrue(request.method.isPOST());
     assertEquals(new URI("/one/two/"), request.uri);
     assertTrue(request.version.isHttp1_1());
-    assertEquals(3, request.headers.size());
-    assertTrue(request.body.hasLines());
-    assertNotNull(request.body.line(0));
-    assertFalse(request.body.line(0).isEmpty());
+    assertEquals(4, request.headers.size());
+    assertEquals(RequestHeader.Host, request.headerOf(RequestHeader.Host).name);
+    assertEquals(RequestHeader.ContentLength, request.headerOf(RequestHeader.ContentLength).name);
+    assertEquals(RequestHeader.Accept, request.headerOf(RequestHeader.Accept).name);
+    assertEquals(RequestHeader.CacheControl, request.headerOf(RequestHeader.CacheControl).name);
+    assertTrue(request.body.hasContent());
+    assertNotNull(request.body.content);
+    assertFalse(request.body.content.isEmpty());
     assertEquals(request.body.toString(), "{ text:\"some text\"}");
   }
   
@@ -103,10 +107,11 @@ public class RequestTest {
   
   @Test
   public void testFindHeader() {
-    final Request request = Request.from(toByteBuffer(requestOneHeaderWithBody));
+    final Request request = Request.from(toByteBuffer(requestTwoHeadersWithBody));
     
     assertNotNull(request.headerOf(RequestHeader.Host));
     assertEquals(RequestHeader.Host, request.headerOf(RequestHeader.Host).name);
+    assertEquals(RequestHeader.ContentLength, request.headerOf(RequestHeader.ContentLength).name);
     assertEquals("test.com", request.headerOf(RequestHeader.Host).value);
   }
   
@@ -131,11 +136,11 @@ public class RequestTest {
   public void setUp() {
     requestOneHeader = "GET / HTTP/1.1\nHost: test.com\n\n";
     
-    requestOneHeaderWithBody = "GET /one/two/three HTTP/1.1\nHost: test.com\n\n{ text:\"some text\"}";
+    requestTwoHeadersWithBody = "PUT /one/two/three HTTP/1.1\nHost: test.com\nContent-Length: 19\n\n{ text:\"some text\"}";
     
     requestMultiHeaders = "GET /one HTTP/1.1\nHost: test.com\nAccept: text/plain\nCache-Control: no-cache\n\n";
     
-    requestMultiHeadersWithBody = "GET /one/two/ HTTP/1.1\nHost: test.com\nAccept: text/plain\nCache-Control: no-cache\n\n{ text:\"some text\"}";
+    requestMultiHeadersWithBody = "POST /one/two/ HTTP/1.1\nHost: test.com\nContent-Length: 19\nAccept: text/plain\nCache-Control: no-cache\n\n{ text:\"some text\"}";
   }
   
   private ByteBuffer toByteBuffer(final String requestContent) {

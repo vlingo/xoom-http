@@ -7,34 +7,23 @@
 
 package io.vlingo.http;
 
-import java.util.Collections;
-import java.util.List;
-
 public class Body {
-  public final List<String> lines;
+  public final String content;
   
-  public static Body from(final List<String> lines) {
-    return new Body(lines);
+  public static Body from(final String body) {
+    return new Body(body);
   }
 
-  Body(final List<String> lines) {
-    this.lines = Collections.unmodifiableList(lines);
+  Body(final String body) {
+    this.content = body;
   }
 
-  public boolean hasLines() {
-    return !lines.isEmpty();
-  }
-
-  public String line(final int index) {
-    return lines.get(index);
+  public boolean hasContent() {
+    return !content.isEmpty();
   }
 
   @Override
   public String toString() {
-    final StringBuilder builder = new StringBuilder();
-    for (final String line : lines) {
-      builder.append(line);
-    }
-    return builder.toString();
+    return content;
   }
 }

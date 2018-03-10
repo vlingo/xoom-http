@@ -10,6 +10,11 @@ package io.vlingo.http.resource;
 import java.util.Collections;
 import java.util.Map;
 
+import io.vlingo.actors.Logger;
+import io.vlingo.http.Context;
+import io.vlingo.http.resource.Action.MappedParameters;
+import io.vlingo.http.resource.Action.MatchResults;
+
 public class Resources {
   final Map<String,Resource<?>> namedResources;
   
@@ -19,5 +24,17 @@ public class Resources {
 
   Resource<?> resourceOf(final String name) {
     return namedResources.get(name);
+  }
+
+  void dispatchMatching(final Context context, Logger logger) {
+    for (final Resource<?> resource : namedResources.values()) {
+      final MatchResults matchResults = resource.matchWith(context.request.method, context.request.uri);
+      if (matchResults.isMatched()) {
+        final MappedParameters mappedParameters = matchResults.action.map(context.request, matchResults.parameters());
+        resource.dispatchToHandlerWith(context, mappedParameters);
+        return;
+      }
+    }
+    logger.log("No matching resource for method " + context.request.method + " and URI " + context.request.uri);
   }
 }

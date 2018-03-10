@@ -49,27 +49,31 @@ public class ResourceTest extends BaseTest {
   private Action actionGetUser;
   private Action actionGetUsers;
 
-  private World world;
   private Resource<?> resource;
   private Class<? extends ResourceHandler> resourceHandlerClass;
   private Resources resources;
-  private Server server;
+  private Dispatcher dispatcher;
+  private World world;
   
   private final UserData johnDoeUserData =
           UserData.from(
                   NameData.from("John", "Doe"),
                   ContactData.from("john.doe@vlingo.io", "+1 212-555-1212"));
 
+  private final String postJohnDoeUserSerialized = serialized(johnDoeUserData);
+
   private final UserData janeDoeUserData =
           UserData.from(
                   NameData.from("Jane", "Doe"),
                   ContactData.from("jane.doe@vlingo.io", "+1 212-555-1212"));
 
+  private final String postJaneDoeUserSerialized = serialized(janeDoeUserData);
+
   private final String postJohnDoeUserMessage =
-          "POST /users HTTP/1.1\nHost: vlingo.io\n\n" + serialized(johnDoeUserData);
+          "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + postJohnDoeUserSerialized.length() + "\n\n" + postJohnDoeUserSerialized;
 
   private final String postJaneDoeUserMessage =
-          "POST /users HTTP/1.1\nHost: vlingo.io\n\n" + serialized(janeDoeUserData);
+          "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + postJaneDoeUserSerialized.length() + "\n\n" + postJaneDoeUserSerialized;
 
   @Test
   public void testThatPostRegisterUserDispatches() {
@@ -77,7 +81,7 @@ public class ResourceTest extends BaseTest {
     final MockCompletesResponse completes = new MockCompletesResponse();
     
     MockCompletesResponse.untilWith = TestUntil.happenings(1);
-    server.dispatchFor(new Context(request, completes));
+    dispatcher.dispatchFor(new Context(request, completes));
     MockCompletesResponse.untilWith.completes();
     
     assertNotNull(completes.response);
@@ -100,21 +104,17 @@ public class ResourceTest extends BaseTest {
   public void testThatGetUserDispatches() {
     final Request postRequest = Request.from(toByteBuffer(postJohnDoeUserMessage));
     final MockCompletesResponse postCompletes = new MockCompletesResponse();
-    
     MockCompletesResponse.untilWith = TestUntil.happenings(1);
-    server.dispatchFor(new Context(postRequest, postCompletes));
+    dispatcher.dispatchFor(new Context(postRequest, postCompletes));
     MockCompletesResponse.untilWith.completes();
-    
     assertNotNull(postCompletes.response);
     
     final String getUserMessage = "GET " + postCompletes.response.headerOf(Location).value + " HTTP/1.1\nHost: vlingo.io\n\n";
     final Request getRequest = Request.from(toByteBuffer(getUserMessage));
     final MockCompletesResponse getCompletes = new MockCompletesResponse();
-    
     MockCompletesResponse.untilWith = TestUntil.happenings(1);
-    server.dispatchFor(new Context(getRequest, getCompletes));
+    dispatcher.dispatchFor(new Context(getRequest, getCompletes));
     MockCompletesResponse.untilWith.completes();
-    
     assertNotNull(getCompletes.response);
     assertEquals(Ok, getCompletes.response.statusCode);
     final UserData getUserData = deserialized(getCompletes.response.entity, UserData.class);
@@ -131,7 +131,7 @@ public class ResourceTest extends BaseTest {
     final MockCompletesResponse postCompletes1 = new MockCompletesResponse();
     
     MockCompletesResponse.untilWith = TestUntil.happenings(1);
-    server.dispatchFor(new Context(postRequest1, postCompletes1));
+    dispatcher.dispatchFor(new Context(postRequest1, postCompletes1));
     MockCompletesResponse.untilWith.completes();
 
     assertNotNull(postCompletes1.response);
@@ -139,7 +139,7 @@ public class ResourceTest extends BaseTest {
     final MockCompletesResponse postCompletes2 = new MockCompletesResponse();
 
     MockCompletesResponse.untilWith = TestUntil.happenings(1);
-    server.dispatchFor(new Context(postRequest2, postCompletes2));
+    dispatcher.dispatchFor(new Context(postRequest2, postCompletes2));
     MockCompletesResponse.untilWith.completes();
 
     assertNotNull(postCompletes2.response);
@@ -149,7 +149,7 @@ public class ResourceTest extends BaseTest {
     final MockCompletesResponse getCompletes = new MockCompletesResponse();
 
     MockCompletesResponse.untilWith = TestUntil.happenings(1);
-    server.dispatchFor(new Context(getRequest, getCompletes));
+    dispatcher.dispatchFor(new Context(getRequest, getCompletes));
     MockCompletesResponse.untilWith.completes();
     
     assertNotNull(getCompletes.response);
@@ -177,9 +177,8 @@ public class ResourceTest extends BaseTest {
   public void testThatPatchNameWorks() {
     final Request postRequest1 = Request.from(toByteBuffer(postJohnDoeUserMessage));
     final MockCompletesResponse postCompletes1 = new MockCompletesResponse();
-    
     MockCompletesResponse.untilWith = TestUntil.happenings(1);
-    server.dispatchFor(new Context(postRequest1, postCompletes1));
+    dispatcher.dispatchFor(new Context(postRequest1, postCompletes1));
     MockCompletesResponse.untilWith.completes();
     
     assertNotNull(postCompletes1.response);
@@ -188,20 +187,24 @@ public class ResourceTest extends BaseTest {
     final MockCompletesResponse postCompletes2 = new MockCompletesResponse();
     
     MockCompletesResponse.untilWith = TestUntil.happenings(1);
-    server.dispatchFor(new Context(postRequest2, postCompletes2));
+    dispatcher.dispatchFor(new Context(postRequest2, postCompletes2));
     MockCompletesResponse.untilWith.completes();
 
     assertNotNull(postCompletes2.response);
     
     // John Doe and Jane Doe marry and change their family name to, of course, Doe-Doe
     final NameData johnNameData = NameData.from("John", "Doe-Doe");
+    final String johnNameSerialized = serialized(johnNameData);
     final String patchJohnDoeUserMessage =
-            "PATCH " + postCompletes1.response.headerOf(Location).value + "/name HTTP/1.1\nHost: vlingo.io\n\n" + serialized(johnNameData);
+            "PATCH " + postCompletes1.response.headerOf(Location).value
+            + "/name HTTP/1.1\nHost: vlingo.io\nContent-Length: " + johnNameSerialized.length()
+            + "\n\n" + johnNameSerialized;
+    
     final Request patchRequest1 = Request.from(toByteBuffer(patchJohnDoeUserMessage));
     final MockCompletesResponse patchCompletes1 = new MockCompletesResponse();
     
     MockCompletesResponse.untilWith = TestUntil.happenings(1);
-    server.dispatchFor(new Context(patchRequest1, patchCompletes1));
+    dispatcher.dispatchFor(new Context(patchRequest1, patchCompletes1));
     MockCompletesResponse.untilWith.completes();
 
     assertNotNull(patchCompletes1.response);
@@ -213,13 +216,17 @@ public class ResourceTest extends BaseTest {
     assertEquals(johnDoeUserData.contactData.telephoneNumber, getJohnDoeDoeUserData.contactData.telephoneNumber);
 
     final NameData janeNameData = NameData.from("Jane", "Doe-Doe");
+    final String janeNameSerialized = serialized(janeNameData);
     final String patchJaneDoeUserMessage =
-            "PATCH " + postCompletes2.response.headerOf(Location).value + "/name HTTP/1.1\nHost: vlingo.io\n\n" + serialized(janeNameData);
+            "PATCH " + postCompletes2.response.headerOf(Location).value
+            + "/name HTTP/1.1\nHost: vlingo.io\nContent-Length: " + janeNameSerialized.length()
+            + "\n\n" + janeNameSerialized;
+
     final Request patchRequest2 = Request.from(toByteBuffer(patchJaneDoeUserMessage));
     final MockCompletesResponse patchCompletes2 = new MockCompletesResponse();
     
     MockCompletesResponse.untilWith = TestUntil.happenings(1);
-    server.dispatchFor(new Context(patchRequest2, patchCompletes2));
+    dispatcher.dispatchFor(new Context(patchRequest2, patchCompletes2));
     MockCompletesResponse.untilWith.completes();
 
     assertNotNull(patchCompletes2.response);
@@ -252,11 +259,7 @@ public class ResourceTest extends BaseTest {
 
   @Test
   public void testThatAllPoorlyOrderedActionHaveMatches() throws Exception {
-    final Action actionPostUser = new Action(0, "POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", null, true);
-    final Action actionPatchUserName = new Action(1, "PATCH", "/users/{userId}/name", "changeName(String userId)", null, true);
     final Action actionGetUserEmailAddress = new Action(2, "GET", "/users/{userId}/emailAddresses/{emailAddressId}", "queryUserEmailAddress(String userId, String emailAddressId)", null, true);
-    final Action actionGetUser = new Action(3, "GET", "/users/{userId}", "queryUser(String userId)", null, true);
-    final Action actionGetUsers = new Action(4, "GET", "/users", "queryUsers()", null, true);
 
     //=============================================================
     // this test assures that the optional feature used in the
@@ -302,10 +305,10 @@ public class ResourceTest extends BaseTest {
     assertTrue(actionPostUserMatch.isMatched());
     assertEquals(actionPostUser, actionPostUserMatch.action);
   }
-  
+
   @Before
   public void setUp() {
-    world = World.start("test-resource");
+    world = World.start("resource-test");
     
     actionPostUser = new Action(0, "POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", null, true);
     actionPatchUserContact = new Action(1, "PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)", null, true);
@@ -325,21 +328,19 @@ public class ResourceTest extends BaseTest {
     
     resource = Resource.newResourceFor("user", resourceHandlerClass, 5, actions);
     
+    resource.allocateHandlerPool(world.stage());
+    
     final Map<String,Resource<?>> oneResource = new HashMap<>(1);
     
     oneResource.put(resource.name, resource);
     
     resources = new Resources(oneResource);
     
-    server = Server.startWith(resources, world.stage(), 10);
+    dispatcher = new TestDispatcher(resources);
   }
-  
+
   @After
   public void tearDown() {
-    server.stop();
-    
-    world.terminate();
-    
     UserRepository.reset();
   }
 }

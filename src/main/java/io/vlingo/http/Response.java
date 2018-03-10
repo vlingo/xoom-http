@@ -8,6 +8,8 @@
 package io.vlingo.http;
 
 import io.vlingo.http.Header.Headers;
+import io.vlingo.wire.message.ConsumerByteBuffer;
+import io.vlingo.wire.message.Converters;
 
 public class Response {
   // 1xx Informational responses
@@ -109,6 +111,10 @@ public class Response {
       }
     }
     return null;
+  }
+
+  public ConsumerByteBuffer into(final ConsumerByteBuffer consumerByteBuffer) {
+    return consumerByteBuffer.put(Converters.textToBytes(toString())).flip();
   }
 
   @Override

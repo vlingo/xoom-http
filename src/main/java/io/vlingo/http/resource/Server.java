@@ -7,53 +7,47 @@
 
 package io.vlingo.http.resource;
 
-import java.util.concurrent.atomic.AtomicLong;
-
+import io.vlingo.actors.Definition;
+import io.vlingo.actors.Scheduled;
 import io.vlingo.actors.Stage;
-import io.vlingo.http.Context;
+import io.vlingo.actors.Startable;
+import io.vlingo.actors.Stoppable;
 
-public class Server {
-  private final Dispatcher[] dispatcherPool;
-  private final AtomicLong dispatcherPoolIndex;
-  private final int dispatcherPoolSize;
+public interface Server extends Scheduled, Startable, Stoppable {
 
   public static Server startWith(final Stage stage) {
     final java.util.Properties properties = Properties.loadProperties();
 
+    final int port = Integer.parseInt(properties.getProperty("server.http.port", "8080"));
     final int dispatcherPoolSize = Integer.parseInt(properties.getProperty("server.dispatcher.pool", "10"));
+    final int maxBufferPoolSize = Integer.parseInt(properties.getProperty("server.buffer.pool.size", "100"));
+    final int maxMessageSize = Integer.parseInt(properties.getProperty("server.message.buffer.size", "65535"));
+    final int probeInterval = Integer.parseInt(properties.getProperty("server.probe.interval", "10"));
+    final long probeTimeout = Long.parseLong(properties.getProperty("server.probe.timeout", "10"));
     
     final Resources resources = Loader.loadResources(properties);
     
-    return startWith(resources, stage, dispatcherPoolSize);
+    return startWith(stage, resources, port, dispatcherPoolSize, maxBufferPoolSize, maxMessageSize, probeInterval, probeTimeout);
   }
 
-  public static Server startWith(final Resources resources, final Stage stage, final int dispatcherPoolSize) {
-    return new Server(resources, stage, dispatcherPoolSize);
-  }
-
-  public void dispatchFor(final Context context) {
-    pooledDispatcher().dispatchFor(context);
-  }
-
-  public void stop() {
-    for (final Dispatcher dispatcher : dispatcherPool) {
-      dispatcher.stop();
-    }
-  }
-
-  private Server(final Resources resources, final Stage stage, final int dispatcherPoolSize) {
-    this.dispatcherPoolSize = dispatcherPoolSize;
-    this.dispatcherPoolIndex = new AtomicLong(0);
+  public static Server startWith(
+          final Stage stage,
+          final Resources resources,
+          final int port,
+          final int dispatcherPoolSize,
+          final int maxBufferPoolSize,
+          final int maxMessageSize,
+          final int probeInterval,
+          final long probeTimeout) {
     
-    this.dispatcherPool = new Dispatcher[dispatcherPoolSize];
-    
-    for (int idx = 0; idx < dispatcherPoolSize; ++idx) { 
-      dispatcherPool[idx] = Dispatcher.startWith(stage, resources);
-    }
-  }
+    final Server server = stage.actorFor(
+            Definition.has(
+                    ServerActor.class,
+                    Definition.parameters(resources, port, dispatcherPoolSize, maxBufferPoolSize, maxMessageSize, probeInterval, probeTimeout)),
+            Server.class);
 
-  protected Dispatcher pooledDispatcher() {
-    final int index = (int)(dispatcherPoolIndex.incrementAndGet() % dispatcherPoolSize);
-    return dispatcherPool[index];
+    server.start();
+    
+    return server;
   }
 }
