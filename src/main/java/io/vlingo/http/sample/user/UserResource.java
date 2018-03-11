@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.vlingo.http.Response;
-import io.vlingo.http.Version;
 import io.vlingo.http.resource.ResourceHandler;
 import io.vlingo.http.sample.user.model.Contact;
 import io.vlingo.http.sample.user.model.Name;
@@ -39,13 +38,13 @@ public class UserResource extends ResourceHandler {
     
     repository.save(user);
     
-    completes().with(Response.of(Version.Http1_1, Created, headers(of(Location, userLocation(user.id))), serialized(UserData.from(user))));
+    completes().with(Response.of(Created, headers(of(Location, userLocation(user.id))), serialized(UserData.from(user))));
   }
 
   public void changeContact(final String userId, final ContactData contactData) {
     final User user = repository.userOf(userId);
     if (user.doesNotExist()) {
-      completes().with(Response.of(Version.Http1_1, NotFound, userLocation(userId)));
+      completes().with(Response.of(NotFound, userLocation(userId)));
       return;
     }
     
@@ -53,13 +52,13 @@ public class UserResource extends ResourceHandler {
     
     repository.save(changedUser);
     
-    completes().with(Response.of(Version.Http1_1, Ok, serialized(UserData.from(changedUser))));
+    completes().with(Response.of(Ok, serialized(UserData.from(changedUser))));
   }
 
   public void changeName(final String userId, final NameData nameData) {
     final User user = repository.userOf(userId);
     if (user.doesNotExist()) {
-      completes().with(Response.of(Version.Http1_1, NotFound, userLocation(userId)));
+      completes().with(Response.of(NotFound, userLocation(userId)));
       return;
     }
     
@@ -67,15 +66,15 @@ public class UserResource extends ResourceHandler {
     
     repository.save(changedUser);
     
-    completes().with(Response.of(Version.Http1_1, Ok, serialized(UserData.from(changedUser))));
+    completes().with(Response.of(Ok, serialized(UserData.from(changedUser))));
   }
 
   public void queryUser(final String userId) {
     final User user = repository.userOf(userId);
     if (user.doesNotExist()) {
-      completes().with(Response.of(Version.Http1_1, NotFound, userLocation(userId)));
+      completes().with(Response.of(NotFound, userLocation(userId)));
     } else {
-      completes().with(Response.of(Version.Http1_1, Ok, serialized(UserData.from(user))));
+      completes().with(Response.of(Ok, serialized(UserData.from(user))));
     }
   }
 
@@ -84,7 +83,7 @@ public class UserResource extends ResourceHandler {
     for (final User user : repository.users()) {
       users.add(UserData.from(user));
     }
-    completes().with(Response.of(Version.Http1_1, Ok, serialized(users)));
+    completes().with(Response.of(Ok, serialized(users)));
   }
 
   private String userLocation(final String userId) {

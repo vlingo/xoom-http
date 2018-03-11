@@ -84,20 +84,40 @@ public class Response {
   public static final String NotExtended = "510 Not Extended";
   public static final String NetworkAuthenticationRequired = "511 Network Authentication Required";
 
+  public static Response of(final String statusCode) {
+    return new Response(Version.Http1_1, statusCode, Headers.empty(), Body.from(""));
+  }
+
   public static Response of(final Version version, final String statusCode) {
     return new Response(version, statusCode, Headers.empty(), Body.from(""));
+  }
+
+  public static Response of(final String statusCode, final String entity) {
+    return new Response(Version.Http1_1, statusCode, Headers.empty(), Body.from(entity));
   }
 
   public static Response of(final Version version, final String statusCode, final String entity) {
     return new Response(version, statusCode, Headers.empty(), Body.from(entity));
   }
 
+  public static Response of(final String statusCode, final Headers<ResponseHeader> headers) {
+    return new Response(Version.Http1_1, statusCode, headers, Body.from(""));
+  }
+
   public static Response of(final Version version, final String statusCode, final Headers<ResponseHeader> headers) {
     return new Response(version, statusCode, headers, Body.from(""));
   }
 
+  public static Response of(final String statusCode, final Headers<ResponseHeader> headers, final String entity) {
+    return new Response(Version.Http1_1, statusCode, headers, Body.from(entity));
+  }
+
   public static Response of(final Version version, final String statusCode, final Headers<ResponseHeader> headers, final String entity) {
     return new Response(version, statusCode, headers, Body.from(entity));
+  }
+
+  public static Response of(final String statusCode, final Headers<ResponseHeader> headers, final Body entity) {
+    return new Response(Version.Http1_1, statusCode, headers, entity);
   }
 
   public static Response of(final Version version, final String statusCode, final Headers<ResponseHeader> headers, final Body entity) {
