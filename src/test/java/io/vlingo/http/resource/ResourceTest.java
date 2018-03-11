@@ -20,60 +20,21 @@ import static org.junit.Assert.assertTrue;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import com.google.gson.reflect.TypeToken;
 
-import io.vlingo.actors.World;
 import io.vlingo.actors.testkit.TestUntil;
-import io.vlingo.http.BaseTest;
 import io.vlingo.http.Context;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.resource.Action.MatchResults;
-import io.vlingo.http.sample.user.ContactData;
 import io.vlingo.http.sample.user.NameData;
 import io.vlingo.http.sample.user.UserData;
-import io.vlingo.http.sample.user.model.UserRepository;
 
-public class ResourceTest extends BaseTest {
-  private Action actionPostUser;
-  private Action actionPatchUserContact;
-  private Action actionPatchUserName;
-  private Action actionGetUser;
-  private Action actionGetUsers;
-
-  private Resource<?> resource;
-  private Class<? extends ResourceHandler> resourceHandlerClass;
-  private Resources resources;
-  private Dispatcher dispatcher;
-  private World world;
-  
-  private final UserData johnDoeUserData =
-          UserData.from(
-                  NameData.from("John", "Doe"),
-                  ContactData.from("john.doe@vlingo.io", "+1 212-555-1212"));
-
-  private final String postJohnDoeUserSerialized = serialized(johnDoeUserData);
-
-  private final UserData janeDoeUserData =
-          UserData.from(
-                  NameData.from("Jane", "Doe"),
-                  ContactData.from("jane.doe@vlingo.io", "+1 212-555-1212"));
-
-  private final String postJaneDoeUserSerialized = serialized(janeDoeUserData);
-
-  private final String postJohnDoeUserMessage =
-          "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + postJohnDoeUserSerialized.length() + "\n\n" + postJohnDoeUserSerialized;
-
-  private final String postJaneDoeUserMessage =
-          "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + postJaneDoeUserSerialized.length() + "\n\n" + postJaneDoeUserSerialized;
+public class ResourceTest extends ResourceTestFixtures {
 
   @Test
   public void testThatPostRegisterUserDispatches() {
@@ -87,12 +48,12 @@ public class ResourceTest extends BaseTest {
     assertNotNull(completes.response);
     
     assertEquals(Created, completes.response.statusCode);
-    assertEquals(1, completes.response.headers.size());
+    assertEquals(2, completes.response.headers.size());
     assertEquals(Location, completes.response.headers.get(0).name);
     assertTrue(Location, completes.response.headerOf(Location).value.startsWith("/users/"));
     assertNotNull(completes.response.entity);
     
-    final UserData createdUserData = deserialized(completes.response.entity, UserData.class);
+    final UserData createdUserData = deserialized(completes.response.entity.content, UserData.class);
     assertNotNull(createdUserData);
     assertEquals(johnDoeUserData.nameData.given, createdUserData.nameData.given);
     assertEquals(johnDoeUserData.nameData.family, createdUserData.nameData.family);
@@ -117,7 +78,7 @@ public class ResourceTest extends BaseTest {
     MockCompletesResponse.untilWith.completes();
     assertNotNull(getCompletes.response);
     assertEquals(Ok, getCompletes.response.statusCode);
-    final UserData getUserData = deserialized(getCompletes.response.entity, UserData.class);
+    final UserData getUserData = deserialized(getCompletes.response.entity.content, UserData.class);
     assertNotNull(getUserData);
     assertEquals(johnDoeUserData.nameData.given, getUserData.nameData.given);
     assertEquals(johnDoeUserData.nameData.family, getUserData.nameData.family);
@@ -155,7 +116,7 @@ public class ResourceTest extends BaseTest {
     assertNotNull(getCompletes.response);
     assertEquals(Ok, getCompletes.response.statusCode);
     final Type listOfUserData = new TypeToken<List<UserData>>(){}.getType();
-    final List<UserData> getUserData = deserializedList(getCompletes.response.entity, listOfUserData);
+    final List<UserData> getUserData = deserializedList(getCompletes.response.entity.content, listOfUserData);
     assertNotNull(getUserData);
     
     final UserData johnUserData = UserData.userAt(postCompletes1.response.headerOf(Location).value, getUserData);
@@ -209,7 +170,7 @@ public class ResourceTest extends BaseTest {
 
     assertNotNull(patchCompletes1.response);
     assertEquals(Ok, patchCompletes1.response.statusCode);
-    final UserData getJohnDoeDoeUserData = deserialized(patchCompletes1.response.entity, UserData.class);
+    final UserData getJohnDoeDoeUserData = deserialized(patchCompletes1.response.entity.content, UserData.class);
     assertEquals(johnNameData.given, getJohnDoeDoeUserData.nameData.given);
     assertEquals(johnNameData.family, getJohnDoeDoeUserData.nameData.family);
     assertEquals(johnDoeUserData.contactData.emailAddress, getJohnDoeDoeUserData.contactData.emailAddress);
@@ -231,7 +192,7 @@ public class ResourceTest extends BaseTest {
 
     assertNotNull(patchCompletes2.response);
     assertEquals(Ok, patchCompletes2.response.statusCode);
-    final UserData getJaneDoeDoeUserData = deserialized(patchCompletes2.response.entity, UserData.class);
+    final UserData getJaneDoeDoeUserData = deserialized(patchCompletes2.response.entity.content, UserData.class);
     assertEquals(janeNameData.given, getJaneDoeDoeUserData.nameData.given);
     assertEquals(janeNameData.family, getJaneDoeDoeUserData.nameData.family);
     assertEquals(janeDoeUserData.contactData.emailAddress, getJaneDoeDoeUserData.contactData.emailAddress);
@@ -304,43 +265,5 @@ public class ResourceTest extends BaseTest {
     final MatchResults actionPostUserMatch = resource.matchWith(Method.POST, new URI("/users"));
     assertTrue(actionPostUserMatch.isMatched());
     assertEquals(actionPostUser, actionPostUserMatch.action);
-  }
-
-  @Before
-  public void setUp() {
-    world = World.start("resource-test");
-    
-    actionPostUser = new Action(0, "POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", null, true);
-    actionPatchUserContact = new Action(1, "PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)", null, true);
-    actionPatchUserName = new Action(2, "PATCH", "/users/{userId}/name", "changeName(String userId, body:io.vlingo.http.sample.user.NameData nameData)", null, true);
-    actionGetUser = new Action(3, "GET", "/users/{userId}", "queryUser(String userId)", null, true);
-    actionGetUsers = new Action(4, "GET", "/users", "queryUsers()", null, true);
-
-    final List<Action> actions =
-            Arrays.asList(
-                    actionPostUser,
-                    actionPatchUserContact,
-                    actionPatchUserName,
-                    actionGetUser,
-                    actionGetUsers);
-
-    resourceHandlerClass = Resource.newResourceHandlerClassFor("io.vlingo.http.sample.user.UserResource");
-    
-    resource = Resource.newResourceFor("user", resourceHandlerClass, 5, actions);
-    
-    resource.allocateHandlerPool(world.stage());
-    
-    final Map<String,Resource<?>> oneResource = new HashMap<>(1);
-    
-    oneResource.put(resource.name, resource);
-    
-    resources = new Resources(oneResource);
-    
-    dispatcher = new TestDispatcher(resources);
-  }
-
-  @After
-  public void tearDown() {
-    UserRepository.reset();
   }
 }

@@ -18,7 +18,7 @@ import io.vlingo.wire.channel.RequestChannelConsumer;
 import io.vlingo.wire.channel.RequestResponseContext;
 import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
 
-public class ServerActor extends Actor implements Server, Dispatcher, RequestChannelConsumer {
+public class ServerActor extends Actor implements Server, RequestChannelConsumer {
   private static final String ServerName = "vlingo-http-server";
   
   private Cancellable cancellable;
@@ -58,14 +58,6 @@ public class ServerActor extends Actor implements Server, Dispatcher, RequestCha
 
 
   //=========================================
-  // Dispatcher
-  //=========================================
-
-  public void dispatchFor(final Context context) {
-  }
-
- 
-  //=========================================
   // RequestChannelConsumer
   //=========================================
 
@@ -95,12 +87,12 @@ public class ServerActor extends Actor implements Server, Dispatcher, RequestCha
   public void start() {
     if (isStopped()) return;
     
-    logger().log("Server " + ServerName + " is listening on port: " + port);
-    
     try {
       this.channel = new ServerRequestResponseChannel(port, ServerName, maxBufferPoolSize, maxMessageSize, probeTimeout, logger());
   
       channel.openFor(this);
+      
+      logger().log("Server " + ServerName + " is listening on port: " + port);
       
     } catch (Exception e) {
       final String message = "Failed to start server because: " + e.getMessage();

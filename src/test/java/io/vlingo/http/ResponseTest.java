@@ -20,7 +20,7 @@ public class ResponseTest {
 
   @Test
   public void testResponseWithOneHeaderNoEntity() {
-    final Response response = Response.of(Ok, headers(CacheControl, "max-age=3600"));
+    final Response response = Response.of(Version.Http1_1, Ok, headers(CacheControl, "max-age=3600"));
     
     final String facsimile = "HTTP/1.1 200 OK\nCache-Control: max-age=3600\n\n";
     
@@ -29,16 +29,17 @@ public class ResponseTest {
 
   @Test
   public void testResponseWithOneHeaderAndEntity() {
-    final Response response = Response.of(Ok, headers(CacheControl, "max-age=3600"), "{ text : \"some text\" }");
+    final String body = "{ text : \"some text\" }";
+    final Response response = Response.of(Version.Http1_1, Ok, headers(CacheControl, "max-age=3600"), body);
     
-    final String facsimile = "HTTP/1.1 200 OK\nCache-Control: max-age=3600\n\n{ text : \"some text\" }";
+    final String facsimile = "HTTP/1.1 200 OK\nCache-Control: max-age=3600\nContent-Length: " + body.length() + "\n\n{ text : \"some text\" }";
     
     assertEquals(facsimile, response.toString());
   }
 
   @Test
   public void testResponseWithMultipleHeadersNoEntity() {
-    final Response response = Response.of(Ok, headers(of(ETag, "123ABC")).and(of(CacheControl, "max-age=3600")));
+    final Response response = Response.of(Version.Http1_1, Ok, headers(of(ETag, "123ABC")).and(of(CacheControl, "max-age=3600")));
     
     final String facsimile = "HTTP/1.1 200 OK\nETag: 123ABC\nCache-Control: max-age=3600\n\n";
     
@@ -47,9 +48,10 @@ public class ResponseTest {
 
   @Test
   public void testResponseWithMultipleHeadersAndEntity() {
-    final Response response = Response.of(Ok, headers(of(ETag, "123ABC")).and(of(CacheControl, "max-age=3600")), "{ text : \"some text\" }");
+    final String body = "{ text : \"some text\" }";
+    final Response response = Response.of(Version.Http1_1, Ok, headers(of(ETag, "123ABC")).and(of(CacheControl, "max-age=3600")), body);
     
-    final String facsimile = "HTTP/1.1 200 OK\nETag: 123ABC\nCache-Control: max-age=3600\n\n{ text : \"some text\" }";
+    final String facsimile = "HTTP/1.1 200 OK\nETag: 123ABC\nCache-Control: max-age=3600\nContent-Length: " + body.length() + "\n\n{ text : \"some text\" }";
     
     assertEquals(facsimile, response.toString());
   }

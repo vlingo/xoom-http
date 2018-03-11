@@ -69,6 +69,16 @@ public class ResponseHeader extends Header {
   public static final String XUACompatible = "X-UA-Compatible";
   public static final String XXSSProtection = "X-XSS-Protection";
 
+  public static ResponseHeader from(final String textLine) {
+    final int colonIndex = textLine.indexOf(":");
+    
+    if (colonIndex == -1) {
+      throw new IllegalArgumentException("Not a header: " + textLine);
+    }
+    
+    return new ResponseHeader(textLine.substring(0, colonIndex).trim(), textLine.substring(colonIndex+1).trim());
+  }
+
   public static Headers<ResponseHeader> headers(final String name, final String value) {
     return Headers.of(of(name, value));
   }
@@ -79,6 +89,13 @@ public class ResponseHeader extends Header {
 
   public static ResponseHeader of(final String name, final String value) {
     return new ResponseHeader(name, value);
+  }
+
+  int ifContentLength() {
+    if (name.equals(ContentLength)) {
+      return Integer.parseInt(value);
+    }
+    return 0;
   }
 
   private ResponseHeader(final String name, final String value) {

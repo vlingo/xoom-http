@@ -75,7 +75,9 @@ public class RequestHeader extends Header {
   }
 
   int ifContentLength() {
-    if (name.equals(ContentLength)) return Integer.parseInt(value);
+    if (name.equals(ContentLength)) {
+      return Integer.parseInt(value);
+    }
     return 0;
   }
 

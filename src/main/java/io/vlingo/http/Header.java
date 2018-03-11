@@ -9,6 +9,7 @@ package io.vlingo.http;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -36,6 +37,17 @@ public class Header {
         headers.add(responseHeader);
       }
       return headers;
+    }
+
+    public Header headerOf(final String name) {
+      final Iterator<T> iter = this.iterator();
+      while (iter.hasNext()) {
+        final T header = iter.next();
+        if (header.name.equals(name)) {
+          return header;
+        }
+      }
+      return null;
     }
 
     @SuppressWarnings("rawtypes")
@@ -111,6 +123,16 @@ public class Header {
     @Override
     public void replaceAll(UnaryOperator<T> operator) {
       throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String toString() {
+      final StringBuilder builder = new StringBuilder();
+      final Iterator<T> iter = this.iterator();
+      while (iter.hasNext()) {
+        builder.append(iter.next()).append("\n");
+      }
+      return builder.toString();
     }
 
     Headers(final int initialCapactiy) {

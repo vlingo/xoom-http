@@ -46,8 +46,6 @@ public interface Server extends Scheduled, Startable, Stoppable {
                     Definition.parameters(resources, port, dispatcherPoolSize, maxBufferPoolSize, maxMessageSize, probeInterval, probeTimeout)),
             Server.class);
 
-    server.start();
-    
     return server;
   }
 }

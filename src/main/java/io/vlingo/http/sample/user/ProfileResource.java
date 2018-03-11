@@ -18,6 +18,7 @@ import static io.vlingo.http.resource.serialization.JsonSerialization.serialized
 import io.vlingo.http.Header.Headers;
 import io.vlingo.http.Response;
 import io.vlingo.http.ResponseHeader;
+import io.vlingo.http.Version;
 import io.vlingo.http.resource.ResourceHandler;
 import io.vlingo.http.sample.user.model.Profile;
 import io.vlingo.http.sample.user.model.ProfileRepository;
@@ -42,15 +43,15 @@ public class ProfileResource extends ResourceHandler {
     
     repository.save(profile);
     
-    completes().with(Response.of(statusCode, headers, serialized(ProfileData.from(profile))));
+    completes().with(Response.of(Version.Http1_1, statusCode, headers, serialized(ProfileData.from(profile))));
   }
 
   public void query(final String userId) {
     final Profile profile = repository.profileOf(userId);
     if (profile.doesNotExist()) {
-      completes().with(Response.of(NotFound, profileLocation(userId)));
+      completes().with(Response.of(Version.Http1_1, NotFound, profileLocation(userId)));
     } else {
-      completes().with(Response.of(Ok, serialized(ProfileData.from(profile))));
+      completes().with(Response.of(Version.Http1_1, Ok, serialized(ProfileData.from(profile))));
     }
   }
 

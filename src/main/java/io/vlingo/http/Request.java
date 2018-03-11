@@ -36,7 +36,7 @@ public class Request {
 
   @Override
   public String toString() {
-    return "" + method + " " + version + " " + uri + "\n" + headers + "\n\n" + body;
+    return "" + method + " " + uri + " "  + version + "\n" + headers + "\n" + body;
   }
 
   Request(final Method method, final URI uri, final Version version, final Headers<RequestHeader> headers, final Body body) {

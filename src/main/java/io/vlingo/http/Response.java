@@ -84,25 +84,30 @@ public class Response {
   public static final String NotExtended = "510 Not Extended";
   public static final String NetworkAuthenticationRequired = "511 Network Authentication Required";
 
-  public static Response of(final String statusCode) {
-    return new Response(statusCode, Headers.empty(), "");
+  public static Response of(final Version version, final String statusCode) {
+    return new Response(version, statusCode, Headers.empty(), Body.from(""));
   }
 
-  public static Response of(final String statusCode, final String entity) {
-    return new Response(statusCode, Headers.empty(), entity);
+  public static Response of(final Version version, final String statusCode, final String entity) {
+    return new Response(version, statusCode, Headers.empty(), Body.from(entity));
   }
 
-  public static Response of(final String statusCode, final Headers<ResponseHeader> headers) {
-    return new Response(statusCode, headers, "");
+  public static Response of(final Version version, final String statusCode, final Headers<ResponseHeader> headers) {
+    return new Response(version, statusCode, headers, Body.from(""));
   }
 
-  public static Response of(final String statusCode, final Headers<ResponseHeader> headers, final String entity) {
-    return new Response(statusCode, headers, entity);
+  public static Response of(final Version version, final String statusCode, final Headers<ResponseHeader> headers, final String entity) {
+    return new Response(version, statusCode, headers, Body.from(entity));
+  }
+
+  public static Response of(final Version version, final String statusCode, final Headers<ResponseHeader> headers, final Body entity) {
+    return new Response(version, statusCode, headers, entity);
   }
 
   public final String statusCode;
   public final Headers<ResponseHeader> headers;
-  public final String entity;
+  public final Body entity;
+  public final Version version;
 
   public Header headerOf(final String name) {
     for (final Header header : headers) {
@@ -130,10 +135,22 @@ public class Response {
     return builder.toString();
   }
   
-  Response(final String statusCode, final Headers<ResponseHeader> headers, final String entity) {
+  Response(final Version version, final String statusCode, final Headers<ResponseHeader> headers, final Body entity) {
+    this.version = version;
     this.statusCode = statusCode;
     this.headers = headers;
-    this.entity = entity;
+    this.entity = entity == null ? Body.from("") : entity;
+    addMissingContentLengthHeader();
+  }
+
+  private void addMissingContentLengthHeader() {
+    final int contentLength = entity.content.length();
+    if (contentLength > 0) {
+      final Header header = headers.headerOf(ResponseHeader.ContentLength);
+      if (header == null) {
+        headers.add(ResponseHeader.of(ResponseHeader.ContentLength, Integer.toString(contentLength)));
+      }
+    }
   }
 
   private StringBuilder appendAllHeadersTo(final StringBuilder builder) {
@@ -150,6 +167,6 @@ public class Response {
       headersSize += (header.name.length() + 2 + header.value.length() + 1);
     }
     // HTTP/1.1 + 1 + status code + "\n" + headers + "\n" + entity + just-in-case
-    return 9 + statusCode.length() + 1 + headersSize + 1 + entity.length() + 5;
+    return 9 + statusCode.length() + 1 + headersSize + 1 + entity.content.length() + 5;
   }
 }
