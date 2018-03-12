@@ -11,6 +11,7 @@ import io.vlingo.actors.Actor;
 import io.vlingo.actors.Cancellable;
 import io.vlingo.actors.Completes;
 import io.vlingo.actors.Scheduled;
+import io.vlingo.actors.World;
 import io.vlingo.http.Context;
 import io.vlingo.http.RequestParser;
 import io.vlingo.http.Response;
@@ -21,16 +22,11 @@ import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
 public class ServerActor extends Actor implements Server, RequestChannelConsumer {
   private static final String ServerName = "vlingo-http-server";
   
-  private Cancellable cancellable;
-  private ServerRequestResponseChannel channel;
+  private final Cancellable cancellable;
+  private final ServerRequestResponseChannel channel;
   private final Dispatcher[] dispatcherPool;
   private int dispatcherPoolIndex;
-  private final int dispatcherPoolSize;
-  private final int maxBufferPoolSize;
-  private final int maxMessageSize;
-  private final int port;
-  private final int probeInterval;
-  private final long probeTimeout;
+  private final World world;
 
   public ServerActor(
           final Resources resources,
@@ -41,18 +37,28 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
           final int probeInterval,
           final long probeTimeout)
   throws Exception {
-    this.port = port;
-    this.dispatcherPoolSize = dispatcherPoolSize;
-    this.maxBufferPoolSize = maxBufferPoolSize;
-    this.maxMessageSize = maxMessageSize;
-    this.probeInterval = probeInterval;
-    this.probeTimeout = probeTimeout;
     this.dispatcherPoolIndex = 0;
-    
-    this.dispatcherPool = new Dispatcher[dispatcherPoolSize];
-    
-    for (int idx = 0; idx < dispatcherPoolSize; ++idx) { 
-      dispatcherPool[idx] = Dispatcher.startWith(stage(), resources);
+    this.world = stage().world();
+
+    try {
+      this.dispatcherPool = new Dispatcher[dispatcherPoolSize];
+
+      for (int idx = 0; idx < dispatcherPoolSize; ++idx) { 
+        dispatcherPool[idx] = Dispatcher.startWith(stage(), resources);
+      }
+
+      this.channel = new ServerRequestResponseChannel(port, ServerName, maxBufferPoolSize, maxMessageSize, probeTimeout, logger());
+
+      channel.openFor(this);
+
+      logger().log("Server " + ServerName + " is listening on port: " + port);
+
+      cancellable = stage().scheduler().schedule(selfAs(Scheduled.class), null, 0, probeInterval);
+
+    } catch (Exception e) {
+      final String message = "Failed to start server because: " + e.getMessage();
+      logger().log(message, e);
+      throw new IllegalStateException(message);
     }
   }
 
@@ -65,7 +71,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   public void consume(final RequestResponseContext<?> requestResponseContext) {
     pooledDispatcher()
       .dispatchFor(new Context(RequestParser.parse(requestResponseContext.requestBuffer().asByteBuffer()),
-                   stage().world().completesFor(new ResponseCompletes(requestResponseContext))));
+                   world.completesFor(new ResponseCompletes(requestResponseContext))));
   }
 
 
@@ -76,31 +82,6 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   @Override
   public void intervalSignal(final Scheduled scheduled, final Object data) {
     channel.probeChannel();
-  }
-
-
-  //=========================================
-  // Startable
-  //=========================================
-
-  @Override
-  public void start() {
-    if (isStopped()) return;
-    
-    try {
-      this.channel = new ServerRequestResponseChannel(port, ServerName, maxBufferPoolSize, maxMessageSize, probeTimeout, logger());
-  
-      channel.openFor(this);
-      
-      logger().log("Server " + ServerName + " is listening on port: " + port);
-      
-    } catch (Exception e) {
-      final String message = "Failed to start server because: " + e.getMessage();
-      logger().log(message, e);
-      throw new IllegalStateException(message);
-    }
-
-    cancellable = this.stage().scheduler().schedule(selfAs(Scheduled.class), null, 0, probeInterval);
   }
 
 
@@ -124,7 +105,9 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   //=========================================
 
   protected Dispatcher pooledDispatcher() {
-    if (dispatcherPoolIndex >= dispatcherPoolSize) dispatcherPoolIndex = 0;
+    if (dispatcherPoolIndex >= dispatcherPool.length) {
+      dispatcherPoolIndex = 0;
+    }
     return dispatcherPool[dispatcherPoolIndex++];
   }
 
@@ -135,7 +118,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
   private class ResponseCompletes implements Completes<Response> {
     final RequestResponseContext<?> requestResponseContext;
-    
+
     ResponseCompletes(final RequestResponseContext<?> requestResponseContext) {
       this.requestResponseContext = requestResponseContext;
     }
