@@ -100,7 +100,7 @@ public class RequestTest {
     Request.from(toByteBuffer("GET / HTTP/1.1\n\n"));
   }
   
-  @Test(expected=IllegalArgumentException.class)
+  @Test(expected=IllegalStateException.class)
   public void testRejectBadRequestMissingLine() {
     Request.from(toByteBuffer("GET / HTTP/1.1\nHost: test.com\n"));
   }

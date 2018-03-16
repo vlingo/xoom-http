@@ -22,7 +22,7 @@ public class Request {
   // TODO: Currently supports only HTTP/1.1
 
   public static Request from(final ByteBuffer requestContent) {
-    return RequestParser.parse(requestContent);
+    return RequestParser.parserFor(requestContent).fullRequest();
   }
 
   public Header headerOf(final String name) {

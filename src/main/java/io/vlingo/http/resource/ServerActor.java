@@ -7,16 +7,23 @@
 
 package io.vlingo.http.resource;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.Cancellable;
 import io.vlingo.actors.Completes;
 import io.vlingo.actors.Scheduled;
 import io.vlingo.actors.World;
 import io.vlingo.http.Context;
+import io.vlingo.http.Request;
 import io.vlingo.http.RequestParser;
 import io.vlingo.http.Response;
 import io.vlingo.wire.channel.RequestChannelConsumer;
 import io.vlingo.wire.channel.RequestResponseContext;
+import io.vlingo.wire.channel.ResponseData;
 import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
 
 public class ServerActor extends Actor implements Server, RequestChannelConsumer {
@@ -26,34 +33,36 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   private final ServerRequestResponseChannel channel;
   private final Dispatcher[] dispatcherPool;
   private int dispatcherPoolIndex;
+  private Map<String,RequestResponseHttpContext> requestsMissingContent;
+  private final long requestMissingContentTimeout;
   private final World world;
 
   public ServerActor(
           final Resources resources,
           final int port,
-          final int dispatcherPoolSize,
-          final int maxBufferPoolSize,
-          final int maxMessageSize,
-          final int probeInterval,
-          final long probeTimeout)
+          final Sizing sizing,
+          final Timing timing)
   throws Exception {
     this.dispatcherPoolIndex = 0;
     this.world = stage().world();
+    this.requestsMissingContent = new HashMap<>();
 
     try {
-      this.dispatcherPool = new Dispatcher[dispatcherPoolSize];
+      this.dispatcherPool = new Dispatcher[sizing.dispatcherPoolSize];
 
-      for (int idx = 0; idx < dispatcherPoolSize; ++idx) { 
+      for (int idx = 0; idx < sizing.dispatcherPoolSize; ++idx) { 
         dispatcherPool[idx] = Dispatcher.startWith(stage(), resources);
       }
 
-      this.channel = new ServerRequestResponseChannel(port, ServerName, maxBufferPoolSize, maxMessageSize, probeTimeout, logger());
+      this.channel = new ServerRequestResponseChannel(port, ServerName, sizing.maxBufferPoolSize, sizing.maxMessageSize, timing.probeTimeout, logger());
 
-      channel.openFor(this);
+      channel.openFor(selfAs(RequestChannelConsumer.class));
 
       logger().log("Server " + ServerName + " is listening on port: " + port);
 
-      cancellable = stage().scheduler().schedule(selfAs(Scheduled.class), null, 0, probeInterval);
+      cancellable = stage().scheduler().schedule(selfAs(Scheduled.class), null, 0, timing.probeInterval);
+      
+      this.requestMissingContentTimeout = timing.requestMissingContentTimeout;
 
     } catch (Exception e) {
       final String message = "Failed to start server because: " + e.getMessage();
@@ -69,9 +78,37 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
   @Override
   public void consume(final RequestResponseContext<?> requestResponseContext) {
-    pooledDispatcher()
-      .dispatchFor(new Context(RequestParser.parse(requestResponseContext.requestBuffer().asByteBuffer()),
-                   world.completesFor(new ResponseCompletes(requestResponseContext))));
+    try {
+      final RequestParser parser;
+
+      if (!requestResponseContext.hasConsumerData()) {
+        parser = RequestParser.parserFor(requestResponseContext.requestBuffer().asByteBuffer());
+        requestResponseContext.consumerData(parser);
+      } else {
+        parser = requestResponseContext.consumerData();
+        parser.parseNext(requestResponseContext.requestBuffer().asByteBuffer());
+      }
+
+      Context context = null;
+
+      while (parser.hasFullRequest()) {
+        final Request request = parser.fullRequest();
+        context = new Context(request, world.completesFor(new ResponseCompletes(requestResponseContext)));
+
+        pooledDispatcher().dispatchFor(context);
+      }
+
+      if (parser.hasCompleted()) {
+        requestResponseContext.consumerData(null);
+      }
+
+      if (parser.isMissingContent() && !requestsMissingContent.containsKey(requestResponseContext.id())) {
+        requestsMissingContent.put(requestResponseContext.id(), new RequestResponseHttpContext(requestResponseContext, context));
+      }
+
+    } catch (Exception e) {
+      new ResponseCompletes(requestResponseContext).with(Response.of(Response.BadRequest + " " + e.getMessage()));
+    }
   }
 
 
@@ -82,6 +119,8 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   @Override
   public void intervalSignal(final Scheduled scheduled, final Object data) {
     channel.probeChannel();
+
+    failTimedOutMissingContentRequests();
   }
 
 
@@ -91,9 +130,11 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
   @Override
   public void stop() {
+    failTimedOutMissingContentRequests();
+
     cancellable.cancel();
     channel.close();
-    
+
     for (final Dispatcher dispatcher : dispatcherPool) {
       dispatcher.stop();
     }
@@ -101,10 +142,35 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
 
   //=========================================
-  // Stoppable
+  // internal implementation
   //=========================================
 
-  protected Dispatcher pooledDispatcher() {
+  private void failTimedOutMissingContentRequests() {
+    if (requestsMissingContent.isEmpty()) return;
+
+    final List<String> toRemove = new ArrayList<>(); // prevent ConcurrentModificationException
+
+    for (final String id : requestsMissingContent.keySet()) {
+      final RequestResponseHttpContext requestResponseHttpContext = requestsMissingContent.get(id);
+
+      if (requestResponseHttpContext.requestResponseContext.hasConsumerData()) {
+        final RequestParser parser = requestResponseHttpContext.requestResponseContext.consumerData();
+        if (parser.hasMissingContentTimeExpired(requestMissingContentTimeout)) {
+          toRemove.add(id);
+          requestResponseHttpContext.httpContext.completes.with(Response.of(Response.BadRequest + " Missing content."));
+          requestResponseHttpContext.requestResponseContext.consumerData(null);
+        }
+      } else {
+        toRemove.add(id); // already closed?
+      }
+    }
+
+    for (final String id : toRemove) {
+      requestsMissingContent.remove(id);
+    }
+  }
+
+  private Dispatcher pooledDispatcher() {
     if (dispatcherPoolIndex >= dispatcherPool.length) {
       dispatcherPoolIndex = 0;
     }
@@ -113,7 +179,21 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
 
   //=========================================
-  // internal implementation
+  // RequestResponseHttpContext
+  //=========================================
+
+  private class RequestResponseHttpContext {
+    final Context httpContext;
+    final RequestResponseContext<?> requestResponseContext;
+    
+    RequestResponseHttpContext(final RequestResponseContext<?> requestResponseContext, final Context httpContext) {
+      this.requestResponseContext = requestResponseContext;
+      this.httpContext = httpContext;
+    }
+  }
+
+  //=========================================
+  // ResponseCompletes
   //=========================================
 
   private class ResponseCompletes implements Completes<Response> {
@@ -124,8 +204,9 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     }
 
     @Override
-    public void with(final Response outcome) {
-      requestResponseContext.respondOnceWith(outcome.into(requestResponseContext.requestBuffer()));
+    public void with(final Response response) {
+      final ResponseData responseData = requestResponseContext.responseData();
+      requestResponseContext.respondWith(response.into(responseData.buffer));
     }
   }
 }

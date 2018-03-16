@@ -92,7 +92,7 @@ public class Header {
 
     @Override
     public void clear() {
-      throw new UnsupportedOperationException();
+      super.clear();
     }
 
     @Override

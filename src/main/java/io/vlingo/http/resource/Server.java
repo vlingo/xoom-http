@@ -10,10 +10,9 @@ package io.vlingo.http.resource;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.Scheduled;
 import io.vlingo.actors.Stage;
-import io.vlingo.actors.Startable;
 import io.vlingo.actors.Stoppable;
 
-public interface Server extends Scheduled, Startable, Stoppable {
+public interface Server extends Scheduled, Stoppable {
 
   public static Server startWith(final Stage stage) {
     final java.util.Properties properties = Properties.loadProperties();
@@ -24,28 +23,55 @@ public interface Server extends Scheduled, Startable, Stoppable {
     final int maxMessageSize = Integer.parseInt(properties.getProperty("server.message.buffer.size", "65535"));
     final int probeInterval = Integer.parseInt(properties.getProperty("server.probe.interval", "10"));
     final long probeTimeout = Long.parseLong(properties.getProperty("server.probe.timeout", "10"));
+    final long requestMissingContentTimeout = Long.parseLong(properties.getProperty("server.request.missing.content.timeout", "100"));
     
     final Resources resources = Loader.loadResources(properties);
     
-    return startWith(stage, resources, port, dispatcherPoolSize, maxBufferPoolSize, maxMessageSize, probeInterval, probeTimeout);
+    return startWith(
+            stage,
+            resources,
+            port,
+            new Sizing(dispatcherPoolSize, maxBufferPoolSize, maxMessageSize),
+            new Timing(probeInterval, probeTimeout, requestMissingContentTimeout));
   }
 
   public static Server startWith(
           final Stage stage,
           final Resources resources,
           final int port,
-          final int dispatcherPoolSize,
-          final int maxBufferPoolSize,
-          final int maxMessageSize,
-          final int probeInterval,
-          final long probeTimeout) {
+          final Sizing sizing,
+          final Timing timing) {
     
     final Server server = stage.actorFor(
             Definition.has(
                     ServerActor.class,
-                    Definition.parameters(resources, port, dispatcherPoolSize, maxBufferPoolSize, maxMessageSize, probeInterval, probeTimeout)),
+                    Definition.parameters(resources, port, sizing, timing)),
             Server.class);
 
     return server;
+  }
+
+  public static class Sizing {
+    public final int dispatcherPoolSize;
+    public final int maxBufferPoolSize;
+    public final int maxMessageSize;
+    
+    public Sizing(final int dispatcherPoolSize, final int maxBufferPoolSize, final int maxMessageSize) {
+      this.dispatcherPoolSize = dispatcherPoolSize;
+      this.maxBufferPoolSize = maxBufferPoolSize;
+      this.maxMessageSize = maxMessageSize;
+    }
+  }
+
+  public static class Timing {
+    public final int probeInterval;
+    public final long probeTimeout;
+    public final long requestMissingContentTimeout;
+    
+    public Timing(final int probeInterval, final long probeTimeout, final long requestMissingContentTimeout) {
+      this.probeInterval = probeInterval;
+      this.probeTimeout = probeTimeout;
+      this.requestMissingContentTimeout = requestMissingContentTimeout;
+    }
   }
 }

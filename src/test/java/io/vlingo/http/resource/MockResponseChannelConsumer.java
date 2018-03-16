@@ -22,11 +22,21 @@ public class MockResponseChannelConsumer implements ResponseChannelConsumer {
   public List<Response> responses = new ArrayList<>();
   public int consumeCount;
   
+  private ResponseParser parser;
+  
   @Override
   public void consume(final ByteBuffer buffer) {
-    final Response response = ResponseParser.parse(buffer);
-    ++consumeCount;
-    responses.add(response);
-    if (untilConsumed != null) untilConsumed.happened();
+    if (parser == null) {
+      parser = ResponseParser.parserFor(buffer);
+    } else {
+      parser.parseNext(buffer);
+    }
+    
+    while (parser.hasFullResponse()) {
+      final Response response = parser.fullResponse();
+      ++consumeCount;
+      responses.add(response);
+      if (untilConsumed != null) untilConsumed.happened();
+    }
   }
 }

@@ -18,6 +18,8 @@ import org.junit.Test;
 import io.vlingo.actors.testkit.TestUntil;
 import io.vlingo.http.Response;
 import io.vlingo.http.ResponseHeader;
+import io.vlingo.http.resource.Server.Sizing;
+import io.vlingo.http.resource.Server.Timing;
 import io.vlingo.wire.fdx.bidirectional.ClientRequestResponseChannel;
 import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
@@ -58,17 +60,36 @@ public class ServerTest extends ResourceTestFixtures {
     assertNotNull(getResponse.entity.content);
     assertFalse(getResponse.entity.content.isEmpty());
   }
+  
+  @Test
+  public void testThatServerBlastDispatchesRequests() throws Exception {
+    MockResponseChannelConsumer.untilConsumed = TestUntil.happenings(20);
+    for (int idx = 0; idx < 10; ++idx) {
+      client.requestWith(toByteBuffer(postJohnDoeUserMessage));
+      client.requestWith(toByteBuffer(postJaneDoeUserMessage));
+    }
+
+    while (MockResponseChannelConsumer.untilConsumed.remaining() > 0) {
+      client.probeChannel();
+    }
+    MockResponseChannelConsumer.untilConsumed.completes();
+
+    final Response createdResponse = consumer.responses.get(0);
+    
+    assertEquals(20, consumer.consumeCount);
+    assertNotNull(createdResponse.headers.headerOf(ResponseHeader.Location));
+  }
 
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    
-    server = Server.startWith(world.stage(), resources, 8080, 2, 100, 1024, 10, 10);
+
+    server = Server.startWith(world.stage(), resources, 8080, new Sizing(2, 100, 10240), new Timing(10, 10, 100));
     Thread.sleep(100); // delay for server startup
 
     consumer = new MockResponseChannelConsumer();
-    
-    client = new ClientRequestResponseChannel(Address.from(Host.of("localhost"), 8080, AddressType.NONE), consumer, 1024, world.defaultLogger());
+
+    client = new ClientRequestResponseChannel(Address.from(Host.of("localhost"), 8080, AddressType.NONE), consumer, 10240, world.defaultLogger());
   }
 
   @After
