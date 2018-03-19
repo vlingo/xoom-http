@@ -7,9 +7,9 @@
 
 package io.vlingo.http.sample.user.model;
 
-import java.util.UUID;
-
 public class User {
+  private static int NextId = 0;
+
   public final String id;
   public final Name name;
   public final Contact contact;
@@ -25,9 +25,14 @@ public class User {
   public User from(final String id, final Name name, final Contact contact) {
     return new User(id, name, contact);
   }
-  
+
+  public static void resetId() {
+    NextId = 0;
+  }
+
   public static String nextId() {
-    return UUID.randomUUID().toString();
+    ++NextId;
+    return "" + NextId; //UUID.randomUUID().toString();
   }
   
   public User(final String id, final Name name, final Contact contact) {

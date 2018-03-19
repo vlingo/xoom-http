@@ -31,7 +31,7 @@ public class MockResponseChannelConsumer implements ResponseChannelConsumer {
     } else {
       parser.parseNext(buffer);
     }
-    
+
     while (parser.hasFullResponse()) {
       final Response response = parser.fullResponse();
       ++consumeCount;

@@ -13,9 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.vlingo.actors.Actor;
-import io.vlingo.actors.Cancellable;
 import io.vlingo.actors.Completes;
-import io.vlingo.actors.Scheduled;
 import io.vlingo.actors.World;
 import io.vlingo.http.Context;
 import io.vlingo.http.Request;
@@ -25,11 +23,11 @@ import io.vlingo.wire.channel.RequestChannelConsumer;
 import io.vlingo.wire.channel.RequestResponseContext;
 import io.vlingo.wire.channel.ResponseData;
 import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
+import io.vlingo.wire.message.ConsumerByteBuffer;
 
 public class ServerActor extends Actor implements Server, RequestChannelConsumer {
   private static final String ServerName = "vlingo-http-server";
   
-  private final Cancellable cancellable;
   private final ServerRequestResponseChannel channel;
   private final Dispatcher[] dispatcherPool;
   private int dispatcherPoolIndex;
@@ -54,14 +52,19 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         dispatcherPool[idx] = Dispatcher.startWith(stage(), resources);
       }
 
-      this.channel = new ServerRequestResponseChannel(port, ServerName, sizing.maxBufferPoolSize, sizing.maxMessageSize, timing.probeTimeout, logger());
-
-      channel.openFor(selfAs(RequestChannelConsumer.class));
+      this.channel =
+              ServerRequestResponseChannel.start(
+                      stage(),
+                      selfAs(RequestChannelConsumer.class),
+                      port,
+                      "server-request-response-channel",
+                      sizing.maxBufferPoolSize,
+                      sizing.maxMessageSize,
+                      timing.probeTimeout,
+                      timing.probeInterval);
 
       logger().log("Server " + ServerName + " is listening on port: " + port);
 
-      cancellable = stage().scheduler().schedule(selfAs(Scheduled.class), null, 0, timing.probeInterval);
-      
       this.requestMissingContentTimeout = timing.requestMissingContentTimeout;
 
     } catch (Exception e) {
@@ -77,18 +80,18 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   //=========================================
 
   @Override
-  public void consume(final RequestResponseContext<?> requestResponseContext) {
+  public void consume(final RequestResponseContext<?> requestResponseContext, final ConsumerByteBuffer buffer) {
     try {
       final RequestParser parser;
 
       if (!requestResponseContext.hasConsumerData()) {
-        parser = RequestParser.parserFor(requestResponseContext.requestBuffer().asByteBuffer());
+        parser = RequestParser.parserFor(buffer.asByteBuffer());
         requestResponseContext.consumerData(parser);
       } else {
         parser = requestResponseContext.consumerData();
-        parser.parseNext(requestResponseContext.requestBuffer().asByteBuffer());
+        parser.parseNext(buffer.asByteBuffer());
       }
-
+      
       Context context = null;
 
       while (parser.hasFullRequest()) {
@@ -98,29 +101,16 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         pooledDispatcher().dispatchFor(context);
       }
 
-      if (parser.hasCompleted()) {
-        requestResponseContext.consumerData(null);
-      }
-
       if (parser.isMissingContent() && !requestsMissingContent.containsKey(requestResponseContext.id())) {
         requestsMissingContent.put(requestResponseContext.id(), new RequestResponseHttpContext(requestResponseContext, context));
       }
 
     } catch (Exception e) {
+      e.printStackTrace();
       new ResponseCompletes(requestResponseContext).with(Response.of(Response.BadRequest + " " + e.getMessage()));
+    } finally {
+      requestResponseContext.release(buffer);
     }
-  }
-
-
-  //=========================================
-  // Scheduled
-  //=========================================
-
-  @Override
-  public void intervalSignal(final Scheduled scheduled, final Object data) {
-    channel.probeChannel();
-
-    failTimedOutMissingContentRequests();
   }
 
 
@@ -132,7 +122,6 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   public void stop() {
     failTimedOutMissingContentRequests();
 
-    cancellable.cancel();
     channel.close();
 
     for (final Dispatcher dispatcher : dispatcherPool) {
@@ -205,8 +194,8 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
     @Override
     public void with(final Response response) {
-      final ResponseData responseData = requestResponseContext.responseData();
-      requestResponseContext.respondWith(response.into(responseData.buffer));
+      ResponseData data = requestResponseContext.responseData();
+      requestResponseContext.respondWith(response.into(data.buffer.clear()));
     }
   }
 }

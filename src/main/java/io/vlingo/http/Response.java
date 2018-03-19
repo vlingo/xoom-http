@@ -124,6 +124,7 @@ public class Response {
     return new Response(version, statusCode, headers, entity);
   }
 
+  public final String status;
   public final String statusCode;
   public final Headers<ResponseHeader> headers;
   public final Body entity;
@@ -148,16 +149,17 @@ public class Response {
     
     // TODO: currently supports only HTTP/1.1
     
-    builder.append(Version.HTTP_1_1).append(" ").append(statusCode).append("\n");
+    builder.append(Version.HTTP_1_1).append(" ").append(status).append("\n");
     appendAllHeadersTo(builder);
     builder.append("\n").append(entity);
     
     return builder.toString();
   }
   
-  Response(final Version version, final String statusCode, final Headers<ResponseHeader> headers, final Body entity) {
+  Response(final Version version, final String status, final Headers<ResponseHeader> headers, final Body entity) {
     this.version = version;
-    this.statusCode = statusCode;
+    this.status = status;
+    this.statusCode = status.substring(0, status.indexOf(' '));
     this.headers = headers;
     this.entity = entity == null ? Body.from("") : entity;
     addMissingContentLengthHeader();

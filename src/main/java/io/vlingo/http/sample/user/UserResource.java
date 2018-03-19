@@ -35,7 +35,7 @@ public class UserResource extends ResourceHandler {
             User.from(
                     Name.from(userData.nameData.given, userData.nameData.family),
                     Contact.from(userData.contactData.emailAddress, userData.contactData.telephoneNumber));
-    
+
     repository.save(user);
     
     completes().with(Response.of(Created, headers(of(Location, userLocation(user.id))), serialized(UserData.from(user))));

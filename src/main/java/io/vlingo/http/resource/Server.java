@@ -8,11 +8,10 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.actors.Definition;
-import io.vlingo.actors.Scheduled;
 import io.vlingo.actors.Stage;
 import io.vlingo.actors.Stoppable;
 
-public interface Server extends Scheduled, Stoppable {
+public interface Server extends Stoppable {
 
   public static Server startWith(final Stage stage) {
     final java.util.Properties properties = Properties.loadProperties();
@@ -64,7 +63,7 @@ public interface Server extends Scheduled, Stoppable {
   }
 
   public static class Timing {
-    public final int probeInterval;
+    public final long probeInterval;
     public final long probeTimeout;
     public final long requestMissingContentTimeout;
     

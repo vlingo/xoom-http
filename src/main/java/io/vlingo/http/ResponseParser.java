@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Queue;
 
 import io.vlingo.http.Header.Headers;
@@ -32,7 +33,7 @@ public class ResponseParser {
   }
 
   public boolean hasFullResponse() {
-    return !virtualStateParser.fullResponses.isEmpty();
+    return virtualStateParser.hasFullResponse();
   }
 
   public boolean hasMissingContentTimeExpired(final long timeLimit) {
@@ -72,6 +73,7 @@ public class ResponseParser {
     private int contentLength;
     private Step currentStep;
     private List<Response> fullResponses;
+    private ListIterator<Response> fullResponsesIterator;
     private Headers<ResponseHeader> headers;
     private long outOfContentTime;
     private String status;
@@ -79,6 +81,7 @@ public class ResponseParser {
 
     VirtualStateParser() {
       this.contentQueue = new LinkedList<>();
+      this.currentStep = Step.NotStarted;
       this.responseText = "";
       this.headers = new Headers<>(2);
       this.fullResponses = new ArrayList<>(2);
@@ -87,18 +90,37 @@ public class ResponseParser {
     }
 
     Response fullResponse() {
-      if (!fullResponses.isEmpty()) {
-        final Response fullResponseHolder = fullResponses.remove(0);
-        reset();
-        return fullResponseHolder;
+      if (fullResponsesIterator == null) {
+        fullResponsesIterator = fullResponses.listIterator();
       }
+      if (fullResponsesIterator.hasNext()) {
+        final Response fullResponse = fullResponsesIterator.next();
+        fullResponsesIterator.remove();
+        return fullResponse;
+      }
+      fullResponsesIterator = null;
       throw new IllegalStateException("Response is not completed.");
+    }
+
+    boolean hasFullResponse() {
+      if (fullResponsesIterator != null) {
+        if (!fullResponsesIterator.hasNext()) {
+          fullResponsesIterator = null;
+          return false;
+        } else {
+          return true;
+        }
+      }
+      if (fullResponses.isEmpty()) {
+        fullResponsesIterator = null;
+        return false;
+      }
+      return true;
     }
 
     boolean hasCompleted() {
       if (isNotStarted() && position >= responseText.length() && contentQueue.isEmpty()) {
-        responseText = responseText.substring(position, responseText.length());
-        position = 0;
+        responseText = compact();
         return true;
       }
       return false;
@@ -112,7 +134,11 @@ public class ResponseParser {
     VirtualStateParser includes(final ByteBuffer responseContent) {
       outOfContentTime = 0;
       final String responseContentText = Converters.bytesToText(responseContent.array(), 0, responseContent.limit());
-      contentQueue.add(responseContentText);
+      if (contentQueue.isEmpty()) {
+        responseText = responseText + responseContentText;
+      } else {
+        contentQueue.add(responseContentText);
+      }
       return this;
     }
 
@@ -123,48 +149,57 @@ public class ResponseParser {
     VirtualStateParser parse() {
       while (!hasCompleted()) {
         try {
-          while (!isCompletedStep()) {
-            if (isNotStarted()) {
-              nextStep();
-            } else if (isStatusLineStep()) {
-              parseStatusLine();
-            } else if (isHeadersStep()) {
-              parseHeaders();
-            } else if (isBodyStep()) {
-              parseBody();
-            }
+          if (isNotStarted()) {
+            nextStep();
+          } else if (isStatusLineStep()) {
+            parseStatusLine();
+          } else if (isHeadersStep()) {
+            parseHeaders();
+          } else if (isBodyStep()) {
+            parseBody();
+          } else if (isCompletedStep()) {
+            newResponse();
           }
         } catch (OutOfContentException e) {
           outOfContentTime = System.currentTimeMillis();
-          restart();
           return this;
         } catch (Throwable t) {
           throw t;
-        }
-  
-        if (isCompletedStep()) {
-          final Response response = Response.of(version, status, headers, body);
-          fullResponses.add(response);
-          restart();
         }
       }
       return this;
     }
 
+    private String blank() {
+      position = 0;
+      return "";
+    }
+
+    private String compact() {
+      final String compact = responseText.substring(position);
+      position = 0;
+      return compact;
+    }
+
     private String nextLine(final String errorMessage) {
+      int possibleCarriageReturnIndex = -1;
       final int lineBreak = responseText.indexOf("\n", position);
       if (lineBreak <= 0) {
-        if (errorMessage == null) {
-          return "";
-        }
         if (contentQueue.isEmpty()) {
+          responseText = compact();
           throw new OutOfContentException();
         }
-        responseText = responseText.substring(position) + contentQueue.poll();
-        position = 0;
+        responseText = compact() + contentQueue.poll();
         return nextLine(errorMessage);
+      } else if (lineBreak == 0) {
+        if (responseText.length() == 1) {
+          responseText = blank();
+          throw new OutOfContentException();
+        } else {
+          possibleCarriageReturnIndex = 0;
+        }
       }
-      final int endOfLine = responseText.charAt(lineBreak - 1) == '\r' ? lineBreak - 1 : lineBreak;
+      final int endOfLine = responseText.charAt(lineBreak + possibleCarriageReturnIndex) == '\r' ? lineBreak - 1 : lineBreak;
       final String line  = responseText.substring(position, endOfLine).trim();
       position = lineBreak + 1;
       return line;
@@ -209,18 +244,19 @@ public class ResponseParser {
         final int endIndex = position + contentLength;
         if (responseText.length() < endIndex) {
           if (contentQueue.isEmpty()) {
-            return;
+            responseText = compact();
+            throw new OutOfContentException();
           }
-          responseText = responseText.substring(position) + contentQueue.poll();
-          position = 0;
+          responseText = compact() + contentQueue.poll();
           parseBody();
         }
         body = Body.from(responseText.substring(position, endIndex));
-        position = endIndex;
+        position += contentLength;
+        nextStep();
       } else {
         body = Body.from("");
+        nextStep();
       }
-      nextStep();
     }
 
     private void parseHeaders() {
@@ -244,11 +280,11 @@ public class ResponseParser {
 
     private void parseStatusLine() {
       final String line = nextLine("Response status line is required.");
-      final String[] parts = line.split(" ");
+      final int spaceIndex = line.indexOf(' ');
 
       try {
-        version = Version.from(parseSpecificStatusLinePart(parts, 1, "HTTP/version"));
-        status = parseSpecificStatusLinePart(parts, 2, "Status");
+        version = Version.from(line.substring(0, spaceIndex).trim());
+        status = line.substring(spaceIndex + 1).trim();
         
         nextStep();
       } catch (Exception e) {
@@ -256,16 +292,11 @@ public class ResponseParser {
       }
     }
 
-    private String parseSpecificStatusLinePart(final String[] parts, final int part, final String name) {
-      int partCount = 0;
-      for (int idx = 0; idx < parts.length; ++idx) {
-        if (parts[idx].length() > 0) {
-          if (++partCount == part) {
-            return parts[idx];
-          }
-        }
-      }
-      throw new IllegalArgumentException("Response line part missing: " + name);
+    private void newResponse() {
+      final Response response = Response.of(version, status, headers, body);
+      fullResponses.add(response);
+      reset();
+      nextStep();
     }
 
     private void reset() {
@@ -273,14 +304,9 @@ public class ResponseParser {
 
       this.body = null;
       this.contentLength = 0;
-      this.currentStep = Step.NotStarted;
       this.outOfContentTime = 0;
       this.status = null;
       this.version = null;
-    }
-
-    private void restart() {
-      this.currentStep = Step.NotStarted;
     }
   }
 }

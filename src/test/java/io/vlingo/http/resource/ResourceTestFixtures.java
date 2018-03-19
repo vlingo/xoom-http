@@ -59,13 +59,55 @@ public abstract class ResourceTestFixtures {
   protected final String postJaneDoeUserMessage =
           "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + postJaneDoeUserSerialized.length() + "\n\n" + postJaneDoeUserSerialized;
 
-  private final ByteBuffer buffer = ByteBufferAllocator.allocate(1024);
+  private final ByteBuffer buffer = ByteBufferAllocator.allocate(65535);
+  
+  private int uniqueId = 1;
 
   protected ByteBuffer toByteBuffer(final String requestContent) {
     buffer.clear();
     buffer.put(Converters.textToBytes(requestContent));
     buffer.flip();
     return buffer;
+  }
+
+  protected String postRequest(final String body) {
+    return "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + body.length() + "\n\n" + body;
+  }
+
+  protected String uniqueJaneDoe() {
+    final UserData unique =
+            UserData.from(
+                    "" + uniqueId,
+                    NameData.from("Jane", "Doe"),
+                    ContactData.from("jane.doe@vlingo.io", "+1 212-555-1212"));
+
+    ++uniqueId;
+    
+    final String serialized = serialized(unique);
+    
+    return serialized;
+  }
+
+  protected String uniqueJaneDoePostRequest() {
+    return postRequest(uniqueJaneDoe());
+  }
+
+  protected String uniqueJohnDoe() {
+    final UserData unique =
+            UserData.from(
+                    "" + uniqueId,
+                    NameData.from("John", "Doe"),
+                    ContactData.from("john.doe@vlingo.io", "+1 212-555-1212"));
+
+    ++uniqueId;
+    
+    final String serialized = serialized(unique);
+
+    return serialized;
+  }
+
+  protected String uniqueJohnDoePostRequest() {
+    return postRequest(uniqueJohnDoe());
   }
 
   @Before

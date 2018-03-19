@@ -12,6 +12,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Queue;
 
 import io.vlingo.http.Header.Headers;
@@ -33,7 +34,7 @@ public class RequestParser {
   }
 
   public boolean hasFullRequest() {
-    return !virtualStateParser.fullRequests.isEmpty();
+    return virtualStateParser.hasFullRequest();
   }
 
   public boolean hasMissingContentTimeExpired(final long timeLimit) {
@@ -73,14 +74,16 @@ public class RequestParser {
     private int contentLength;
     private Step currentStep;
     private List<Request> fullRequests;
+    private ListIterator<Request> fullRequestsIterator;
     private Headers<RequestHeader> headers;
     private Method method;
     private long outOfContentTime;
     private URI uri;
     private Version version;
-
+    
     VirtualStateParser() {
       this.contentQueue = new LinkedList<>();
+      this.currentStep = Step.NotStarted;
       this.requestText = "";
       this.headers = new Headers<>(2);
       this.fullRequests = new ArrayList<>(2);
@@ -89,18 +92,36 @@ public class RequestParser {
     }
 
     Request fullRequest() {
-      if (!fullRequests.isEmpty()) {
-        final Request fullRequestHolder = fullRequests.remove(0);
-        reset();
-        return fullRequestHolder;
+      if (fullRequestsIterator == null) {
+        fullRequestsIterator = fullRequests.listIterator();
+      }
+      if (fullRequestsIterator.hasNext()) {
+        final Request fullRequest = fullRequestsIterator.next();
+        fullRequestsIterator.remove();
+        return fullRequest;
       }
       throw new IllegalStateException(Response.BadRequest + "\n\nRequest is not completed: " + method + " " + uri);
     }
 
+    boolean hasFullRequest() {
+      if (fullRequestsIterator != null) {
+        if (!fullRequestsIterator.hasNext()) {
+          fullRequestsIterator = null;
+          return false;
+        } else {
+          return true;
+        }
+      }
+      if (fullRequests.isEmpty()) {
+        fullRequestsIterator = null;
+        return false;
+      }
+      return true;
+    }
+
     boolean hasCompleted() {
       if (isNotStarted() && position >= requestText.length() && contentQueue.isEmpty()) {
-        requestText = requestText.substring(position, requestText.length());
-        position = 0;
+        requestText = compact();
         return true;
       }
       return false;
@@ -114,7 +135,11 @@ public class RequestParser {
     VirtualStateParser includes(final ByteBuffer requestContent) {
       outOfContentTime = 0;
       final String requestContentText = Converters.bytesToText(requestContent.array(), 0, requestContent.limit());
-      contentQueue.add(requestContentText);
+      if (contentQueue.isEmpty()) {
+        requestText = requestText + requestContentText;
+      } else {
+        contentQueue.add(requestContentText);
+      }
       return this;
     }
 
@@ -125,45 +150,57 @@ public class RequestParser {
     VirtualStateParser parse() {
       while (!hasCompleted()) {
         try {
-          while (!isCompletedStep()) {
-            if (isNotStarted()) {
-              nextStep();
-            } else if (isRequestLineStep()) {
-              parseRequestLine();
-            } else if (isHeadersStep()) {
-              parseHeaders();
-            } else if (isBodyStep()) {
-              parseBody();
-            }
+          if (isNotStarted()) {
+            nextStep();
+          } else if (isRequestLineStep()) {
+            parseRequestLine();
+          } else if (isHeadersStep()) {
+            parseHeaders();
+          } else if (isBodyStep()) {
+            parseBody();
+          } else if (isCompletedStep()) {
+            newRequest();
           }
         } catch (OutOfContentException e) {
           outOfContentTime = System.currentTimeMillis();
-          restart();
           return this;
         } catch (Throwable t) {
           throw t;
-        }
-  
-        if (isCompletedStep()) {
-          final Request request = new Request(method, uri, version, headers, body);
-          fullRequests.add(request);
-          restart();
         }
       }
       return this;
     }
 
+    private String blank() {
+      position = 0;
+      return "";
+    }
+
+    private String compact() {
+      final String compact = requestText.substring(position);
+      position = 0;
+      return compact;
+    }
+
     private String nextLine(final String errorResult, final String errorMessage) {
+      int possibleCarriageReturnIndex = -1;
       final int lineBreak = requestText.indexOf("\n", position);
-      if (lineBreak <= 0) {
+      if (lineBreak < 0) {
         if (contentQueue.isEmpty()) {
+          requestText = compact();
           throw new OutOfContentException();
         }
-        requestText = requestText.substring(position) + contentQueue.poll();
-        position = 0;
+        requestText = compact() + contentQueue.poll();
         return nextLine(errorResult, errorMessage);
+      } else if (lineBreak == 0) {
+        if (requestText.length() == 1) {
+          requestText = blank();
+          throw new OutOfContentException();
+        } else {
+          possibleCarriageReturnIndex = 0;
+        }
       }
-      final int endOfLine = requestText.charAt(lineBreak - 1) == '\r' ? lineBreak - 1 : lineBreak;
+      final int endOfLine = requestText.charAt(lineBreak + possibleCarriageReturnIndex) == '\r' ? lineBreak - 1 : lineBreak;
       final String line  = requestText.substring(position, endOfLine).trim();
       position = lineBreak + 1;
       return line;
@@ -183,16 +220,16 @@ public class RequestParser {
       }
     }
 
+    private boolean isBodyStep() {
+      return currentStep == Step.Body;
+    }
+
     private boolean isCompletedStep() {
       return currentStep == Step.Completed;
     }
 
     private boolean isHeadersStep() {
       return currentStep == Step.Headers;
-    }
-
-    private boolean isBodyStep() {
-      return currentStep == Step.Body;
     }
 
     private boolean isNotStarted() {
@@ -208,18 +245,20 @@ public class RequestParser {
         final int endIndex = position + contentLength;
         if (requestText.length() < endIndex) {
           if (contentQueue.isEmpty()) {
-            return;
+            requestText = compact();
+            throw new OutOfContentException();
           }
-          requestText = requestText.substring(position) + contentQueue.poll();
-          position = 0;
+          requestText = compact() + contentQueue.poll();
           parseBody();
+        } else {
+          body = Body.from(requestText.substring(position, endIndex));
+          position += contentLength;
+          nextStep();
         }
-        body = Body.from(requestText.substring(position, endIndex));
-        position = endIndex;
       } else {
         body = Body.from("");
+        nextStep();
       }
-      nextStep();
     }
 
     private void parseHeaders() {
@@ -271,20 +310,22 @@ public class RequestParser {
       throw new IllegalArgumentException(Response.BadRequest + "\n\nRequest line part missing: " + name);
     }
 
+    private void newRequest() {
+      final Request request = new Request(method, uri, version, headers, body);
+      fullRequests.add(request);
+      reset();
+      nextStep();
+    }
+
     private void reset() {
       // DO NOT RESET: (1) contentQueue, (2) position, (3) requestText, (4) headers, (5) fullRequests
 
       this.body = null;
       this.contentLength = 0;
-      this.currentStep = Step.NotStarted;
       this.method = null;
       this.outOfContentTime = 0;
       this.version = null;
       this.uri = null;
-    }
-
-    private void restart() {
-      this.currentStep = Step.NotStarted;
     }
   }
 }

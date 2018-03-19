@@ -47,7 +47,7 @@ public class ResourceTest extends ResourceTestFixtures {
     
     assertNotNull(completes.response);
     
-    assertEquals(Created, completes.response.statusCode);
+    assertEquals(Created, completes.response.status);
     assertEquals(2, completes.response.headers.size());
     assertEquals(Location, completes.response.headers.get(0).name);
     assertTrue(Location, completes.response.headerOf(Location).value.startsWith("/users/"));
@@ -77,7 +77,7 @@ public class ResourceTest extends ResourceTestFixtures {
     dispatcher.dispatchFor(new Context(getRequest, getCompletes));
     MockCompletesResponse.untilWith.completes();
     assertNotNull(getCompletes.response);
-    assertEquals(Ok, getCompletes.response.statusCode);
+    assertEquals(Ok, getCompletes.response.status);
     final UserData getUserData = deserialized(getCompletes.response.entity.content, UserData.class);
     assertNotNull(getUserData);
     assertEquals(johnDoeUserData.nameData.given, getUserData.nameData.given);
@@ -114,7 +114,7 @@ public class ResourceTest extends ResourceTestFixtures {
     MockCompletesResponse.untilWith.completes();
     
     assertNotNull(getCompletes.response);
-    assertEquals(Ok, getCompletes.response.statusCode);
+    assertEquals(Ok, getCompletes.response.status);
     final Type listOfUserData = new TypeToken<List<UserData>>(){}.getType();
     final List<UserData> getUserData = deserializedList(getCompletes.response.entity.content, listOfUserData);
     assertNotNull(getUserData);
@@ -169,7 +169,7 @@ public class ResourceTest extends ResourceTestFixtures {
     MockCompletesResponse.untilWith.completes();
 
     assertNotNull(patchCompletes1.response);
-    assertEquals(Ok, patchCompletes1.response.statusCode);
+    assertEquals(Ok, patchCompletes1.response.status);
     final UserData getJohnDoeDoeUserData = deserialized(patchCompletes1.response.entity.content, UserData.class);
     assertEquals(johnNameData.given, getJohnDoeDoeUserData.nameData.given);
     assertEquals(johnNameData.family, getJohnDoeDoeUserData.nameData.family);
@@ -191,7 +191,7 @@ public class ResourceTest extends ResourceTestFixtures {
     MockCompletesResponse.untilWith.completes();
 
     assertNotNull(patchCompletes2.response);
-    assertEquals(Ok, patchCompletes2.response.statusCode);
+    assertEquals(Ok, patchCompletes2.response.status);
     final UserData getJaneDoeDoeUserData = deserialized(patchCompletes2.response.entity.content, UserData.class);
     assertEquals(janeNameData.given, getJaneDoeDoeUserData.nameData.given);
     assertEquals(janeNameData.family, getJaneDoeDoeUserData.nameData.family);
