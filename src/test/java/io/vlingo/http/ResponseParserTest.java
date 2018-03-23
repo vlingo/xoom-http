@@ -20,130 +20,121 @@ import org.junit.Test;
 
 import io.vlingo.http.resource.ResourceTestFixtures;
 
-public class RequestParserTest extends ResourceTestFixtures {
+public class ResponseParserTest extends ResourceTestFixtures {
   private List<String> uniqueBodies = new ArrayList<>();
 
   @Test
-  public void testThatSingleRequestParses() {
-    final RequestParser parser = RequestParser.parserFor(toByteBuffer(postJohnDoeUserMessage));
+  public void testThatSingleResponseParses() {
+    final ResponseParser parser = ResponseParser.parserFor(toByteBuffer(johnDoeCreated()));
     
     assertTrue(parser.hasCompleted());
-    assertTrue(parser.hasFullRequest());
+    assertTrue(parser.hasFullResponse());
     assertFalse(parser.isMissingContent());
     assertFalse(parser.hasMissingContentTimeExpired(System.currentTimeMillis()));
     
-    final Request request = parser.fullRequest();
+    final Response response = parser.fullResponse();
     
-    assertNotNull(request);
-    assertTrue(request.method.isPOST());
-    assertEquals("/users", request.uri.getPath());
-    assertTrue(request.version.isHttp1_1());
-    assertEquals(johnDoeUserSerialized, request.body.content);
+    assertNotNull(response);
+    assertTrue(response.version.isHttp1_1());
+    assertEquals(johnDoeUserSerialized, response.entity.content);
   }
 
   @Test
-  public void testThatTenRequestsParse() {
-    final RequestParser parser = RequestParser.parserFor(toByteBuffer(multipleRequestBuilder(10)));
+  public void testThatTenResponsesParse() {
+    final ResponseParser parser = ResponseParser.parserFor(toByteBuffer(multipleResponseBuilder(10)));
 
     assertTrue(parser.hasCompleted());
-    assertTrue(parser.hasFullRequest());
+    assertTrue(parser.hasFullResponse());
     assertFalse(parser.isMissingContent());
     assertFalse(parser.hasMissingContentTimeExpired(System.currentTimeMillis()));
 
     int count = 0;
     final Iterator<String> bodyIterator = uniqueBodies.iterator();
-    while (parser.hasFullRequest()) {
+    while (parser.hasFullResponse()) {
       ++count;
-      final Request request = parser.fullRequest();
+      final Response response = parser.fullResponse();
       
-      assertNotNull(request);
-      assertTrue(request.method.isPOST());
-      assertEquals("/users", request.uri.getPath());
-      assertTrue(request.version.isHttp1_1());
+      assertNotNull(response);
+      assertTrue(response.version.isHttp1_1());
       assertTrue(bodyIterator.hasNext());
       final String body = bodyIterator.next();
-      assertEquals(body, request.body.content);
+      assertEquals(body, response.entity.content);
     }
 
     assertEquals(10, count);
   }
 
   @Test
-  public void testThatTwoHundredRequestsParse() {
-    final RequestParser parser = RequestParser.parserFor(toByteBuffer(multipleRequestBuilder(200)));
+  public void testThatTwoHundredResponsesParse() {
+    final ResponseParser parser = ResponseParser.parserFor(toByteBuffer(multipleResponseBuilder(200)));
 
     assertTrue(parser.hasCompleted());
-    assertTrue(parser.hasFullRequest());
+    assertTrue(parser.hasFullResponse());
     assertFalse(parser.isMissingContent());
     assertFalse(parser.hasMissingContentTimeExpired(System.currentTimeMillis()));
 
     int count = 0;
     final Iterator<String> bodyIterator = uniqueBodies.iterator();
-    while (parser.hasFullRequest()) {
+    while (parser.hasFullResponse()) {
       ++count;
-      final Request request = parser.fullRequest();
+      final Response response = parser.fullResponse();
       
-      assertNotNull(request);
-      assertTrue(request.method.isPOST());
-      assertEquals("/users", request.uri.getPath());
-      assertTrue(request.version.isHttp1_1());
+      assertNotNull(response);
+      assertTrue(response.version.isHttp1_1());
       assertTrue(bodyIterator.hasNext());
       final String body = bodyIterator.next();
-      assertEquals(body, request.body.content);
+      assertEquals(body, response.entity.content);
     }
 
     assertEquals(200, count);
   }
 
   @Test
-  public void testThatTwoHundredRequestsParseNextSucceeds() {
-    final String manyRequests = multipleRequestBuilder(200);
-    
-    final int totalLength = manyRequests.length();
-    
+  public void testThatTwoHundredResponsesParseParseNextSucceeds() {
+    final String manyResponses = multipleResponseBuilder(200);
+
+    final int totalLength = manyResponses.length();
     int alteringEndIndex = 1024;
-    final RequestParser parser = RequestParser.parserFor(toByteBuffer(manyRequests.substring(0, alteringEndIndex)));
+    final ResponseParser parser = ResponseParser.parserFor(toByteBuffer(manyResponses.substring(0, alteringEndIndex)));
     int startingIndex = alteringEndIndex;
-    
+
     while (startingIndex < totalLength) {
       alteringEndIndex = startingIndex + 1024 + (int)(System.currentTimeMillis() % startingIndex);
       if (alteringEndIndex > totalLength) {
         alteringEndIndex = totalLength;
       }
-      parser.parseNext(toByteBuffer(manyRequests.substring(startingIndex, alteringEndIndex)));
+      parser.parseNext(toByteBuffer(manyResponses.substring(startingIndex, alteringEndIndex)));
       startingIndex = alteringEndIndex;
     }
 
     assertTrue(parser.hasCompleted());
-    assertTrue(parser.hasFullRequest());
+    assertTrue(parser.hasFullResponse());
     assertFalse(parser.isMissingContent());
     assertFalse(parser.hasMissingContentTimeExpired(System.currentTimeMillis()));
 
     int count = 0;
     final Iterator<String> bodyIterator = uniqueBodies.iterator();
-    while (parser.hasFullRequest()) {
+    while (parser.hasFullResponse()) {
       ++count;
-      final Request request = parser.fullRequest();
+      final Response response = parser.fullResponse();
       
-      assertNotNull(request);
-      assertTrue(request.method.isPOST());
-      assertEquals("/users", request.uri.getPath());
-      assertTrue(request.version.isHttp1_1());
+      assertNotNull(response);
+      assertTrue(response.version.isHttp1_1());
       assertTrue(bodyIterator.hasNext());
       final String body = bodyIterator.next();
-      assertEquals(body, request.body.content);
+      assertEquals(body, response.entity.content);
     }
 
     assertEquals(200, count);
   }
 
-  private String multipleRequestBuilder(final int amount) {
+  private String multipleResponseBuilder(final int amount) {
     final StringBuilder builder = new StringBuilder();
     
     for (int idx = 1; idx <= amount; ++idx) {
       final String body = (idx % 2 == 0) ? uniqueJaneDoe() : uniqueJohnDoe();
       uniqueBodies.add(body);
-      builder.append(postRequest(body));
+      builder.append(this.createdResponse(body));
     }
 
     return builder.toString();

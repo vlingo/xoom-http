@@ -120,13 +120,18 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
   @Override
   public void stop() {
+    logger().log("Server stopped.");
+
     failTimedOutMissingContentRequests();
 
+    channel.stop();
     channel.close();
 
     for (final Dispatcher dispatcher : dispatcherPool) {
       dispatcher.stop();
     }
+
+    super.stop();
   }
 
 

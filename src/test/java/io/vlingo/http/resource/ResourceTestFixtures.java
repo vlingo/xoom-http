@@ -44,20 +44,20 @@ public abstract class ResourceTestFixtures {
                   NameData.from("John", "Doe"),
                   ContactData.from("john.doe@vlingo.io", "+1 212-555-1212"));
 
-  protected final String postJohnDoeUserSerialized = serialized(johnDoeUserData);
+  protected final String johnDoeUserSerialized = serialized(johnDoeUserData);
 
   protected final UserData janeDoeUserData =
           UserData.from(
                   NameData.from("Jane", "Doe"),
                   ContactData.from("jane.doe@vlingo.io", "+1 212-555-1212"));
 
-  protected final String postJaneDoeUserSerialized = serialized(janeDoeUserData);
+  protected final String janeDoeUserSerialized = serialized(janeDoeUserData);
 
   protected final String postJohnDoeUserMessage =
-          "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + postJohnDoeUserSerialized.length() + "\n\n" + postJohnDoeUserSerialized;
+          "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + johnDoeUserSerialized.length() + "\n\n" + johnDoeUserSerialized;
 
   protected final String postJaneDoeUserMessage =
-          "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + postJaneDoeUserSerialized.length() + "\n\n" + postJaneDoeUserSerialized;
+          "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + janeDoeUserSerialized.length() + "\n\n" + janeDoeUserSerialized;
 
   private final ByteBuffer buffer = ByteBufferAllocator.allocate(65535);
   
@@ -70,8 +70,16 @@ public abstract class ResourceTestFixtures {
     return buffer;
   }
 
+  protected String createdResponse(final String body) {
+    return "HTTP/1.1 201 CREATED\nContent-Length: " + body.length() + "\n\n" + body;
+  }
+
   protected String postRequest(final String body) {
     return "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + body.length() + "\n\n" + body;
+  }
+
+  protected String janeDoeCreated() {
+    return createdResponse(janeDoeUserSerialized);
   }
 
   protected String uniqueJaneDoe() {
@@ -88,14 +96,21 @@ public abstract class ResourceTestFixtures {
     return serialized;
   }
 
+  protected String uniqueJaneDoePostCreated() {
+    return createdResponse(uniqueJaneDoe());
+  }
+
   protected String uniqueJaneDoePostRequest() {
     return postRequest(uniqueJaneDoe());
   }
 
   protected String uniqueJohnDoe() {
+    String id = "" + uniqueId;
+    if (id.length() == 1) id = "00" + id;
+    if (id.length() == 2) id = "0" + id;
     final UserData unique =
             UserData.from(
-                    "" + uniqueId,
+                    id, //"" + uniqueId,
                     NameData.from("John", "Doe"),
                     ContactData.from("john.doe@vlingo.io", "+1 212-555-1212"));
 
@@ -104,6 +119,14 @@ public abstract class ResourceTestFixtures {
     final String serialized = serialized(unique);
 
     return serialized;
+  }
+
+  protected String johnDoeCreated() {
+    return createdResponse(johnDoeUserSerialized);
+  }
+
+  protected String uniqueJohnDoePostCreated() {
+    return createdResponse(uniqueJohnDoe());
   }
 
   protected String uniqueJohnDoePostRequest() {

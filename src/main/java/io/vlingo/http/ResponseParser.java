@@ -61,16 +61,18 @@ public class ResponseParser {
 
     private enum Step { NotStarted, StatusLine, Headers, Body, Completed };
 
-    // DO NOT RESET: (1) contentQueue, (2) position, (3) requestText
+    // DO NOT RESET: (1) contentQueue, (2) position, (3) requestText (4) currentResponseTextLength
 
     private final Queue<String> contentQueue;
     private int position;
     private String responseText;
+    private int currentResponseTextLength;
 
     // DO NOT RESET: (1) headers, (2) fullResponses
 
     private Body body;
     private int contentLength;
+    private boolean continuation;
     private Step currentStep;
     private List<Response> fullResponses;
     private ListIterator<Response> fullResponsesIterator;
@@ -119,7 +121,7 @@ public class ResponseParser {
     }
 
     boolean hasCompleted() {
-      if (isNotStarted() && position >= responseText.length() && contentQueue.isEmpty()) {
+      if (isNotStarted() && position >= currentResponseTextLength && contentQueue.isEmpty()) {
         responseText = compact();
         return true;
       }
@@ -136,6 +138,7 @@ public class ResponseParser {
       final String responseContentText = Converters.bytesToText(responseContent.array(), 0, responseContent.limit());
       if (contentQueue.isEmpty()) {
         responseText = responseText + responseContentText;
+        currentResponseTextLength = responseText.length();
       } else {
         contentQueue.add(responseContentText);
       }
@@ -158,9 +161,11 @@ public class ResponseParser {
           } else if (isBodyStep()) {
             parseBody();
           } else if (isCompletedStep()) {
+            continuation = false;
             newResponse();
           }
         } catch (OutOfContentException e) {
+          continuation = true;
           outOfContentTime = System.currentTimeMillis();
           return this;
         } catch (Throwable t) {
@@ -170,34 +175,25 @@ public class ResponseParser {
       return this;
     }
 
-    private String blank() {
-      position = 0;
-      return "";
-    }
-
     private String compact() {
       final String compact = responseText.substring(position);
       position = 0;
+      currentResponseTextLength = compact.length();
       return compact;
     }
 
-    private String nextLine(final String errorMessage) {
+    private String nextLine(final boolean mayBeBlank, final String errorMessage) {
       int possibleCarriageReturnIndex = -1;
       final int lineBreak = responseText.indexOf("\n", position);
-      if (lineBreak <= 0) {
+      if (lineBreak < 0) {
         if (contentQueue.isEmpty()) {
           responseText = compact();
           throw new OutOfContentException();
         }
         responseText = compact() + contentQueue.poll();
-        return nextLine(errorMessage);
+        return nextLine(mayBeBlank, errorMessage);
       } else if (lineBreak == 0) {
-        if (responseText.length() == 1) {
-          responseText = blank();
-          throw new OutOfContentException();
-        } else {
-          possibleCarriageReturnIndex = 0;
-        }
+        possibleCarriageReturnIndex = 0;
       }
       final int endOfLine = responseText.charAt(lineBreak + possibleCarriageReturnIndex) == '\r' ? lineBreak - 1 : lineBreak;
       final String line  = responseText.substring(position, endOfLine).trim();
@@ -240,29 +236,33 @@ public class ResponseParser {
     }
 
     private void parseBody() {
+      continuation = false;
       if (contentLength > 0) {
         final int endIndex = position + contentLength;
-        if (responseText.length() < endIndex) {
+        if (currentResponseTextLength < endIndex) {
           if (contentQueue.isEmpty()) {
             responseText = compact();
             throw new OutOfContentException();
           }
           responseText = compact() + contentQueue.poll();
           parseBody();
+          return;
         }
         body = Body.from(responseText.substring(position, endIndex));
         position += contentLength;
-        nextStep();
       } else {
         body = Body.from("");
-        nextStep();
       }
+      nextStep();
     }
 
     private void parseHeaders() {
-      headers.clear();
+      if (!continuation) {
+        headers.clear();
+      }
+      continuation = false;
       while (true) {
-        final String maybeHeaderLine = nextLine(null);
+        final String maybeHeaderLine = nextLine(true, null);
         if (maybeHeaderLine.isEmpty()) {
           break;
         }
@@ -279,15 +279,16 @@ public class ResponseParser {
     }
 
     private void parseStatusLine() {
-      final String line = nextLine("Response status line is required.");
+      continuation = false;
+      final String line = nextLine(false, "Response status line is required.");
       final int spaceIndex = line.indexOf(' ');
-
+      
       try {
         version = Version.from(line.substring(0, spaceIndex).trim());
         status = line.substring(spaceIndex + 1).trim();
         
         nextStep();
-      } catch (Exception e) {
+      } catch (Throwable e) {
         throw new IllegalArgumentException("Response status line parsing exception: " + e.getMessage(), e);
       }
     }
@@ -304,6 +305,7 @@ public class ResponseParser {
 
       this.body = null;
       this.contentLength = 0;
+      this.continuation = false;
       this.outOfContentTime = 0;
       this.status = null;
       this.version = null;

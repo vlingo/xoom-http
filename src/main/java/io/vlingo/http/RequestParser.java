@@ -171,11 +171,6 @@ public class RequestParser {
       return this;
     }
 
-    private String blank() {
-      position = 0;
-      return "";
-    }
-
     private String compact() {
       final String compact = requestText.substring(position);
       position = 0;
@@ -193,12 +188,7 @@ public class RequestParser {
         requestText = compact() + contentQueue.poll();
         return nextLine(errorResult, errorMessage);
       } else if (lineBreak == 0) {
-        if (requestText.length() == 1) {
-          requestText = blank();
-          throw new OutOfContentException();
-        } else {
-          possibleCarriageReturnIndex = 0;
-        }
+        possibleCarriageReturnIndex = 0;
       }
       final int endOfLine = requestText.charAt(lineBreak + possibleCarriageReturnIndex) == '\r' ? lineBreak - 1 : lineBreak;
       final String line  = requestText.substring(position, endOfLine).trim();

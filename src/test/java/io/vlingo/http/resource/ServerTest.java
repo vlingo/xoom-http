@@ -10,25 +10,32 @@ package io.vlingo.http.resource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import io.vlingo.actors.Definition;
 import io.vlingo.actors.testkit.TestUntil;
 import io.vlingo.http.Response;
 import io.vlingo.http.ResponseHeader;
 import io.vlingo.http.resource.Server.Sizing;
 import io.vlingo.http.resource.Server.Timing;
+import io.vlingo.http.resource.TestResponseChannelConsumer.Progress;
 import io.vlingo.http.sample.user.model.User;
+import io.vlingo.wire.channel.ResponseChannelConsumer;
 import io.vlingo.wire.fdx.bidirectional.ClientRequestResponseChannel;
 import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
 
 public class ServerTest extends ResourceTestFixtures {
+  private static final int BLASTS = 197;
+  
   private ClientRequestResponseChannel client;
-  private MockResponseChannelConsumer consumer;
+  private ResponseChannelConsumer consumer;
+  private Progress progress;
   private Server server;
   
   @Test
@@ -36,52 +43,52 @@ public class ServerTest extends ResourceTestFixtures {
     final String request = postRequest(uniqueJohnDoe());
     client.requestWith(toByteBuffer(request));
 
-    MockResponseChannelConsumer.untilConsumed = TestUntil.happenings(1);
-    while (MockResponseChannelConsumer.untilConsumed.remaining() > 0) {
+    progress.untilConsumed = TestUntil.happenings(1);
+    while (progress.untilConsumed.remaining() > 0) {
       client.probeChannel();
     }
-    MockResponseChannelConsumer.untilConsumed.completes();
+    progress.untilConsumed.completes();
 
-    final Response createdResponse = consumer.responses.get(0);
+    final Response createdResponse = progress.responses.poll();
 
-    assertEquals(1, consumer.consumeCount);
+    assertEquals(1, progress.consumeCount.get());
     assertNotNull(createdResponse.headers.headerOf(ResponseHeader.Location));
     
     final String getUserMessage = "GET " + createdResponse.headerOf(ResponseHeader.Location).value + " HTTP/1.1\nHost: vlingo.io\n\n";
 
     client.requestWith(toByteBuffer(getUserMessage));
     
-    MockResponseChannelConsumer.untilConsumed = TestUntil.happenings(1);
-    while (MockResponseChannelConsumer.untilConsumed.remaining() > 0) {
+    progress.untilConsumed = TestUntil.happenings(1);
+    while (progress.untilConsumed.remaining() > 0) {
       client.probeChannel();
     }
-    MockResponseChannelConsumer.untilConsumed.completes();
+    progress.untilConsumed.completes();
 
-    final Response getResponse = consumer.responses.get(1);
+    final Response getResponse = progress.responses.poll();
 
-    assertEquals(2, consumer.consumeCount);
+    assertEquals(2, progress.consumeCount.get());
     assertEquals(Response.Ok, getResponse.status);
     assertNotNull(getResponse.entity);
     assertNotNull(getResponse.entity.content);
     assertFalse(getResponse.entity.content.isEmpty());
   }
-  
+
   @Test
   public void testThatServerBlastDispatchesRequests() throws Exception {
-    MockResponseChannelConsumer.untilConsumed = TestUntil.happenings(200);
+    progress.untilConsumed = TestUntil.happenings(BLASTS);
     for (int idx = 0; idx < 100; ++idx) {
       client.requestWith(toByteBuffer(postRequest(uniqueJohnDoe())));
       client.requestWith(toByteBuffer(postRequest(uniqueJaneDoe())));
     }
 
-    while (MockResponseChannelConsumer.untilConsumed.remaining() > 0) {
+    while (progress.untilConsumed.remaining() > 0) {
       client.probeChannel();
     }
-    MockResponseChannelConsumer.untilConsumed.completes();
+    progress.untilConsumed.completes();
 
-    final Response createdResponse = consumer.responses.get(0);
-    
-    assertEquals(200, consumer.consumeCount);
+    final Response createdResponse = progress.responses.peek();
+
+    assertTrue(progress.consumeCount.get() >= BLASTS);
     assertNotNull(createdResponse.headers.headerOf(ResponseHeader.Location));
   }
 
@@ -90,13 +97,15 @@ public class ServerTest extends ResourceTestFixtures {
     super.setUp();
 
     User.resetId();
-    
-    server = Server.startWith(world.stage(), resources, 8080, new Sizing(2, 500, 10240), new Timing(10, 10, 100));
+
+    server = Server.startWith(world.stage(), resources, 8080, new Sizing(2, 200, 10240), new Timing(1, 2, 100));
     Thread.sleep(10); // delay for server startup
 
-    consumer = new MockResponseChannelConsumer();
+    progress = new Progress();
+    
+    consumer = world.actorFor(Definition.has(TestResponseChannelConsumer.class, Definition.parameters(progress)), ResponseChannelConsumer.class);
 
-    client = new ClientRequestResponseChannel(Address.from(Host.of("localhost"), 8080, AddressType.NONE), consumer, 10240, world.defaultLogger());
+    client = new ClientRequestResponseChannel(Address.from(Host.of("localhost"), 8080, AddressType.NONE), consumer, 100, 10240, world.defaultLogger());
   }
 
   @After

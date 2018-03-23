@@ -7,8 +7,10 @@
 
 package io.vlingo.http.sample.user.model;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class User {
-  private static int NextId = 0;
+  private static AtomicInteger NextId = new AtomicInteger(0);
 
   public final String id;
   public final Name name;
@@ -27,12 +29,14 @@ public class User {
   }
 
   public static void resetId() {
-    NextId = 0;
+    NextId = new AtomicInteger(0);
   }
 
   public static String nextId() {
-    ++NextId;
-    return "" + NextId; //UUID.randomUUID().toString();
+    String id = "" + NextId.incrementAndGet(); //UUID.randomUUID().toString();
+    if (id.length() == 1) id = "00" + id;
+    if (id.length() == 2) id = "0" + id;
+    return id;
   }
   
   public User(final String id, final Name name, final Contact contact) {
