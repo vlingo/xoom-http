@@ -72,6 +72,7 @@ public class RequestParser {
 
     private Body body;
     private int contentLength;
+    private boolean continuation;
     private Step currentStep;
     private List<Request> fullRequests;
     private ListIterator<Request> fullRequestsIterator;
@@ -159,9 +160,11 @@ public class RequestParser {
           } else if (isBodyStep()) {
             parseBody();
           } else if (isCompletedStep()) {
+            continuation = false;
             newRequest();
           }
         } catch (OutOfContentException e) {
+          continuation = true;
           outOfContentTime = System.currentTimeMillis();
           return this;
         } catch (Throwable t) {
@@ -231,6 +234,7 @@ public class RequestParser {
     }
 
     private void parseBody() {
+      continuation = false;
       if (contentLength > 0) {
         final int endIndex = position + contentLength;
         if (requestText.length() < endIndex) {
@@ -252,7 +256,10 @@ public class RequestParser {
     }
 
     private void parseHeaders() {
-      headers.clear();
+      if (!continuation) {
+        headers.clear();
+      }
+      continuation = false;
       while (true) {
         final String maybeHeaderLine = nextLine(Response.BadRequest, "\n\nHeader is required.");
         if (maybeHeaderLine.isEmpty()) {
@@ -274,6 +281,7 @@ public class RequestParser {
     }
 
     private void parseRequestLine() {
+      continuation = false;
       final String line = nextLine(Response.BadRequest, "\n\nRequest line is required.");
       final String[] parts = line.split(" ");
 
@@ -312,6 +320,7 @@ public class RequestParser {
 
       this.body = null;
       this.contentLength = 0;
+      this.continuation = false;
       this.method = null;
       this.outOfContentTime = 0;
       this.version = null;
