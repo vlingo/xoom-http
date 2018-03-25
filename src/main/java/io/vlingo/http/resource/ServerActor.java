@@ -21,8 +21,8 @@ import io.vlingo.http.RequestParser;
 import io.vlingo.http.Response;
 import io.vlingo.wire.channel.RequestChannelConsumer;
 import io.vlingo.wire.channel.RequestResponseContext;
-import io.vlingo.wire.channel.ResponseData;
 import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
+import io.vlingo.wire.message.ByteBufferPool;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 
 public class ServerActor extends Actor implements Server, RequestChannelConsumer {
@@ -33,6 +33,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   private int dispatcherPoolIndex;
   private Map<String,RequestResponseHttpContext> requestsMissingContent;
   private final long requestMissingContentTimeout;
+  private final ByteBufferPool responseBufferPool;
   private final World world;
 
   public ServerActor(
@@ -46,6 +47,8 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     this.requestsMissingContent = new HashMap<>();
 
     try {
+      this.responseBufferPool = new ByteBufferPool(sizing.maxBufferPoolSize, sizing.maxMessageSize);
+
       this.dispatcherPool = new Dispatcher[sizing.dispatcherPoolSize];
 
       for (int idx = 0; idx < sizing.dispatcherPoolSize; ++idx) { 
@@ -109,7 +112,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       e.printStackTrace();
       new ResponseCompletes(requestResponseContext).with(Response.of(Response.BadRequest + " " + e.getMessage()));
     } finally {
-      requestResponseContext.release(buffer);
+      buffer.release();
     }
   }
 
@@ -199,8 +202,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
     @Override
     public void with(final Response response) {
-      ResponseData data = requestResponseContext.responseData();
-      requestResponseContext.respondWith(response.into(data.buffer.clear()));
+      requestResponseContext.respondWith(response.into(responseBufferPool.accessFor("response")));
     }
   }
 }

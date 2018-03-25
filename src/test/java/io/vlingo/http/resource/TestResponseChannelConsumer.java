@@ -19,7 +19,7 @@ import io.vlingo.wire.channel.ResponseChannelConsumer;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 
 public class TestResponseChannelConsumer extends Actor implements ResponseChannelConsumer {
-  private ResponseParser parser;
+  public static volatile ResponseParser parser;
   private final Progress progress;
   
   public TestResponseChannelConsumer(final Progress progress) {

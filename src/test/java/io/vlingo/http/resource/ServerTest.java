@@ -10,7 +10,6 @@ package io.vlingo.http.resource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.After;
 import org.junit.Before;
@@ -31,7 +30,7 @@ import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
 
 public class ServerTest extends ResourceTestFixtures {
-  private static final int BLASTS = 197;
+  private static final int BLASTS = 10_000;
   
   private ClientRequestResponseChannel client;
   private ResponseChannelConsumer consumer;
@@ -75,8 +74,11 @@ public class ServerTest extends ResourceTestFixtures {
 
   @Test
   public void testThatServerBlastDispatchesRequests() throws Exception {
+    final long startTime = System.currentTimeMillis();
+    
     progress.untilConsumed = TestUntil.happenings(BLASTS);
-    for (int idx = 0; idx < 100; ++idx) {
+    final int totalPairs = BLASTS / 2;
+    for (int idx = 0; idx < totalPairs; ++idx) {
       client.requestWith(toByteBuffer(postRequest(uniqueJohnDoe())));
       client.requestWith(toByteBuffer(postRequest(uniqueJaneDoe())));
     }
@@ -84,11 +86,11 @@ public class ServerTest extends ResourceTestFixtures {
     while (progress.untilConsumed.remaining() > 0) {
       client.probeChannel();
     }
-    progress.untilConsumed.completes();
+    
+    System.out.println("TOTAL REQUESTS-RESPONSES: " + BLASTS + " TIME: " + (System.currentTimeMillis() - startTime) + " ms");
 
+    assertEquals(BLASTS, progress.consumeCount.get());
     final Response createdResponse = progress.responses.peek();
-
-    assertTrue(progress.consumeCount.get() >= BLASTS);
     assertNotNull(createdResponse.headers.headerOf(ResponseHeader.Location));
   }
 
@@ -98,7 +100,7 @@ public class ServerTest extends ResourceTestFixtures {
 
     User.resetId();
 
-    server = Server.startWith(world.stage(), resources, 8080, new Sizing(2, 200, 10240), new Timing(1, 2, 100));
+    server = Server.startWith(world.stage(), resources, 8080, new Sizing(2, 100, 10240), new Timing(1, 2, 100));
     Thread.sleep(10); // delay for server startup
 
     progress = new Progress();

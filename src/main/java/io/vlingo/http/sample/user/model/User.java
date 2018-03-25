@@ -33,10 +33,8 @@ public class User {
   }
 
   public static String nextId() {
-    String id = "" + NextId.incrementAndGet(); //UUID.randomUUID().toString();
-    if (id.length() == 1) id = "00" + id;
-    if (id.length() == 2) id = "0" + id;
-    return id;
+    final int id = NextId.incrementAndGet(); //UUID.randomUUID().toString();
+    return String.format("%03d", id);
   }
   
   public User(final String id, final Name name, final Contact contact) {
