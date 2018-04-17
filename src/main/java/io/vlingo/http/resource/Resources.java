@@ -18,6 +18,11 @@ import io.vlingo.http.resource.Action.MatchResults;
 public class Resources {
   final Map<String,Resource<?>> namedResources;
   
+  @Override
+  public String toString() {
+    return "Resources[namedResources=" + namedResources + "]";
+  }
+  
   Resources(final Map<String,Resource<?>> namedResources) {
     this.namedResources = Collections.unmodifiableMap(namedResources);
   }
