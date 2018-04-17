@@ -31,7 +31,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   private final ServerRequestResponseChannel channel;
   private final Dispatcher[] dispatcherPool;
   private int dispatcherPoolIndex;
-  private Map<String,RequestResponseHttpContext> requestsMissingContent;
+  private final Map<String,RequestResponseHttpContext> requestsMissingContent;
   private final long requestMissingContentTimeout;
   private final ByteBufferPool responseBufferPool;
   private final World world;
@@ -73,6 +73,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     } catch (Exception e) {
       final String message = "Failed to start server because: " + e.getMessage();
       logger().log(message, e);
+      e.printStackTrace();
       throw new IllegalStateException(message);
     }
   }
