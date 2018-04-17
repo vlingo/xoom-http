@@ -16,6 +16,10 @@ public interface Server extends Stoppable {
   public static Server startWith(final Stage stage) {
     final java.util.Properties properties = Properties.loadProperties();
 
+    return startWith(stage, properties);
+  }
+
+  public static Server startWith(final Stage stage, java.util.Properties properties) {
     final int port = Integer.parseInt(properties.getProperty("server.http.port", "8080"));
     final int dispatcherPoolSize = Integer.parseInt(properties.getProperty("server.dispatcher.pool", "10"));
     final int maxBufferPoolSize = Integer.parseInt(properties.getProperty("server.buffer.pool.size", "100"));
@@ -25,6 +29,8 @@ public interface Server extends Stoppable {
     final long requestMissingContentTimeout = Long.parseLong(properties.getProperty("server.request.missing.content.timeout", "100"));
     
     final Resources resources = Loader.loadResources(properties);
+    
+    System.out.println("Resources: " + resources);
     
     return startWith(
             stage,
