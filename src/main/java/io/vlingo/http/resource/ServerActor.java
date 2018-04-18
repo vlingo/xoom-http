@@ -14,6 +14,7 @@ import java.util.Map;
 
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.Completes;
+import io.vlingo.actors.Scheduled;
 import io.vlingo.actors.World;
 import io.vlingo.http.Context;
 import io.vlingo.http.Request;
@@ -25,7 +26,7 @@ import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
 import io.vlingo.wire.message.ByteBufferPool;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 
-public class ServerActor extends Actor implements Server, RequestChannelConsumer {
+public class ServerActor extends Actor implements Server, RequestChannelConsumer, Scheduled {
   private static final String ServerName = "vlingo-http-server";
   
   private final ServerRequestResponseChannel channel;
@@ -69,6 +70,8 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       logger().log("Server " + ServerName + " is listening on port: " + port);
 
       this.requestMissingContentTimeout = timing.requestMissingContentTimeout;
+      
+      stage().scheduler().schedule(selfAs(Scheduled.class), null, 1000L, requestMissingContentTimeout);
 
     } catch (Exception e) {
       final String message = "Failed to start server because: " + e.getMessage();
@@ -115,6 +118,16 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     } finally {
       buffer.release();
     }
+  }
+
+
+  //=========================================
+  // Scheduled
+  //=========================================
+
+  @Override
+  public void intervalSignal(final Scheduled scheduled, final Object data) {
+    failTimedOutMissingContentRequests();
   }
 
 

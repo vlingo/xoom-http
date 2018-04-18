@@ -30,8 +30,6 @@ public interface Server extends Stoppable {
     
     final Resources resources = Loader.loadResources(properties);
     
-    System.out.println("Resources: " + resources);
-    
     return startWith(
             stage,
             resources,
