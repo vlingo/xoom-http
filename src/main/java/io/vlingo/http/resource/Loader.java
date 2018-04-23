@@ -55,11 +55,16 @@ public class Loader {
     final String disallowPathParametersWithSlashKey = "resource." + resourceName + ".disallowPathParametersWithSlash";
     final boolean disallowPathParametersWithSlash = Boolean.parseBoolean(properties.getProperty(disallowPathParametersWithSlashKey, "true"));
     
-    final List<Action> resourceActions = resourceActionsOf(properties, resourceName, resourceActionNames, disallowPathParametersWithSlash);
-    
-    final Class<? extends ResourceHandler> resourceHandlerClass = Resource.newResourceHandlerClassFor(resourceHandlerClassname);
-
-    return resourceFor(resourceName, resourceHandlerClass, handlerPoolSize, resourceActions);
+    try {
+      final List<Action> resourceActions = resourceActionsOf(properties, resourceName, resourceActionNames, disallowPathParametersWithSlash);
+      
+      final Class<? extends ResourceHandler> resourceHandlerClass = Resource.newResourceHandlerClassFor(resourceHandlerClassname);
+  
+      return resourceFor(resourceName, resourceHandlerClass, handlerPoolSize, resourceActions);
+    } catch (Exception e) {
+      System.out.println("vlingo/http: Failed to load resource: " + resourceName + " because: " + e.getMessage());
+      throw e;
+    }
   }
 
   private static Resource<?> resourceFor(
@@ -100,15 +105,20 @@ public class Loader {
     final List<Action> resourceActions = new ArrayList<>(resourceActionNames.length);
     
     for (final String actionName : resourceActionNames) {
-      final String keyPrefix = "action." + resourceName + "." + actionName + ".";
-      
-      final int actionId = resourceActions.size();
-      final String method =  properties.getProperty(keyPrefix + "method", null);
-      final String uri = properties.getProperty(keyPrefix + "uri", null);
-      final String to = properties.getProperty(keyPrefix + "to", null);
-      final String mapper = properties.getProperty(keyPrefix + "mapper", null);
-      
-      resourceActions.add(new Action(actionId, method, uri, to, mapper, disallowPathParametersWithSlash));
+      try {
+        final String keyPrefix = "action." + resourceName + "." + actionName + ".";
+        
+        final int actionId = resourceActions.size();
+        final String method =  properties.getProperty(keyPrefix + "method", null);
+        final String uri = properties.getProperty(keyPrefix + "uri", null);
+        final String to = properties.getProperty(keyPrefix + "to", null);
+        final String mapper = properties.getProperty(keyPrefix + "mapper", null);
+        
+        resourceActions.add(new Action(actionId, method, uri, to, mapper, disallowPathParametersWithSlash));
+      } catch (Exception e) {
+        System.out.println("vlingo/http: Failed to load resource: " + resourceName + " action:" + actionName + " because: " + e.getMessage());
+        throw e;
+      }
     }
     
     return resourceActions;

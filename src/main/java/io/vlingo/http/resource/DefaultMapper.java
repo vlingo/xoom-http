@@ -13,7 +13,11 @@ public class DefaultMapper implements Mapper {
   public static final Mapper instance = new DefaultMapper();
   
   @Override
+  @SuppressWarnings("unchecked")
   public <T> T from(final String data, final Class<T> type) {
+    if (type.getName().equals("java.lang.String")) {
+      return (T) data;
+    }
     return JsonSerialization.deserialized(data, type);
   }
 
