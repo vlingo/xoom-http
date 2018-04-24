@@ -42,8 +42,8 @@ public class JsonSerialization {
   }
 
   public static <T> List<T> deserializedList(String serialization, final Type listOfType) {
-    List<T> collection = gson.fromJson(serialization, listOfType);
-    return collection;
+    final List<T> list = gson.fromJson(serialization, listOfType);
+    return list;
   }
   
   public static String serialized(final Object instance) {
