@@ -81,9 +81,7 @@ public class ServerTest extends ResourceTestFixtures {
     for (int idx = 0; idx < totalPairs; ++idx) {
       client.requestWith(toByteBuffer(postRequest(uniqueJohnDoe())));
       client.requestWith(toByteBuffer(postRequest(uniqueJaneDoe())));
-      if (idx > 0 && idx % 10 == 0) {
-        Thread.sleep(10);
-      }
+      Thread.sleep(10);
     }
 
     while (progress.untilConsumed.remaining() > 0) {
