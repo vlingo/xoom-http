@@ -30,7 +30,7 @@ import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
 
 public class ServerTest extends ResourceTestFixtures {
-  private static final int TOTAL_REQUESTS_RESPONSES = 1_000;
+  private static final int TOTAL_REQUESTS_RESPONSES = 10_000;
   
   private ClientRequestResponseChannel client;
   private ResponseChannelConsumer consumer;
@@ -81,7 +81,7 @@ public class ServerTest extends ResourceTestFixtures {
     for (int idx = 0; idx < totalPairs; ++idx) {
       client.requestWith(toByteBuffer(postRequest(uniqueJohnDoe())));
       client.requestWith(toByteBuffer(postRequest(uniqueJaneDoe())));
-      Thread.sleep(50);
+      Thread.sleep(10);
     }
 
     while (progress.untilConsumed.remaining() > 0) {
