@@ -1,4 +1,7 @@
 # vlingo-http
+
+[![Build Status](https://travis-ci.org/vlingo/vlingo-http.svg?branch=master)](https://travis-ci.org/vlingo/vlingo-http)
+
 Reactive, scalable, and resilient HTTP servers and RESTful services running on vlingo/cluster and vlingo/actors.
 
 1. The essential features are completed
