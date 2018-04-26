@@ -30,7 +30,7 @@ import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
 
 public class ServerTest extends ResourceTestFixtures {
-  private static final int BLASTS = 10_000;
+  private static final int BLASTS = 1_000;
   
   private ClientRequestResponseChannel client;
   private ResponseChannelConsumer consumer;
