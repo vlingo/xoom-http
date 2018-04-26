@@ -30,7 +30,7 @@ import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
 
 public class ServerTest extends ResourceTestFixtures {
-  private static final int BLASTS = 1_000;
+  private static final int TOTAL_REQUESTS_RESPONSES = 1_000;
   
   private ClientRequestResponseChannel client;
   private ResponseChannelConsumer consumer;
@@ -73,23 +73,24 @@ public class ServerTest extends ResourceTestFixtures {
   }
 
   @Test
-  public void testThatServerBlastDispatchesRequests() throws Exception {
+  public void testThatServerDispatchesManyRequests() throws Exception {
     final long startTime = System.currentTimeMillis();
     
-    progress.untilConsumed = TestUntil.happenings(BLASTS);
-    final int totalPairs = BLASTS / 2;
+    progress.untilConsumed = TestUntil.happenings(TOTAL_REQUESTS_RESPONSES);
+    final int totalPairs = TOTAL_REQUESTS_RESPONSES / 2;
     for (int idx = 0; idx < totalPairs; ++idx) {
       client.requestWith(toByteBuffer(postRequest(uniqueJohnDoe())));
       client.requestWith(toByteBuffer(postRequest(uniqueJaneDoe())));
+      Thread.sleep(50);
     }
 
     while (progress.untilConsumed.remaining() > 0) {
       client.probeChannel();
     }
     
-    System.out.println("TOTAL REQUESTS-RESPONSES: " + BLASTS + " TIME: " + (System.currentTimeMillis() - startTime) + " ms");
+    System.out.println("TOTAL REQUESTS-RESPONSES: " + TOTAL_REQUESTS_RESPONSES + " TIME: " + (System.currentTimeMillis() - startTime) + " ms");
 
-    assertEquals(BLASTS, progress.consumeCount.get());
+    assertEquals(TOTAL_REQUESTS_RESPONSES, progress.consumeCount.get());
     final Response createdResponse = progress.responses.peek();
     assertNotNull(createdResponse.headers.headerOf(ResponseHeader.Location));
   }
