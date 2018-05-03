@@ -30,7 +30,7 @@ import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
 
 public class ServerTest extends ResourceTestFixtures {
-  private static final int TOTAL_REQUESTS_RESPONSES = 10_000;
+  private static final int TOTAL_REQUESTS_RESPONSES = 1_000;
   
   private ClientRequestResponseChannel client;
   private ResponseChannelConsumer consumer;
@@ -76,17 +76,17 @@ public class ServerTest extends ResourceTestFixtures {
   public void testThatServerDispatchesManyRequests() throws Exception {
     final long startTime = System.currentTimeMillis();
     
-    System.out.println("WARNING: THIS TEST RUNS SLOWLY!");
-    
     progress.untilConsumed = TestUntil.happenings(TOTAL_REQUESTS_RESPONSES);
     final int totalPairs = TOTAL_REQUESTS_RESPONSES / 2;
+    int currentConsumeCount = 0;
     for (int idx = 0; idx < totalPairs; ++idx) {
-      final int currentConsumeCount = progress.consumeCount.get();
       client.requestWith(toByteBuffer(postRequest(uniqueJohnDoe())));
       client.requestWith(toByteBuffer(postRequest(uniqueJaneDoe())));
-      while (progress.consumeCount.get() < currentConsumeCount) {
+      final int expected = currentConsumeCount + 2;
+      while (progress.consumeCount.get() < expected) {
         client.probeChannel();
       }
+      currentConsumeCount = expected;
     }
 
     while (progress.untilConsumed.remaining() > 0) {

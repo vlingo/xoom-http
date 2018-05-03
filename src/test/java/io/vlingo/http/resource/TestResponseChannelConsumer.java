@@ -47,5 +47,9 @@ public class TestResponseChannelConsumer extends Actor implements ResponseChanne
     public TestUntil untilConsumed;
     public Queue<Response> responses = new ConcurrentLinkedQueue<>();
     public AtomicInteger consumeCount = new AtomicInteger(0);
+    
+    public boolean expectedConsumeCount(final int expected) {
+      return consumeCount.get() >= expected;
+    }
   }
 }
