@@ -12,6 +12,7 @@ import java.util.Map;
 
 import io.vlingo.actors.Logger;
 import io.vlingo.http.Context;
+import io.vlingo.http.Response;
 import io.vlingo.http.resource.Action.MappedParameters;
 import io.vlingo.http.resource.Action.MatchResults;
 
@@ -40,6 +41,9 @@ public class Resources {
         return;
       }
     }
-    logger.log("No matching resource for method " + context.request.method + " and URI " + context.request.uri);
+
+    final String message = "No matching resource for method " + context.request.method + " and URI " + context.request.uri;
+    logger.log(message);
+    context.completes.with(Response.of(Response.BadRequest + " " + message));
   }
 }
