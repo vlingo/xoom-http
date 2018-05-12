@@ -16,6 +16,15 @@ Reactive, scalable, and resilient HTTP servers and RESTful services running on v
   * [The user resource sample](https://github.com/vlingo/vlingo-http/blob/master/src/main/java/io/vlingo/http/sample/user/UserResource.java)
   * [The user profile resource sample](https://github.com/vlingo/vlingo-http/blob/master/src/main/java/io/vlingo/http/sample/user/ProfileResource.java)
 
+### Bintray
+```xml
+<dependency>
+  <groupId>io.vlingo</groupId>
+  <artifactId>vlingo-http</artifactId>
+  <version>0.3.1</version>
+  <type>pom</type>
+</dependency>
+```
 
 License (See LICENSE file for full license)
 -------------------------------------------
