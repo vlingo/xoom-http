@@ -16,14 +16,9 @@ import io.vlingo.http.resource.Mapper;
  * to demonstrate that if you need a custom ResourceMapper, you can
  * create one and wire it in the vlingo-http.properties file with
  * the action for which it maps resources:
- * <p><pre>
- *   {@code action.RESOURCE_NAME.ACTION_NAME.mapper = fully.qualified.classname }
- * </pre></p><p>
- * As in:
- * </p>
- * <p><pre>
- *   {@code action.profile.define.mapper = io.vlingo.http.sample.user.ProfileDataMapper }
- * </pre></p>
+ * <p>{@code action.RESOURCE_NAME.ACTION_NAME.mapper = fully.qualified.classname }</p>
+ * <p>As in:</p>
+ * <p>{@code action.profile.define.mapper = io.vlingo.http.sample.user.ProfileDataMapper }</p>
  */
 public class ProfileDataMapper implements Mapper {
 
