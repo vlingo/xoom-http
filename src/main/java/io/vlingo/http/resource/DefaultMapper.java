@@ -7,7 +7,7 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.http.resource.serialization.JsonSerialization;
+import io.vlingo.common.serialization.JsonSerialization;
 
 public class DefaultMapper implements Mapper {
   public static final Mapper instance = new DefaultMapper();

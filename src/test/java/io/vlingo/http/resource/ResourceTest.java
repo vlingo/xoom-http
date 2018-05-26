@@ -7,12 +7,12 @@
 
 package io.vlingo.http.resource;
 
+import static io.vlingo.common.serialization.JsonSerialization.deserialized;
+import static io.vlingo.common.serialization.JsonSerialization.deserializedList;
+import static io.vlingo.common.serialization.JsonSerialization.serialized;
 import static io.vlingo.http.Response.Created;
 import static io.vlingo.http.Response.Ok;
 import static io.vlingo.http.ResponseHeader.Location;
-import static io.vlingo.http.resource.serialization.JsonSerialization.deserialized;
-import static io.vlingo.http.resource.serialization.JsonSerialization.deserializedList;
-import static io.vlingo.http.resource.serialization.JsonSerialization.serialized;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;

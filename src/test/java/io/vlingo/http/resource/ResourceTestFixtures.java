@@ -7,7 +7,7 @@
 
 package io.vlingo.http.resource;
 
-import static io.vlingo.http.resource.serialization.JsonSerialization.serialized;
+import static io.vlingo.common.serialization.JsonSerialization.serialized;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
