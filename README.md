@@ -2,6 +2,37 @@
 
 [![Build Status](https://travis-ci.org/vlingo/vlingo-http.svg?branch=master)](https://travis-ci.org/vlingo/vlingo-http) [ ![Download](https://api.bintray.com/packages/vlingo/vlingo-platform-java/vlingo-http/images/download.svg) ](https://bintray.com/vlingo/vlingo-platform-java/vlingo-http/_latestVersion)
 
+### Bintray
+
+```xml
+  <repositories>
+    <repository>
+      <id>jcenter</id>
+      <url>https://jcenter.bintray.com/</url>
+    </repository>
+  </repositories>
+  <dependencies>
+    <dependency>
+      <groupId>io.vlingo</groupId>
+      <artifactId>vlingo-http</artifactId>
+      <version>0.3.3</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+```
+
+```gradle
+dependencies {
+    compile 'io.vlingo:vlingo-http:0.3.3'
+}
+
+repositories {
+    jcenter()
+}
+```
+
+### Usage
+
 Reactive, scalable, and resilient HTTP servers and RESTful services running on vlingo/cluster and vlingo/actors.
 
 1. The essential features are completed
@@ -15,16 +46,6 @@ Reactive, scalable, and resilient HTTP servers and RESTful services running on v
   * [vlingo/http properties file](https://github.com/vlingo/vlingo-http/blob/master/src/test/resources/vlingo-http.properties)
   * [The user resource sample](https://github.com/vlingo/vlingo-http/blob/master/src/main/java/io/vlingo/http/sample/user/UserResource.java)
   * [The user profile resource sample](https://github.com/vlingo/vlingo-http/blob/master/src/main/java/io/vlingo/http/sample/user/ProfileResource.java)
-
-### Bintray
-```xml
-<dependency>
-  <groupId>io.vlingo</groupId>
-  <artifactId>vlingo-http</artifactId>
-  <version>0.3.1</version>
-  <type>pom</type>
-</dependency>
-```
 
 License (See LICENSE file for full license)
 -------------------------------------------
