@@ -7,18 +7,18 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.Completes;
+import io.vlingo.actors.CompletesEventually;
 import io.vlingo.actors.testkit.TestUntil;
 import io.vlingo.http.Response;
 
-public class MockCompletesResponse implements Completes<Response> {
+public class MockCompletesEventuallyResponse implements CompletesEventually {
   public static TestUntil untilWith;
 
   public Response response;
   
   @Override
-  public void with(final Response outcome) {
-    this.response = outcome;
+  public void with(final Object outcome) {
+    this.response = (Response) outcome;
     if (untilWith != null) untilWith.happened();
   }
 }

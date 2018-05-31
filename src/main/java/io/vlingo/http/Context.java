@@ -7,13 +7,13 @@
 
 package io.vlingo.http;
 
-import io.vlingo.actors.Completes;
+import io.vlingo.actors.CompletesEventually;
 
 public class Context {
-  public final Completes<Response> completes;
+  public final CompletesEventually completes;
   public final Request request;
   
-  public Context(final Request request, final Completes<Response> completes) {
+  public Context(final Request request, final CompletesEventually completes) {
     this.request = request;
     this.completes = completes;
   }

@@ -2,10 +2,39 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.vlingo</groupId>
   <artifactId>vlingo-http</artifactId>
-  <version>0.3.3</version>
+  <version>0.3.4</version>
 
   <name>vlingo-http</name>
-  <url>http://maven.apache.org</url>
+  <description>Reactive, scalable, and resilient HTTP servers and RESTful services running on vlingo/cluster and vlingo/actors.</description>
+  <url>https://github.com/vlingo/vlingo-http</url>
+
+  <licenses>
+    <license>
+      <name>Mozilla Public License 2.0</name>
+      <url>https://mozilla.org/MPL/2.0/</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Vaughn Vernon</name>
+      <email>vaughn@kalele.io</email>
+      <organization>Kalele</organization>
+      <organizationUrl>http://kalele.io</organizationUrl>
+    </developer>
+    <developer>
+      <name>Dmitry Ledentsov</name>
+      <email>dmlled@yahoo.com</email>
+      <organization>Dmitry Ledentsov</organization>
+      <organizationUrl>https://github.com/d-led</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://github.com/vlingo/vlingo-http.git</connection>
+    <developerConnection>scm:git:ssh://github.com/vlingo/vlingo-http.git</developerConnection>
+    <url>http://github.com/vlingo/vlingo-http/tree/master</url>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -65,12 +94,12 @@
     <dependency>
       <groupId>io.vlingo</groupId>
       <artifactId>vlingo-common</artifactId>
-      <version>0.3.1</version>
+      <version>0.3.2</version>
     </dependency>
     <dependency>
       <groupId>io.vlingo</groupId>
       <artifactId>vlingo-actors</artifactId>
-      <version>0.4.4</version>
+      <version>0.4.5</version>
     </dependency>
     <dependency>
       <groupId>io.vlingo</groupId>

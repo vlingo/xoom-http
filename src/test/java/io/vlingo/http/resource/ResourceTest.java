@@ -39,11 +39,11 @@ public class ResourceTest extends ResourceTestFixtures {
   @Test
   public void testThatPostRegisterUserDispatches() {
     final Request request = Request.from(toByteBuffer(postJohnDoeUserMessage));
-    final MockCompletesResponse completes = new MockCompletesResponse();
+    final MockCompletesEventuallyResponse completes = new MockCompletesEventuallyResponse();
     
-    MockCompletesResponse.untilWith = TestUntil.happenings(1);
+    MockCompletesEventuallyResponse.untilWith = TestUntil.happenings(1);
     dispatcher.dispatchFor(new Context(request, completes));
-    MockCompletesResponse.untilWith.completes();
+    MockCompletesEventuallyResponse.untilWith.completes();
     
     assertNotNull(completes.response);
     
@@ -64,18 +64,18 @@ public class ResourceTest extends ResourceTestFixtures {
   @Test
   public void testThatGetUserDispatches() {
     final Request postRequest = Request.from(toByteBuffer(postJohnDoeUserMessage));
-    final MockCompletesResponse postCompletes = new MockCompletesResponse();
-    MockCompletesResponse.untilWith = TestUntil.happenings(1);
+    final MockCompletesEventuallyResponse postCompletes = new MockCompletesEventuallyResponse();
+    MockCompletesEventuallyResponse.untilWith = TestUntil.happenings(1);
     dispatcher.dispatchFor(new Context(postRequest, postCompletes));
-    MockCompletesResponse.untilWith.completes();
+    MockCompletesEventuallyResponse.untilWith.completes();
     assertNotNull(postCompletes.response);
     
     final String getUserMessage = "GET " + postCompletes.response.headerOf(Location).value + " HTTP/1.1\nHost: vlingo.io\n\n";
     final Request getRequest = Request.from(toByteBuffer(getUserMessage));
-    final MockCompletesResponse getCompletes = new MockCompletesResponse();
-    MockCompletesResponse.untilWith = TestUntil.happenings(1);
+    final MockCompletesEventuallyResponse getCompletes = new MockCompletesEventuallyResponse();
+    MockCompletesEventuallyResponse.untilWith = TestUntil.happenings(1);
     dispatcher.dispatchFor(new Context(getRequest, getCompletes));
-    MockCompletesResponse.untilWith.completes();
+    MockCompletesEventuallyResponse.untilWith.completes();
     assertNotNull(getCompletes.response);
     assertEquals(Ok, getCompletes.response.status);
     final UserData getUserData = deserialized(getCompletes.response.entity.content, UserData.class);
@@ -89,29 +89,29 @@ public class ResourceTest extends ResourceTestFixtures {
   @Test
   public void testThatGetAllUsersDispatches() {
     final Request postRequest1 = Request.from(toByteBuffer(postJohnDoeUserMessage));
-    final MockCompletesResponse postCompletes1 = new MockCompletesResponse();
+    final MockCompletesEventuallyResponse postCompletes1 = new MockCompletesEventuallyResponse();
     
-    MockCompletesResponse.untilWith = TestUntil.happenings(1);
+    MockCompletesEventuallyResponse.untilWith = TestUntil.happenings(1);
     dispatcher.dispatchFor(new Context(postRequest1, postCompletes1));
-    MockCompletesResponse.untilWith.completes();
+    MockCompletesEventuallyResponse.untilWith.completes();
 
     assertNotNull(postCompletes1.response);
     final Request postRequest2 = Request.from(toByteBuffer(postJaneDoeUserMessage));
-    final MockCompletesResponse postCompletes2 = new MockCompletesResponse();
+    final MockCompletesEventuallyResponse postCompletes2 = new MockCompletesEventuallyResponse();
 
-    MockCompletesResponse.untilWith = TestUntil.happenings(1);
+    MockCompletesEventuallyResponse.untilWith = TestUntil.happenings(1);
     dispatcher.dispatchFor(new Context(postRequest2, postCompletes2));
-    MockCompletesResponse.untilWith.completes();
+    MockCompletesEventuallyResponse.untilWith.completes();
 
     assertNotNull(postCompletes2.response);
     
     final String getUserMessage = "GET /users HTTP/1.1\nHost: vlingo.io\n\n";
     final Request getRequest = Request.from(toByteBuffer(getUserMessage));
-    final MockCompletesResponse getCompletes = new MockCompletesResponse();
+    final MockCompletesEventuallyResponse getCompletes = new MockCompletesEventuallyResponse();
 
-    MockCompletesResponse.untilWith = TestUntil.happenings(1);
+    MockCompletesEventuallyResponse.untilWith = TestUntil.happenings(1);
     dispatcher.dispatchFor(new Context(getRequest, getCompletes));
-    MockCompletesResponse.untilWith.completes();
+    MockCompletesEventuallyResponse.untilWith.completes();
     
     assertNotNull(getCompletes.response);
     assertEquals(Ok, getCompletes.response.status);
@@ -137,19 +137,19 @@ public class ResourceTest extends ResourceTestFixtures {
   @Test
   public void testThatPatchNameWorks() {
     final Request postRequest1 = Request.from(toByteBuffer(postJohnDoeUserMessage));
-    final MockCompletesResponse postCompletes1 = new MockCompletesResponse();
-    MockCompletesResponse.untilWith = TestUntil.happenings(1);
+    final MockCompletesEventuallyResponse postCompletes1 = new MockCompletesEventuallyResponse();
+    MockCompletesEventuallyResponse.untilWith = TestUntil.happenings(1);
     dispatcher.dispatchFor(new Context(postRequest1, postCompletes1));
-    MockCompletesResponse.untilWith.completes();
+    MockCompletesEventuallyResponse.untilWith.completes();
     
     assertNotNull(postCompletes1.response);
     
     final Request postRequest2 = Request.from(toByteBuffer(postJaneDoeUserMessage));
-    final MockCompletesResponse postCompletes2 = new MockCompletesResponse();
+    final MockCompletesEventuallyResponse postCompletes2 = new MockCompletesEventuallyResponse();
     
-    MockCompletesResponse.untilWith = TestUntil.happenings(1);
+    MockCompletesEventuallyResponse.untilWith = TestUntil.happenings(1);
     dispatcher.dispatchFor(new Context(postRequest2, postCompletes2));
-    MockCompletesResponse.untilWith.completes();
+    MockCompletesEventuallyResponse.untilWith.completes();
 
     assertNotNull(postCompletes2.response);
     
@@ -162,11 +162,11 @@ public class ResourceTest extends ResourceTestFixtures {
             + "\n\n" + johnNameSerialized;
     
     final Request patchRequest1 = Request.from(toByteBuffer(patchJohnDoeUserMessage));
-    final MockCompletesResponse patchCompletes1 = new MockCompletesResponse();
+    final MockCompletesEventuallyResponse patchCompletes1 = new MockCompletesEventuallyResponse();
     
-    MockCompletesResponse.untilWith = TestUntil.happenings(1);
+    MockCompletesEventuallyResponse.untilWith = TestUntil.happenings(1);
     dispatcher.dispatchFor(new Context(patchRequest1, patchCompletes1));
-    MockCompletesResponse.untilWith.completes();
+    MockCompletesEventuallyResponse.untilWith.completes();
 
     assertNotNull(patchCompletes1.response);
     assertEquals(Ok, patchCompletes1.response.status);
@@ -184,11 +184,11 @@ public class ResourceTest extends ResourceTestFixtures {
             + "\n\n" + janeNameSerialized;
 
     final Request patchRequest2 = Request.from(toByteBuffer(patchJaneDoeUserMessage));
-    final MockCompletesResponse patchCompletes2 = new MockCompletesResponse();
+    final MockCompletesEventuallyResponse patchCompletes2 = new MockCompletesEventuallyResponse();
     
-    MockCompletesResponse.untilWith = TestUntil.happenings(1);
+    MockCompletesEventuallyResponse.untilWith = TestUntil.happenings(1);
     dispatcher.dispatchFor(new Context(patchRequest2, patchCompletes2));
-    MockCompletesResponse.untilWith.completes();
+    MockCompletesEventuallyResponse.untilWith.completes();
 
     assertNotNull(patchCompletes2.response);
     assertEquals(Ok, patchCompletes2.response.status);

@@ -7,9 +7,8 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.Completes;
+import io.vlingo.actors.CompletesEventually;
 import io.vlingo.http.Context;
-import io.vlingo.http.Response;
 
 public abstract class ResourceHandler {
   Context context;
@@ -17,7 +16,7 @@ public abstract class ResourceHandler {
   protected ResourceHandler() {
   }
 
-  protected Completes<Response> completes() {
+  protected CompletesEventually completes() {
     return context.completes;
   }
 
