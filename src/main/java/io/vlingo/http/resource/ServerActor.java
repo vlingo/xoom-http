@@ -14,8 +14,8 @@ import java.util.Map;
 
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.BasicCompletes;
+import io.vlingo.actors.Completes;
 import io.vlingo.actors.Scheduled;
-import io.vlingo.actors.Scheduler;
 import io.vlingo.actors.World;
 import io.vlingo.http.Context;
 import io.vlingo.http.Request;
@@ -212,13 +212,15 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     final RequestResponseContext<?> requestResponseContext;
 
     ResponseCompletes(final RequestResponseContext<?> requestResponseContext) {
-      super((Scheduler) null);
+      super(stage().scheduler());
       this.requestResponseContext = requestResponseContext;
     }
 
     @Override
-    public void with(final Response response) {
-      requestResponseContext.respondWith(response.into(responseBufferPool.accessFor("response")));
+    @SuppressWarnings("unchecked")
+    public <O> Completes<O> with(final O response) {
+      requestResponseContext.respondWith(((Response) response).into(responseBufferPool.accessFor("response")));
+      return (Completes<O>) this;
     }
   }
 }
