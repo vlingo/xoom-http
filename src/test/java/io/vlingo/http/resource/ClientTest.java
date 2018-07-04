@@ -47,7 +47,7 @@ public class ClientTest extends ResourceTestFixtures {
               .and(RequestHeader.host("vlingo.io"))
               .and(RequestHeader.contentLength(johnDoeUserSerialized.length()))
               .and(Body.from(johnDoeUserSerialized)))
-          .after(response -> expectedResponse = response, 1000, Response.of(RequestTimeout))
+          .after(response -> expectedResponse = response, 5000, Response.of(RequestTimeout))
           .andThen(response -> expectedHeaderCount = response.headers.size())
           .andThen(response -> location = response.headers.headerOf(ResponseHeader.Location))
           .atLast(response -> until.completeNow());
