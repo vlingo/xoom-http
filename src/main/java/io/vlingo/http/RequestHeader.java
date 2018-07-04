@@ -82,6 +82,14 @@ public class RequestHeader extends Header {
     return new RequestHeader(ContentLength, String.valueOf(length));
   }
 
+  public static RequestHeader contentLength(final String body) {
+    return new RequestHeader(ContentLength, String.valueOf(body.length()));
+  }
+
+  public static RequestHeader contentLength(final byte[] body) {
+    return new RequestHeader(ContentLength, String.valueOf(body.length));
+  }
+
   public static RequestHeader host(final String value) {
     return new RequestHeader(Host, value);
   }
