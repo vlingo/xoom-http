@@ -8,31 +8,31 @@
 package io.vlingo.http;
 
 public enum Method {
-  POST {
+  POST("POST") {
     @Override public boolean isPOST() { return true; }
   },
-  GET {
+  GET("GET") {
     @Override public boolean isGET() { return true; }
   },
-  PUT {
+  PUT("PUT") {
     @Override public boolean isPUT() { return true; }
   },
-  PATCH {
+  PATCH("PATCH") {
     @Override public boolean isPATCH() { return true; }
   },
-  DELETE {
+  DELETE("DELETE") {
     @Override public boolean isDELETE() { return true; }
   },
-  HEAD {
+  HEAD("HEAD") {
     @Override public boolean isHEAD() { return true; }
   },
-  TRACE {
+  TRACE("TRACE") {
     @Override public boolean isTRACE() { return true; }
   },
-  OPTIONS {
+  OPTIONS("OPTIONS") {
     @Override public boolean isOPTIONS() { return true; }
   },
-  CONNECT {
+  CONNECT("CONNECT") {
     @Override public boolean isCONNECT() { return true; }
   };
 
@@ -61,6 +61,12 @@ public enum Method {
     }
   }
   
+  public final String name;
+
+  private Method(final String name) {
+    this.name = name;
+  }
+
   public boolean isCONNECT() { return false; }
   public boolean isDELETE() { return false; }
   public boolean isGET() { return false; }
