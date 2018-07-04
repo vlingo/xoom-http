@@ -91,7 +91,6 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
   @Override
   public void consume(final RequestResponseContext<?> requestResponseContext, final ConsumerByteBuffer buffer) {
-    System.out.println("CONSUME");
     try {
       final RequestParser parser;
 
