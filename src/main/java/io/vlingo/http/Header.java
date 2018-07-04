@@ -23,6 +23,26 @@ public class Header {
     this.value = value;
   }
 
+  public boolean matchesName(final Header header) {
+    return name.equals(header.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * name.hashCode() + value.hashCode();
+  }
+
+  @Override
+  public boolean equals(final Object other) {
+    if (other == null || other.getClass() != getClass()) {
+      return false;
+    }
+
+    final Header otherHeader = (Header) other;
+
+    return name.equals(otherHeader.name) && value.equals(otherHeader.value);
+  }
+
   @Override
   public String toString() {
     return "" + name + ": " + value;
@@ -39,7 +59,7 @@ public class Header {
       return headers;
     }
 
-    public Header headerOf(final String name) {
+    public T headerOf(final String name) {
       final Iterator<T> iter = this.iterator();
       while (iter.hasNext()) {
         final T header = iter.next();
@@ -53,6 +73,12 @@ public class Header {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <T extends Header> Headers<T> empty() {
       return new Headers(0);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public Headers<T> and(final Headers<? extends Header> headers) {
+      super.addAll((Collection<T>) headers);
+      return this;
     }
     
     @SuppressWarnings("unchecked")
