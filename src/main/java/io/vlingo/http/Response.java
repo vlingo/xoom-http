@@ -139,6 +139,13 @@ public class Response {
     return null;
   }
 
+  public Response include(final Header header) {
+    if (header != null && headerOf(header.name) == null) {
+      headers.and(ResponseHeader.of(header.name, header.value));
+    }
+    return this;
+  }
+
   public ConsumerByteBuffer into(final ConsumerByteBuffer consumerByteBuffer) {
     return consumerByteBuffer.put(Converters.textToBytes(toString())).flip();
   }
