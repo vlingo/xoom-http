@@ -70,6 +70,22 @@ public class RequestHeader extends Header {
     return new RequestHeader(textLine.substring(0, colonIndex).trim(), textLine.substring(colonIndex+1).trim());
   }
 
+  public static RequestHeader accept(final String type) {
+    return new RequestHeader(Accept, type);
+  }
+
+  public static RequestHeader cacheControl(final String option) {
+    return new RequestHeader(CacheControl, option);
+  }
+
+  public static RequestHeader contentLength(final int length) {
+    return new RequestHeader(ContentLength, String.valueOf(length));
+  }
+
+  public static RequestHeader host(final String value) {
+    return new RequestHeader(Host, value);
+  }
+
   public static RequestHeader of(final String name, final String value) {
     return new RequestHeader(name, value);
   }
