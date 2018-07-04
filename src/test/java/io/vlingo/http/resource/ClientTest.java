@@ -3,6 +3,9 @@ package io.vlingo.http.resource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import static io.vlingo.http.Response.*;
+import static io.vlingo.http.Method.*;
+
 import java.net.URI;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -12,7 +15,6 @@ import org.junit.Test;
 
 import io.vlingo.actors.testkit.TestUntil;
 import io.vlingo.http.Body;
-import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.RequestHeader;
 import io.vlingo.http.Response;
@@ -40,12 +42,12 @@ public class ClientTest extends ResourceTestFixtures {
 
     client.requestWith(
             Request
-              .has(Method.POST)
+              .has(POST)
               .and(URI.create("/users"))
               .and(RequestHeader.host("vlingo.io"))
               .and(RequestHeader.contentLength(johnDoeUserSerialized.length()))
               .and(Body.from(johnDoeUserSerialized)))
-          .after(response -> expectedResponse = response)
+          .after(response -> expectedResponse = response, 1000, Response.of(RequestTimeout))
           .andThen(response -> expectedHeaderCount = response.headers.size())
           .andThen(response -> location = response.headers.headerOf(ResponseHeader.Location))
           .atLast(response -> until.completeNow());
