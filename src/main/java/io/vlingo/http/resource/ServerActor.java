@@ -18,7 +18,9 @@ import io.vlingo.actors.Completes;
 import io.vlingo.actors.Scheduled;
 import io.vlingo.actors.World;
 import io.vlingo.http.Context;
+import io.vlingo.http.Header;
 import io.vlingo.http.Request;
+import io.vlingo.http.RequestHeader;
 import io.vlingo.http.RequestParser;
 import io.vlingo.http.Response;
 import io.vlingo.wire.channel.RequestChannelConsumer;
@@ -89,6 +91,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
   @Override
   public void consume(final RequestResponseContext<?> requestResponseContext, final ConsumerByteBuffer buffer) {
+    System.out.println("CONSUME");
     try {
       final RequestParser parser;
 
@@ -104,8 +107,8 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
       while (parser.hasFullRequest()) {
         final Request request = parser.fullRequest();
-        context = new Context(request, world.completesFor(new ResponseCompletes(requestResponseContext)));
-
+        final ResponseCompletes completes = new ResponseCompletes(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
+        context = new Context(request, world.completesFor(completes));
         pooledDispatcher().dispatchFor(context);
       }
 
@@ -115,7 +118,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
     } catch (Exception e) {
       e.printStackTrace();
-      new ResponseCompletes(requestResponseContext).with(Response.of(Response.BadRequest + " " + e.getMessage()));
+      new ResponseCompletes(requestResponseContext, null).with(Response.of(Response.BadRequest + " " + e.getMessage()));
     } finally {
       buffer.release();
     }
@@ -209,17 +212,19 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   //=========================================
 
   private class ResponseCompletes extends BasicCompletes<Response> {
+    final Header correlationId;
     final RequestResponseContext<?> requestResponseContext;
 
-    ResponseCompletes(final RequestResponseContext<?> requestResponseContext) {
+    ResponseCompletes(final RequestResponseContext<?> requestResponseContext, final Header correlationId) {
       super(stage().scheduler());
       this.requestResponseContext = requestResponseContext;
+      this.correlationId = correlationId;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <O> Completes<O> with(final O response) {
-      requestResponseContext.respondWith(((Response) response).into(responseBufferPool.accessFor("response")));
+      requestResponseContext.respondWith(((Response) response).include(correlationId).into(responseBufferPool.accessFor("response")));
       return (Completes<O>) this;
     }
   }
