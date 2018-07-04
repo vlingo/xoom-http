@@ -12,6 +12,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import static io.vlingo.http.Method.*;
+
 import java.net.URI;
 import java.nio.ByteBuffer;
 
@@ -130,6 +132,81 @@ public class RequestTest {
     assertNotNull(request.headerOf(RequestHeader.CacheControl));
     assertEquals(RequestHeader.CacheControl, request.headerOf(RequestHeader.CacheControl).name);
     assertEquals("no-cache", request.headerOf(RequestHeader.CacheControl).value);
+  }
+
+  @Test
+  public void testRequestBuilder() {
+    assertEquals(requestOneHeader,
+            Request
+              .has(Method.GET)
+              .and(URI.create("/"))
+              .and(RequestHeader.host("test.com"))
+              .toString());
+
+    assertEquals(requestOneHeader,
+            Request
+              .method(GET)
+              .uri("/")
+              .header(RequestHeader.Host, "test.com")
+              .toString());
+
+    assertEquals(requestTwoHeadersWithBody,
+            Request
+              .has(Method.PUT)
+              .and(URI.create("/one/two/three"))
+              .and(RequestHeader.host("test.com"))
+              .and(RequestHeader.contentLength(19))
+              .and(Body.from("{ text:\"some text\"}"))
+              .toString());
+
+    assertEquals(requestTwoHeadersWithBody,
+            Request
+              .method(PUT)
+              .uri("/one/two/three")
+              .header(RequestHeader.Host, "test.com")
+              .header(RequestHeader.ContentLength, 19)
+              .body("{ text:\"some text\"}")
+              .toString());
+
+    assertEquals(requestMultiHeaders,
+            Request
+              .has(Method.GET)
+              .and(URI.create("/one"))
+              .and(RequestHeader.host("test.com"))
+              .and(RequestHeader.accept("text/plain"))
+              .and(RequestHeader.cacheControl("no-cache"))
+              .toString());
+
+    assertEquals(requestMultiHeaders,
+            Request
+              .method(GET)
+              .uri("/one")
+              .header(RequestHeader.Host, "test.com")
+              .header(RequestHeader.Accept, "text/plain")
+              .header(RequestHeader.CacheControl, "no-cache")
+              .toString());
+
+    assertEquals(requestMultiHeadersWithBody,
+            Request
+              .has(Method.POST)
+              .and(URI.create("/one/two/"))
+              .and(RequestHeader.host("test.com"))
+              .and(RequestHeader.contentLength(19))
+              .and(RequestHeader.accept("text/plain"))
+              .and(RequestHeader.cacheControl("no-cache"))
+              .and(Body.from("{ text:\"some text\"}"))
+              .toString());
+
+    assertEquals(requestMultiHeadersWithBody,
+            Request
+              .has(POST)
+              .uri("/one/two/")
+              .header(RequestHeader.Host, "test.com")
+              .header(RequestHeader.ContentLength, 19)
+              .header(RequestHeader.Accept, "text/plain")
+              .header(RequestHeader.CacheControl, "no-cache")
+              .body("{ text:\"some text\"}")
+              .toString());
   }
 
   @Before
