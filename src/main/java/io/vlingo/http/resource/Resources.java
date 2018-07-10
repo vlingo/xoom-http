@@ -8,6 +8,7 @@
 package io.vlingo.http.resource;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import io.vlingo.actors.Logger;
@@ -18,14 +19,40 @@ import io.vlingo.http.resource.Action.MatchResults;
 
 public class Resources {
   final Map<String,Resource<?>> namedResources;
-  
+
+  public static Resources are(final Resource<?>... resources) {
+    final Resources all = new Resources();
+    for (final Resource<?> resource : resources) {
+      all.namedResources.put(resource.name, resource);
+    }
+    return all;
+  }
+
+//  public Resources ready() {
+//    return new Resources(namedResources);
+//  }
+
+//  public Resources add(final Resource<?> resource) {
+//    namedResources.put(resource.name, resource);
+//    return this;
+//  }
+
   @Override
   public String toString() {
     return "Resources[namedResources=" + namedResources + "]";
   }
-  
+
   Resources(final Map<String,Resource<?>> namedResources) {
     this.namedResources = Collections.unmodifiableMap(namedResources);
+  }
+
+  Resources(final Resource<?> resource) {
+    this.namedResources = new HashMap<>();
+    this.namedResources.put(resource.name, resource);
+  }
+
+  private Resources() {
+    this.namedResources = new HashMap<>();
   }
 
   Resource<?> resourceOf(final String name) {

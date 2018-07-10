@@ -7,9 +7,14 @@
 
 package io.vlingo.http.resource;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
+
+import io.vlingo.http.sample.user.ProfileResource;
+import io.vlingo.http.sample.user.UserResource;
 
 public class ResourcesTest {
   private final Resources resources = Loader.loadResources(Properties.loadProperties());
@@ -59,5 +64,25 @@ public class ResourcesTest {
     }
     
     assertEquals(2, countProfileActions);
+  }
+
+  @Test
+  public void testThatResourcesBuildFluently() {
+    final Resources resources =
+            Resources
+              .are(Resource.defining("user", UserResource.class, 10,
+                      Actions.canBe("POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", true)
+                              .also("PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)", true)
+                              .also("PATCH", "/users/{userId}/name", "changeName(String userId, body:io.vlingo.http.sample.user.NameData nameData)", true)
+                              .also("GET", "/users/{userId}", "queryUser(String userId)", true)
+                              .also("GET", "/users", "queryUsers()", true)
+                              .thatsAll()),
+                   Resource.defining("profile", ProfileResource.class, 5,
+                      Actions.canBe("PUT", "/users/{userId}/profile", "define(String userId, body:io.vlingo.http.sample.user.ProfileData profileData)", "io.vlingo.http.sample.user.ProfileDataMapper", false)
+                              .also("GET", "/users/{userId}/profile", "query(String userId)", "io.vlingo.http.sample.user.ProfileDataMapper", false)
+                              .thatsAll()));
+
+    assertNotNull(resources.resourceOf("user"));
+    assertNotNull(resources.resourceOf("profile"));
   }
 }

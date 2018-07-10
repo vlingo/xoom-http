@@ -13,21 +13,21 @@
     },
 
     "version": {
-        "name": "0.3.7",
+        "name": "0.3.8",
         "gpgSign": true
     },
 
     "files": [
         {
             "includePattern": "target/(.*).jar",
-            "uploadPattern": "/io/vlingo/vlingo-http/0.3.7/$1.jar",
+            "uploadPattern": "/io/vlingo/vlingo-http/0.3.8/$1.jar",
             "matrixParams": {
                 "override": 1
             }
         },
         {
             "includePattern": "pom.xml",
-            "uploadPattern": "/io/vlingo/vlingo-http/0.3.7/vlingo-http-0.3.7.pom",
+            "uploadPattern": "/io/vlingo/vlingo-http/0.3.8/vlingo-http-0.3.8.pom",
             "matrixParams": {
                 "override": 1
             }

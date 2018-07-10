@@ -37,6 +37,14 @@ public abstract class Resource<T> {
   public final String name;
   public final Class<? extends ResourceHandler> resourceHandlerClass;
 
+  public static Resource<?> defining(
+          final String resourceName,
+          final Class<? extends ResourceHandler> resourceHandlerClass,
+          final int handlerPoolSize,
+          final List<Action> actions) {
+    return newResourceFor(resourceName, resourceHandlerClass, handlerPoolSize, actions);
+  }
+
   @SuppressWarnings("unchecked")
   static Resource<?> newResourceFor(
           final String resourceName,
