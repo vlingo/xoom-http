@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.vlingo.actors.Actor;
+import io.vlingo.actors.Address;
 import io.vlingo.actors.BasicCompletes;
 import io.vlingo.actors.Completes;
 import io.vlingo.actors.Scheduled;
@@ -30,8 +31,9 @@ import io.vlingo.wire.message.ByteBufferPool;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 
 public class ServerActor extends Actor implements Server, RequestChannelConsumer, Scheduled {
-  private static final String ServerName = "vlingo-http-server";
-  
+  static final String ChannelName = "server-request-response-channel";
+  static final String ServerName = "vlingo-http-server";
+
   private final ServerRequestResponseChannel channel;
   private final Dispatcher[] dispatcherPool;
   private int dispatcherPoolIndex;
@@ -62,9 +64,11 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       this.channel =
               ServerRequestResponseChannel.start(
                       stage(),
+                      Address.withHighId(ChannelName),
+                      "queueMailbox",
                       selfAs(RequestChannelConsumer.class),
                       port,
-                      "server-request-response-channel",
+                      ChannelName,
                       sizing.maxBufferPoolSize,
                       sizing.maxMessageSize,
                       timing.probeTimeout,
