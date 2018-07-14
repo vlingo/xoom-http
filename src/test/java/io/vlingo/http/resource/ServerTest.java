@@ -106,14 +106,14 @@ public class ServerTest extends ResourceTestFixtures {
 
     User.resetId();
 
-    server = Server.startWith(world.stage(), resources, 8080, new Sizing(10, 100, 10240), new Timing(1, 2, 100));
+    server = Server.startWith(world.stage(), resources, 18080, new Sizing(10, 100, 10240), new Timing(1, 2, 100));
     Thread.sleep(10); // delay for server startup
 
     progress = new Progress();
     
     consumer = world.actorFor(Definition.has(TestResponseChannelConsumer.class, Definition.parameters(progress)), ResponseChannelConsumer.class);
 
-    client = new ClientRequestResponseChannel(Address.from(Host.of("localhost"), 8080, AddressType.NONE), consumer, 100, 10240, world.defaultLogger());
+    client = new ClientRequestResponseChannel(Address.from(Host.of("localhost"), 18080, AddressType.NONE), consumer, 100, 10240, world.defaultLogger());
   }
 
   @After
