@@ -52,11 +52,13 @@ public class ResourceDispatcherGenerator implements AutoCloseable {
   private final URLClassLoader urlClassLoader;
 
   static ResourceDispatcherGenerator forMain(final List<Action> actions, final boolean persist) throws Exception {
-    return new ResourceDispatcherGenerator(actions, RootOfMainClasses, DynaType.Main, persist);
+    final String root = Properties.properties.getProperty("resource.dispatcher.generated.classes.main", RootOfMainClasses);
+    return new ResourceDispatcherGenerator(actions, root, DynaType.Main, persist);
   }
 
   static ResourceDispatcherGenerator forTest(final List<Action> actions, final boolean persist) throws Exception {
-    return new ResourceDispatcherGenerator(actions, RootOfTestClasses, DynaType.Test, persist);
+    final String root = Properties.properties.getProperty("resource.dispatcher.generated.classes.test", RootOfTestClasses);
+    return new ResourceDispatcherGenerator(actions, root, DynaType.Test, persist);
   }
 
   @Override
@@ -99,7 +101,7 @@ public class ResourceDispatcherGenerator implements AutoCloseable {
   private ResourceDispatcherGenerator(final List<Action> actions, final String rootOfClasses, final DynaType type, final boolean persist) throws Exception {
     this.actions = actions;
     this.rootOfClasses = rootOfClasses;
-    this.rootOfGenerated = type == DynaType.Main ? GeneratedSources : GeneratedTestSources;
+    this.rootOfGenerated = rootOfGeneratedSources(type);
     this.type = type;
     this.persist = persist;
     this.targetClassesPath = new File(rootOfClasses);
@@ -244,5 +246,13 @@ public class ResourceDispatcherGenerator implements AutoCloseable {
   private Class<?> readHandlerInterface(final String handlerProtocol) throws Exception {
     final Class<?> handlerInterface = urlClassLoader.loadClass(handlerProtocol);
     return handlerInterface;
+  }
+
+  private String rootOfGeneratedSources(final DynaType type) {
+    final String root = 
+            type == DynaType.Main ?
+                    Properties.properties.getProperty("resource.dispatcher.generated.sources.main", GeneratedSources) :
+                    Properties.properties.getProperty("resource.dispatcher.generated.sources.test", GeneratedTestSources);
+    return root;
   }
 }

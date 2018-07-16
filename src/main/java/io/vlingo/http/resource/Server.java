@@ -15,9 +15,7 @@ import io.vlingo.actors.Stoppable;
 public interface Server extends Stoppable {
 
   public static Server startWith(final Stage stage) {
-    final java.util.Properties properties = Properties.loadProperties();
-
-    return startWith(stage, properties);
+    return startWith(stage, Properties.properties);
   }
 
   public static Server startWith(final Stage stage, java.util.Properties properties) {
