@@ -66,9 +66,19 @@ public class Client {
     public static Configuration defaultedExceptFor(
             final Stage stage,
             final ResponseConsumer consumerOfUnknownResponses) {
-      return new Configuration(
+      return defaultedExceptFor(
               stage,
               Address.from(Host.of("localhost"), 8080, AddressType.NONE),
+              consumerOfUnknownResponses);
+    }
+
+    public static Configuration defaultedExceptFor(
+            final Stage stage,
+            final Address addressOfHost,
+            final ResponseConsumer consumerOfUnknownResponses) {
+      return has(
+              stage,
+              addressOfHost,
               consumerOfUnknownResponses,
               10,
               10240,
