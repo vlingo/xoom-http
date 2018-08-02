@@ -15,42 +15,46 @@ import static io.vlingo.http.ResponseHeader.Location;
 import static io.vlingo.http.ResponseHeader.headers;
 import static io.vlingo.http.ResponseHeader.of;
 
-import io.vlingo.http.Header.Headers;
+import io.vlingo.actors.Address;
+import io.vlingo.actors.Definition;
 import io.vlingo.http.Response;
-import io.vlingo.http.ResponseHeader;
 import io.vlingo.http.resource.ResourceHandler;
 import io.vlingo.http.sample.user.model.Profile;
+import io.vlingo.http.sample.user.model.ProfileActor;
 import io.vlingo.http.sample.user.model.ProfileRepository;
 
 public class ProfileResource extends ResourceHandler {
-  private final ProfileRepository repository;
+  private final ProfileRepository repository = ProfileRepository.instance();
 
-  public ProfileResource() {
-    this.repository = new ProfileRepository();
-  }
+  public ProfileResource() { }
 
   public void define(final String userId, final ProfileData profileData) {
-    final Profile maybeProfile = repository.profileOf(userId);
-    
-    final String statusCode = maybeProfile.doesNotExist() ? Created : Ok;
-    
-    final Headers<ResponseHeader> headers = maybeProfile.doesNotExist() ?
-                    headers(of(Location, profileLocation(userId))) :
-                    Headers.empty();
-    
-    final Profile profile = Profile.from(userId, profileData.twitterAccount, profileData.linkedInAccount, profileData.website);
-    
-    repository.save(profile);
-    
-    completes().with(Response.of(statusCode, headers, serialized(ProfileData.from(profile))));
+    stage().actorOf(Address.findableBy(Integer.parseInt(userId)), Profile.class).after(profile -> {
+      if (profile == null) {
+        final Profile.State profileState =
+                Profile.from(
+                        userId,
+                        profileData.twitterAccount,
+                        profileData.linkedInAccount,
+                        profileData.website);
+
+        stage().actorFor(Definition.has(ProfileActor.class, Definition.parameters(profileState)), Profile.class);
+
+        repository.save(profileState);
+        completes().with(Response.of(Created, serialized(ProfileData.from(profileState))));
+      } else {
+        final Profile.State profileState = repository.profileOf(userId);
+        completes().with(Response.of(Ok, headers(of(Location, profileLocation(userId))), serialized(ProfileData.from(profileState))));
+      }
+    });
   }
 
   public void query(final String userId) {
-    final Profile profile = repository.profileOf(userId);
-    if (profile.doesNotExist()) {
+    final Profile.State profileState = repository.profileOf(userId);
+    if (profileState.doesNotExist()) {
       completes().with(Response.of(NotFound, profileLocation(userId)));
     } else {
-      completes().with(Response.of(Ok, serialized(ProfileData.from(profile))));
+      completes().with(Response.of(Ok, serialized(ProfileData.from(profileState))));
     }
   }
 

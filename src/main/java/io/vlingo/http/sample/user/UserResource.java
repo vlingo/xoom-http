@@ -18,11 +18,14 @@ import static io.vlingo.http.ResponseHeader.of;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.vlingo.actors.Address;
+import io.vlingo.actors.Definition;
 import io.vlingo.http.Response;
 import io.vlingo.http.resource.ResourceHandler;
 import io.vlingo.http.sample.user.model.Contact;
 import io.vlingo.http.sample.user.model.Name;
 import io.vlingo.http.sample.user.model.User;
+import io.vlingo.http.sample.user.model.UserActor;
 import io.vlingo.http.sample.user.model.UserRepository;
 
 public class UserResource extends ResourceHandler {
@@ -31,57 +34,61 @@ public class UserResource extends ResourceHandler {
   public UserResource() { }
 
   public void register(final UserData userData) {
-    final User user =
+    final Address userAddress = Address.uniquePrefixedWith("u-");
+
+    final User.State userState =
             User.from(
+                    userAddress.ids(),
                     Name.from(userData.nameData.given, userData.nameData.family),
                     Contact.from(userData.contactData.emailAddress, userData.contactData.telephoneNumber));
 
-    repository.save(user);
-    
-    completes().with(Response.of(Created, headers(of(Location, userLocation(user.id))), serialized(UserData.from(user))));
+    stage().actorFor(Definition.has(UserActor.class, Definition.parameters(userState)), User.class, userAddress);
+
+    repository.save(userState);
+
+    completes().with(Response.of(Created, headers(of(Location, userLocation(userState.id))), serialized(UserData.from(userState))));
   }
 
   public void changeContact(final String userId, final ContactData contactData) {
-    final User user = repository.userOf(userId);
-    if (user.doesNotExist()) {
-      completes().with(Response.of(NotFound, userLocation(userId)));
-      return;
-    }
-    
-    final User changedUser = user.withContact(new Contact(contactData.emailAddress, contactData.telephoneNumber));
-    
-    repository.save(changedUser);
-    
-    completes().with(Response.of(Ok, serialized(UserData.from(changedUser))));
+    stage().actorOf(Address.findableBy(Integer.parseInt(userId)), User.class).after(user -> {
+      if (user == null) {
+        completes().with(Response.of(NotFound, userLocation(userId)));
+        return;
+      }
+
+      user.withContact(new Contact(contactData.emailAddress, contactData.telephoneNumber)).after(userState -> {
+        repository.save(userState);
+        completes().with(Response.of(Ok, serialized(UserData.from(userState))));
+      });
+    });
   }
 
   public void changeName(final String userId, final NameData nameData) {
-    final User user = repository.userOf(userId);
-    if (user.doesNotExist()) {
-      completes().with(Response.of(NotFound, userLocation(userId)));
-      return;
-    }
-    
-    final User changedUser = user.withName(new Name(nameData.given, nameData.family));
-    
-    repository.save(changedUser);
-    
-    completes().with(Response.of(Ok, serialized(UserData.from(changedUser))));
+    stage().actorOf(Address.findableBy(Integer.parseInt(userId)), User.class).after(user -> {
+      if (user == null) {
+        completes().with(Response.of(NotFound, userLocation(userId)));
+        return;
+      }
+      user.withName(new Name(nameData.given, nameData.family)).after(userState -> {
+        repository.save(userState);
+        completes().with(Response.of(Ok, serialized(UserData.from(userState))));
+      });
+    });
   }
 
   public void queryUser(final String userId) {
-    final User user = repository.userOf(userId);
-    if (user.doesNotExist()) {
+    final User.State userState = repository.userOf(userId);
+    if (userState.doesNotExist()) {
       completes().with(Response.of(NotFound, userLocation(userId)));
     } else {
-      completes().with(Response.of(Ok, serialized(UserData.from(user))));
+      completes().with(Response.of(Ok, serialized(UserData.from(userState))));
     }
   }
 
   public void queryUsers() {
     final List<UserData> users = new ArrayList<>();
-    for (final User user : repository.users()) {
-      users.add(UserData.from(user));
+    for (final User.State userState : repository.users()) {
+      users.add(UserData.from(userState));
     }
     completes().with(Response.of(Ok, serialized(users)));
   }

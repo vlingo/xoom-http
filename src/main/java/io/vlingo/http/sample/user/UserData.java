@@ -25,8 +25,8 @@ public class UserData {
     return new UserData(id, nameData, contactData);
   }
   
-  public static UserData from(final User user) {
-    return new UserData(user.id, NameData.from(user.name), ContactData.from(user.contact));
+  public static UserData from(final User.State userState) {
+    return new UserData(userState.id, NameData.from(userState.name), ContactData.from(userState.contact));
   }
 
   public static UserData userAt(final String location, List<UserData> userData) {

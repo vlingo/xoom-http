@@ -22,6 +22,7 @@ public class ResourceRequestHandlerActor extends Actor implements ResourceReques
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public void handleFor(final Context context, final Consumer consumer) {
     resourceHandler.context = context;
+    resourceHandler.stage = stage();
     consumer.accept(resourceHandler);
   }
 }

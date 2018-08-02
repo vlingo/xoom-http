@@ -8,10 +8,12 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.actors.CompletesEventually;
+import io.vlingo.actors.Stage;
 import io.vlingo.http.Context;
 
 public abstract class ResourceHandler {
   Context context;
+  Stage stage;
 
   protected ResourceHandler() {
   }
@@ -22,5 +24,9 @@ public abstract class ResourceHandler {
 
   protected Context context() {
     return context;
+  }
+
+  protected Stage stage() {
+    return stage;
   }
 }

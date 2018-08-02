@@ -9,54 +9,61 @@ package io.vlingo.http.sample.user.model;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class User {
-  private static AtomicInteger NextId = new AtomicInteger(0);
+import io.vlingo.actors.Completes;
 
-  public final String id;
-  public final Name name;
-  public final Contact contact;
+public interface User {
+  Completes<User.State> withContact(final Contact contact);
+  Completes<User.State> withName(final Name name);
 
-  public static User nonExisting() {
-    return new User(null, null, null);
-  }
-  
-  public static User from(final Name name, final Contact contact) {
-    return new User(nextId(), name, contact);
-  }
-  
-  public User from(final String id, final Name name, final Contact contact) {
-    return new User(id, name, contact);
+  static State nonExisting() {
+    return new State(null, null, null);
   }
 
-  public static void resetId() {
-    NextId = new AtomicInteger(0);
+  static State from(final Name name, final Contact contact) {
+    return new State(nextId(), name, contact);
+  }
+
+  static State from(final String id, final Name name, final Contact contact) {
+    return new State(id, name, contact);
+  }
+
+  static void resetId() {
+    State.NextId.set(0);
   }
 
   public static String nextId() {
-    final int id = NextId.incrementAndGet(); //UUID.randomUUID().toString();
+    final int id = State.NextId.incrementAndGet();
     return String.format("%03d", id);
   }
-  
-  public User(final String id, final Name name, final Contact contact) {
-    this.id = id;
-    this.name = name;
-    this.contact = contact;
-  }
-  
-  public boolean doesNotExist() {
-    return id == null;
-  }
 
-  public User withContact(final Contact contact) {
-    return new User(this.id, this.name, contact);
-  }
+  public static final class State {
+    private static final AtomicInteger NextId = new AtomicInteger(0);
 
-  public User withName(final Name name) {
-    return new User(this.id, name, this.contact);
-  }
+    public final String id;
+    public final Name name;
+    public final Contact contact;
+    
+    public boolean doesNotExist() {
+      return id == null;
+    }
 
-  @Override
-  public String toString() {
-    return "User[id=" + id + ", name=" + name + ", contact=" + contact + "]";
+    public State withContact(final Contact contact) {
+      return new State(this.id, this.name, contact);
+    }
+
+    public State withName(final Name name) {
+      return new State(this.id, name, this.contact);
+    }
+
+    @Override
+    public String toString() {
+      return "User.State[id=" + id + ", name=" + name + ", contact=" + contact + "]";
+    }
+
+    private State(final String id, final Name name, final Contact contact) {
+      this.id = id;
+      this.name = name;
+      this.contact = contact;
+    }
   }
 }

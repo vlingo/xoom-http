@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class UserRepository {
   private static UserRepository instance;
   
-  private final Map<String,User> users;
+  private final Map<String,User.State> users;
 
   public static synchronized UserRepository instance() {
     if (instance == null) {
@@ -28,21 +28,21 @@ public class UserRepository {
     instance = null;
   }
 
-  public UserRepository() {
-    this.users = new ConcurrentHashMap<>();
-  }
-
-  public User userOf(final String userId) {
-    final User user = users.get(userId);
+  public User.State userOf(final String userId) {
+    final User.State userState = users.get(userId);
     
-    return user == null ? User.nonExisting() : user;
+    return userState == null ? User.nonExisting() : userState;
   }
 
-  public Collection<User> users() {
+  public Collection<User.State> users() {
     return Collections.unmodifiableCollection(users.values());
   }
 
-  public void save(final User user) {
-    users.put(user.id, user);
+  public void save(final User.State userState) {
+    users.put(userState.id, userState);
+  }
+
+  private UserRepository() {
+    this.users = new ConcurrentHashMap<>();
   }
 }

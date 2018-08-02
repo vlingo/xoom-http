@@ -141,7 +141,7 @@ public class ResourceTest extends ResourceTestFixtures {
     MockCompletesEventuallyResponse.untilWith = TestUntil.happenings(1);
     dispatcher.dispatchFor(new Context(postRequest1, postCompletes1));
     MockCompletesEventuallyResponse.untilWith.completes();
-    
+
     assertNotNull(postCompletes1.response);
     
     final Request postRequest2 = Request.from(toByteBuffer(postJaneDoeUserMessage));
@@ -163,7 +163,7 @@ public class ResourceTest extends ResourceTestFixtures {
     
     final Request patchRequest1 = Request.from(toByteBuffer(patchJohnDoeUserMessage));
     final MockCompletesEventuallyResponse patchCompletes1 = new MockCompletesEventuallyResponse();
-    
+
     MockCompletesEventuallyResponse.untilWith = TestUntil.happenings(1);
     dispatcher.dispatchFor(new Context(patchRequest1, patchCompletes1));
     MockCompletesEventuallyResponse.untilWith.completes();

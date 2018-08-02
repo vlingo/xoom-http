@@ -11,19 +11,28 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ProfileRepository {
-  private final Map<String,Profile> profiles;
+  private static ProfileRepository instance;
   
-  public ProfileRepository() {
-    this.profiles = new HashMap<>();
+  private final Map<String,Profile.State> profiles;
+
+  public static synchronized ProfileRepository instance() {
+    if (instance == null) {
+      instance = new ProfileRepository();
+    }
+    return instance;
   }
   
-  public Profile profileOf(final String userId) {
-    final Profile profile = profiles.get(userId);
+  public Profile.State profileOf(final String userId) {
+    final Profile.State profileState = profiles.get(userId);
     
-    return profile == null ? Profile.nonExisting() : profile;
+    return profileState == null ? Profile.nonExisting() : profileState;
   }
-  
-  public void save(final Profile profile) {
-    profiles.put(profile.id, profile);
+
+  public void save(final Profile.State profileState) {
+    profiles.put(profileState.id, profileState);
+  }
+
+  private ProfileRepository() {
+    this.profiles = new HashMap<>();
   }
 }

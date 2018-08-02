@@ -14,10 +14,10 @@ public class ProfileData {
   public final String twitterAccount;
   public final String website;
 
-  public static ProfileData from(final Profile profile) {
+  public static ProfileData from(final Profile.State profile) {
     return new ProfileData(profile.twitterAccount, profile.linkedInAccount, profile.website);
   }
-  
+
   public ProfileData(final String twitterAccount, final String linkedInAccount, final String website) {
     this.twitterAccount = twitterAccount;
     this.linkedInAccount = linkedInAccount;
