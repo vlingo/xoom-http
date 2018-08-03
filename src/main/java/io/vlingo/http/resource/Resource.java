@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import io.vlingo.actors.Actor;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.Stage;
 import io.vlingo.common.compiler.DynaClassLoader;
@@ -136,7 +137,7 @@ public abstract class Resource<T> {
               stage.actorFor(
                       Definition.has(
                               ResourceRequestHandlerActor.class,
-                              Definition.parameters(resourceHandlerInstance())),
+                              Definition.parameters(resourceHandlerInstance(stage))),
                       ResourceRequestHandler.class);
     }
   }
@@ -171,8 +172,13 @@ public abstract class Resource<T> {
     return handlerPool[index];
   }
 
-  private ResourceHandler resourceHandlerInstance() {
+  private ResourceHandler resourceHandlerInstance(final Stage stage) {
     try {
+      for (final Constructor<?> ctor : resourceHandlerClass.getConstructors()) {
+        if (ctor.getParameterCount() == 1) {
+          return (ResourceHandler) ctor.newInstance(new Object[] { stage.world() } );
+        }
+      }
       return resourceHandlerClass.newInstance();
     } catch (Exception e) {
       throw new IllegalArgumentException("The instance for resource handler '" + resourceHandlerClass.getName() + "' cannot be created.");

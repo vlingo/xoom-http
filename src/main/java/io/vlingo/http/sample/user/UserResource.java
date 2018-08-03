@@ -20,6 +20,8 @@ import java.util.List;
 
 import io.vlingo.actors.Address;
 import io.vlingo.actors.Definition;
+import io.vlingo.actors.Stage;
+import io.vlingo.actors.World;
 import io.vlingo.http.Response;
 import io.vlingo.http.resource.ResourceHandler;
 import io.vlingo.http.sample.user.model.Contact;
@@ -30,8 +32,11 @@ import io.vlingo.http.sample.user.model.UserRepository;
 
 public class UserResource extends ResourceHandler {
   private final UserRepository repository = UserRepository.instance();
+  private final Stage stage;
 
-  public UserResource() { }
+  public UserResource(final World world) {
+    this.stage = world.stageNamed("service");
+  }
 
   public void register(final UserData userData) {
     final Address userAddress = Address.uniquePrefixedWith("u-");
@@ -42,7 +47,7 @@ public class UserResource extends ResourceHandler {
                     Name.from(userData.nameData.given, userData.nameData.family),
                     Contact.from(userData.contactData.emailAddress, userData.contactData.telephoneNumber));
 
-    stage().actorFor(Definition.has(UserActor.class, Definition.parameters(userState)), User.class, userAddress);
+    stage.actorFor(Definition.has(UserActor.class, Definition.parameters(userState)), User.class, userAddress);
 
     repository.save(userState);
 
@@ -50,7 +55,7 @@ public class UserResource extends ResourceHandler {
   }
 
   public void changeContact(final String userId, final ContactData contactData) {
-    stage().actorOf(Address.findableBy(Integer.parseInt(userId)), User.class).after(user -> {
+    stage.actorOf(Address.findableBy(Integer.parseInt(userId)), User.class).after(user -> {
       if (user == null) {
         completes().with(Response.of(NotFound, userLocation(userId)));
         return;
@@ -64,7 +69,7 @@ public class UserResource extends ResourceHandler {
   }
 
   public void changeName(final String userId, final NameData nameData) {
-    stage().actorOf(Address.findableBy(Integer.parseInt(userId)), User.class).after(user -> {
+    stage.actorOf(Address.findableBy(Integer.parseInt(userId)), User.class).after(user -> {
       if (user == null) {
         completes().with(Response.of(NotFound, userLocation(userId)));
         return;

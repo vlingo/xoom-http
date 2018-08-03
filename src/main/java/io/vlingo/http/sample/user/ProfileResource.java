@@ -17,6 +17,8 @@ import static io.vlingo.http.ResponseHeader.of;
 
 import io.vlingo.actors.Address;
 import io.vlingo.actors.Definition;
+import io.vlingo.actors.Stage;
+import io.vlingo.actors.World;
 import io.vlingo.http.Response;
 import io.vlingo.http.resource.ResourceHandler;
 import io.vlingo.http.sample.user.model.Profile;
@@ -25,11 +27,14 @@ import io.vlingo.http.sample.user.model.ProfileRepository;
 
 public class ProfileResource extends ResourceHandler {
   private final ProfileRepository repository = ProfileRepository.instance();
+  private final Stage stage;
 
-  public ProfileResource() { }
+  public ProfileResource(final World world) {
+    this.stage = world.stageNamed("service");
+  }
 
   public void define(final String userId, final ProfileData profileData) {
-    stage().actorOf(Address.findableBy(Integer.parseInt(userId)), Profile.class).after(profile -> {
+    stage.actorOf(Address.findableBy(Integer.parseInt(userId)), Profile.class).after(profile -> {
       if (profile == null) {
         final Profile.State profileState =
                 Profile.from(
