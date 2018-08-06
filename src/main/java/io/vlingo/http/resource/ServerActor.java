@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 import io.vlingo.actors.Actor;
-import io.vlingo.actors.Address;
 import io.vlingo.actors.BasicCompletes;
 import io.vlingo.actors.Completes;
 import io.vlingo.actors.Scheduled;
@@ -64,7 +63,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       this.channel =
               ServerRequestResponseChannel.start(
                       stage(),
-                      Address.withHighId(ChannelName),
+                      stage().world().addressFactory().withHighId(ChannelName),
                       "queueMailbox",
                       selfAs(RequestChannelConsumer.class),
                       port,

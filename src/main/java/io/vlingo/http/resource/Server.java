@@ -7,7 +7,6 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.Address;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.Stage;
 import io.vlingo.actors.Stoppable;
@@ -51,7 +50,7 @@ public interface Server extends Stoppable {
                     "queueMailbox",
                     ServerActor.ServerName),
             Server.class,
-            Address.withHighId(),
+            stage.world().addressFactory().withHighId(),
             stage.world().defaultLogger());
 
     return server;

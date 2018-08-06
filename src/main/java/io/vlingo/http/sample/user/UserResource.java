@@ -39,7 +39,7 @@ public class UserResource extends ResourceHandler {
   }
 
   public void register(final UserData userData) {
-    final Address userAddress = Address.uniquePrefixedWith("u-");
+    final Address userAddress = stage.world().addressFactory().uniquePrefixedWith("u-");
 
     final User.State userState =
             User.from(
@@ -55,7 +55,7 @@ public class UserResource extends ResourceHandler {
   }
 
   public void changeContact(final String userId, final ContactData contactData) {
-    stage.actorOf(Address.findableBy(Integer.parseInt(userId)), User.class).after(user -> {
+    stage.actorOf(stage.world().addressFactory().findableBy(Integer.parseInt(userId)), User.class).after(user -> {
       if (user == null) {
         completes().with(Response.of(NotFound, userLocation(userId)));
         return;
@@ -69,7 +69,7 @@ public class UserResource extends ResourceHandler {
   }
 
   public void changeName(final String userId, final NameData nameData) {
-    stage.actorOf(Address.findableBy(Integer.parseInt(userId)), User.class).after(user -> {
+    stage.actorOf(stage.world().addressFactory().findableBy(Integer.parseInt(userId)), User.class).after(user -> {
       if (user == null) {
         completes().with(Response.of(NotFound, userLocation(userId)));
         return;
