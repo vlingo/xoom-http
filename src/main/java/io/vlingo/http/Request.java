@@ -96,6 +96,10 @@ public class Request {
     return null;
   }
 
+  public QueryParameters queryParameters() {
+    return new QueryParameters(uri.getQuery());
+  }
+
   @Override
   public String toString() {
     return "" + method + " " + uri + " "  + version + "\n" + headers + "\n" + body;

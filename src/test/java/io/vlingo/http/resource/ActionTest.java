@@ -8,10 +8,10 @@
 package io.vlingo.http.resource;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URI;
@@ -19,6 +19,7 @@ import java.net.URI;
 import org.junit.Test;
 
 import io.vlingo.http.Method;
+import io.vlingo.http.QueryParameters;
 import io.vlingo.http.resource.Action.MatchResults;
 
 public class ActionTest {
@@ -177,5 +178,34 @@ public class ActionTest {
     assertEquals(2, matchResults.parameterCount());
     assertNotEquals("890", matchResults.parameters().get(1).value);
     assertEquals("890/", matchResults.parameters().get(1).value); // TODO: may watch for last "/" or add optional configuration
+  }
+
+  @Test
+  public void testWithQueryParameters() throws Exception {
+    final Action action =
+            new Action(
+                    0,
+                    "GET",
+                    "/users/{userId}",
+                    "queryUser(String userId)",
+                    null,
+                    false);
+
+    final URI uri = new URI("/users/1234567?one=1.1&two=2.0&three=three*&three=3.3");
+    final MatchResults matchResults = action.matchWith(Method.GET, uri);
+    assertTrue(matchResults.isMatched());
+    assertSame(action, matchResults.action);
+    assertEquals(1, matchResults.parameterCount());
+    assertEquals("1234567", matchResults.parameters().get(0).value);
+
+    final QueryParameters queryParameters = new QueryParameters(uri.getQuery());
+    assertEquals(3, queryParameters.names().size());
+    assertEquals(1, queryParameters.valuesOf("one").size());
+    assertEquals("1.1", queryParameters.valuesOf("one").get(0));
+    assertEquals(1, queryParameters.valuesOf("two").size());
+    assertEquals("2.0", queryParameters.valuesOf("two").get(0));
+    assertEquals(2, queryParameters.valuesOf("three").size());
+    assertEquals("three*", queryParameters.valuesOf("three").get(0));
+    assertEquals("3.3", queryParameters.valuesOf("three").get(1));
   }
 }

@@ -29,6 +29,7 @@ public class RequestTest {
   private String requestTwoHeadersWithBody;
   private String requestMultiHeaders;
   private String requestMultiHeadersWithBody;
+  private String requestQueryParameters;
   
   @Test
   public void testThatRequestCanHaveOneHeader() throws Exception {
@@ -135,6 +136,18 @@ public class RequestTest {
   }
 
   @Test
+  public void testQueryParameters() {
+    final Request request = Request.from(toByteBuffer(requestQueryParameters));
+    final QueryParameters queryParameters = request.queryParameters();
+    assertEquals(4, queryParameters.names().size());
+    assertEquals("1", queryParameters.valuesOf("one").get(0));
+    assertEquals("2", queryParameters.valuesOf("two").get(0));
+    assertEquals("3", queryParameters.valuesOf("three").get(0));
+    assertEquals("NY", queryParameters.valuesOf("state").get(0));
+    assertEquals("CO", queryParameters.valuesOf("state").get(1));
+  }
+
+  @Test
   public void testRequestBuilder() {
     assertEquals(requestOneHeader,
             Request
@@ -218,6 +231,8 @@ public class RequestTest {
     requestMultiHeaders = "GET /one HTTP/1.1\nHost: test.com\nAccept: text/plain\nCache-Control: no-cache\n\n";
     
     requestMultiHeadersWithBody = "POST /one/two/ HTTP/1.1\nHost: test.com\nContent-Length: 19\nAccept: text/plain\nCache-Control: no-cache\n\n{ text:\"some text\"}";
+    
+    requestQueryParameters = "GET /one/param1?one=1&two=2&three=3&state=NY&state=CO HTTP/1.1\nHost: test.com\n\n";
   }
   
   private ByteBuffer toByteBuffer(final String requestContent) {
