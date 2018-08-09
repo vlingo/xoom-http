@@ -18,7 +18,6 @@ public class Dispatcher__Proxy implements Dispatcher {
 
   private static final String dispatchForRepresentation1 = "dispatchFor(io.vlingo.http.Context)";
   private static final String stopRepresentation2 = "stop()";
-  private static final String isStoppedRepresentation3 = "isStopped()";
 
   private final Actor actor;
   private final Mailbox mailbox;
@@ -45,12 +44,6 @@ public class Dispatcher__Proxy implements Dispatcher {
     }
   }
   public boolean isStopped() {
-    if (!actor.isStopped()) {
-      final Consumer<Dispatcher> consumer = (actor) -> actor.isStopped();
-      mailbox.send(new LocalMessage<Dispatcher>(actor, Dispatcher.class, consumer, isStoppedRepresentation3));
-    } else {
-      actor.deadLetters().failedDelivery(new DeadLetter(actor, isStoppedRepresentation3));
-    }
-    return false;
+    return actor.isStopped();
   }
 }

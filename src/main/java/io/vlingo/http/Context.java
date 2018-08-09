@@ -12,9 +12,21 @@ import io.vlingo.actors.CompletesEventually;
 public class Context {
   public final CompletesEventually completes;
   public final Request request;
-  
+
   public Context(final Request request, final CompletesEventually completes) {
     this.request = request;
     this.completes = completes;
+  }
+
+  public Context(final CompletesEventually completes) {
+    this(null, completes);
+  }
+
+  public boolean hasRequest() {
+    return request != null;
+  }
+
+  public Request request() {
+    return request;
   }
 }

@@ -104,7 +104,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         parser = requestResponseContext.consumerData();
         parser.parseNext(buffer.asByteBuffer());
       }
-      
+
       Context context = null;
 
       while (parser.hasFullRequest()) {
@@ -115,6 +115,10 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       }
 
       if (parser.isMissingContent() && !requestsMissingContent.containsKey(requestResponseContext.id())) {
+        if (context == null) {
+          final ResponseCompletes completes = new ResponseCompletes(requestResponseContext);
+          context = new Context(world.completesFor(completes));
+        }
         requestsMissingContent.put(requestResponseContext.id(), new RequestResponseHttpContext(requestResponseContext, context));
       }
 
@@ -163,6 +167,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   //=========================================
 
   private void failTimedOutMissingContentRequests() {
+    if (isStopped()) return;
     if (requestsMissingContent.isEmpty()) return;
 
     final List<String> toRemove = new ArrayList<>(); // prevent ConcurrentModificationException
@@ -221,6 +226,10 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       super(stage().scheduler());
       this.requestResponseContext = requestResponseContext;
       this.correlationId = correlationId;
+    }
+
+    ResponseCompletes(final RequestResponseContext<?> requestResponseContext) {
+      this(requestResponseContext, null);
     }
 
     @Override
