@@ -28,6 +28,7 @@ import io.vlingo.wire.channel.RequestResponseContext;
 import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
 import io.vlingo.wire.message.ByteBufferPool;
 import io.vlingo.wire.message.ConsumerByteBuffer;
+import io.vlingo.wire.message.Converters;
 
 public class ServerActor extends Actor implements Server, RequestChannelConsumer, Scheduled {
   static final String ChannelName = "server-request-response-channel";
@@ -115,6 +116,9 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       }
 
       if (parser.isMissingContent() && !requestsMissingContent.containsKey(requestResponseContext.id())) {
+        java.nio.ByteBuffer buf = buffer.asByteBuffer();
+        final String requestContentText = Converters.bytesToText(buf.array(), 0, buf.limit());
+        logger().log(requestContentText);
         if (context == null) {
           final ResponseCompletes completes = new ResponseCompletes(requestResponseContext);
           context = new Context(world.completesFor(completes));
