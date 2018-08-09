@@ -122,7 +122,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         if (requestContentText.endsWith("\n")) {
           logger().log("CORRECT LINE ENDING");
         } else {
-          logger().log("INCORRECT LINE ENDING");
+          logger().log("INCORRECT LINE ENDING: " + requestContentText.substring(requestContentText.length() - 1));
         }
         if (context == null) {
           final ResponseCompletes completes = new ResponseCompletes(requestResponseContext);
