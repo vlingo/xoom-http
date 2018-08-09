@@ -187,6 +187,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       if (requestResponseHttpContext.requestResponseContext.hasConsumerData()) {
         final RequestParser parser = requestResponseHttpContext.requestResponseContext.consumerData();
         if (parser.hasMissingContentTimeExpired(requestMissingContentTimeout)) {
+          requestResponseHttpContext.requestResponseContext.consumerData(null);
           toRemove.add(id);
           logger().log("TIME OUT: 400 BAD REQUEST; MISSING CONTENT RESPONSE");
           requestResponseHttpContext.httpContext.completes.with(Response.of(Response.BadRequest, "Missing content."));
