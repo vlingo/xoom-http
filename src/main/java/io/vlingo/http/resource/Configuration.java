@@ -15,6 +15,21 @@ public class Configuration {
     return new Configuration(properties);
   }
 
+  public Configuration withPort(final int port) {
+    this.port = port;
+    return this;
+  }
+
+  public Configuration with(final Sizing sizing) {
+    this.sizing = sizing;
+    return this;
+  }
+
+  public Configuration with(final Timing timing) {
+    this.timing = timing;
+    return this;
+  }
+
   public int port() {
     return this.port;
   }
@@ -29,7 +44,7 @@ public class Configuration {
 
   private Configuration() {
     this.port = 8080;
-    this.sizing = new Sizing(10, 100, 65535);
+    this.sizing = Sizing.define();
     this.timing = new Timing(10, 10, 100);
   }
 
@@ -58,10 +73,26 @@ public class Configuration {
       this.maxBufferPoolSize = maxBufferPoolSize;
       this.maxMessageSize = maxMessageSize;
     }
+
+    public static Sizing define() {
+      return new Sizing(10, 100, 65535);
+    }
+
+    public Sizing withDispatcherPoolSize(final int dispatcherPoolSize) {
+      return new Sizing(dispatcherPoolSize, this.maxBufferPoolSize, this.maxMessageSize);
+    }
+
+    public Sizing withMaxBufferPoolSize(final int maxBufferPoolSize) {
+      return new Sizing(this.dispatcherPoolSize, maxBufferPoolSize, this.maxMessageSize);
+    }
+
+    public Sizing withMaxMessageSize(final int maxMessageSize) {
+      return new Sizing(this.dispatcherPoolSize, this.maxBufferPoolSize, maxMessageSize);
+    }
   }
 
   public static class Timing {
-    public final long probeInterval;
+    public final int probeInterval;
     public final long probeTimeout;
     public final long requestMissingContentTimeout;
 
@@ -69,6 +100,22 @@ public class Configuration {
       this.probeInterval = probeInterval;
       this.probeTimeout = probeTimeout;
       this.requestMissingContentTimeout = requestMissingContentTimeout;
+    }
+
+    public static Timing define() {
+      return new Timing(10, 10, 100);
+    }
+
+    public Timing withProbeInterval(final int probeInterval) {
+      return new Timing(probeInterval, this.probeTimeout, this.requestMissingContentTimeout);
+    }
+
+    public Timing withProbeTimeout(final long probeTimeout) {
+      return new Timing(this.probeInterval, probeTimeout, this.requestMissingContentTimeout);
+    }
+
+    public Timing withRequestMissingContentTimeout(final long requestMissingContentTimeout) {
+      return new Timing(this.probeInterval, this.probeTimeout, requestMissingContentTimeout);
     }
   }
 }
