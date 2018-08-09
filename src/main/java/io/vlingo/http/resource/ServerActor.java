@@ -124,7 +124,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
     } catch (Exception e) {
       e.printStackTrace();
-      new ResponseCompletes(requestResponseContext, null).with(Response.of(Response.BadRequest + " " + e.getMessage()));
+      new ResponseCompletes(requestResponseContext, null).with(Response.of(Response.BadRequest, e.getMessage()));
     } finally {
       buffer.release();
     }
@@ -179,7 +179,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         final RequestParser parser = requestResponseHttpContext.requestResponseContext.consumerData();
         if (parser.hasMissingContentTimeExpired(requestMissingContentTimeout)) {
           toRemove.add(id);
-          requestResponseHttpContext.httpContext.completes.with(Response.of(Response.BadRequest + " Missing content."));
+          requestResponseHttpContext.httpContext.completes.with(Response.of(Response.BadRequest, "Missing content."));
           requestResponseHttpContext.requestResponseContext.consumerData(null);
         }
       } else {
