@@ -10,6 +10,8 @@ package io.vlingo.http.resource;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.Stage;
 import io.vlingo.actors.Stoppable;
+import io.vlingo.http.resource.Configuration.Sizing;
+import io.vlingo.http.resource.Configuration.Timing;
 
 public interface Server extends Stoppable {
 
@@ -18,22 +20,16 @@ public interface Server extends Stoppable {
   }
 
   public static Server startWith(final Stage stage, java.util.Properties properties) {
-    final int port = Integer.parseInt(properties.getProperty("server.http.port", "8080"));
-    final int dispatcherPoolSize = Integer.parseInt(properties.getProperty("server.dispatcher.pool", "10"));
-    final int maxBufferPoolSize = Integer.parseInt(properties.getProperty("server.buffer.pool.size", "100"));
-    final int maxMessageSize = Integer.parseInt(properties.getProperty("server.message.buffer.size", "65535"));
-    final int probeInterval = Integer.parseInt(properties.getProperty("server.probe.interval", "10"));
-    final long probeTimeout = Long.parseLong(properties.getProperty("server.probe.timeout", "10"));
-    final long requestMissingContentTimeout = Long.parseLong(properties.getProperty("server.request.missing.content.timeout", "100"));
+    final Configuration configuration = Configuration.defineWith(properties);
     
     final Resources resources = Loader.loadResources(properties);
     
     return startWith(
             stage,
             resources,
-            port,
-            new Sizing(dispatcherPoolSize, maxBufferPoolSize, maxMessageSize),
-            new Timing(probeInterval, probeTimeout, requestMissingContentTimeout));
+            configuration.port(),
+            configuration.sizing(),
+            configuration.timing());
   }
 
   public static Server startWith(
@@ -56,27 +52,4 @@ public interface Server extends Stoppable {
     return server;
   }
 
-  public static class Sizing {
-    public final int dispatcherPoolSize;
-    public final int maxBufferPoolSize;
-    public final int maxMessageSize;
-    
-    public Sizing(final int dispatcherPoolSize, final int maxBufferPoolSize, final int maxMessageSize) {
-      this.dispatcherPoolSize = dispatcherPoolSize;
-      this.maxBufferPoolSize = maxBufferPoolSize;
-      this.maxMessageSize = maxMessageSize;
-    }
-  }
-
-  public static class Timing {
-    public final long probeInterval;
-    public final long probeTimeout;
-    public final long requestMissingContentTimeout;
-    
-    public Timing(final int probeInterval, final long probeTimeout, final long requestMissingContentTimeout) {
-      this.probeInterval = probeInterval;
-      this.probeTimeout = probeTimeout;
-      this.requestMissingContentTimeout = requestMissingContentTimeout;
-    }
-  }
 }

@@ -23,6 +23,8 @@ import io.vlingo.http.Request;
 import io.vlingo.http.RequestHeader;
 import io.vlingo.http.RequestParser;
 import io.vlingo.http.Response;
+import io.vlingo.http.resource.Configuration.Timing;
+import io.vlingo.http.resource.Configuration.Sizing;
 import io.vlingo.wire.channel.RequestChannelConsumer;
 import io.vlingo.wire.channel.RequestResponseContext;
 import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
