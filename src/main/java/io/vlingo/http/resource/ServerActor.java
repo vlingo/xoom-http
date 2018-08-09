@@ -119,6 +119,11 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         java.nio.ByteBuffer buf = buffer.asByteBuffer();
         final String requestContentText = Converters.bytesToText(buf.array(), 0, buf.limit());
         logger().log(requestContentText);
+        if (requestContentText.endsWith("\n")) {
+          logger().log("CORRECT LINE ENDING");
+        } else {
+          logger().log("INCORRECT LINE ENDING");
+        }
         if (context == null) {
           final ResponseCompletes completes = new ResponseCompletes(requestResponseContext);
           context = new Context(world.completesFor(completes));
