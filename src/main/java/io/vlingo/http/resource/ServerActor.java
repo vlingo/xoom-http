@@ -113,6 +113,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         final ResponseCompletes completes = new ResponseCompletes(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
         context = new Context(request, world.completesFor(completes));
         pooledDispatcher().dispatchFor(context);
+        requestsMissingContent.remove(requestResponseContext.id());
       }
 
       if (parser.isMissingContent() && !requestsMissingContent.containsKey(requestResponseContext.id())) {
