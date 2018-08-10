@@ -15,7 +15,7 @@
     <dependency>
       <groupId>io.vlingo</groupId>
       <artifactId>vlingo-http</artifactId>
-      <version>0.4.7</version>
+      <version>0.4.8</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>
@@ -23,7 +23,7 @@
 
 ```gradle
 dependencies {
-    compile 'io.vlingo:vlingo-http:0.4.7'
+    compile 'io.vlingo:vlingo-http:0.4.8'
 }
 
 repositories {
