@@ -28,7 +28,6 @@ import io.vlingo.wire.channel.RequestResponseContext;
 import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
 import io.vlingo.wire.message.ByteBufferPool;
 import io.vlingo.wire.message.ConsumerByteBuffer;
-import io.vlingo.wire.message.Converters;
 
 public class ServerActor extends Actor implements Server, RequestChannelConsumer, Scheduled {
   static final String ChannelName = "server-request-response-channel";
@@ -83,7 +82,6 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     } catch (Exception e) {
       final String message = "Failed to start server because: " + e.getMessage();
       logger().log(message, e);
-      e.printStackTrace();
       throw new IllegalStateException(message);
     }
   }
@@ -97,12 +95,14 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   public void consume(final RequestResponseContext<?> requestResponseContext, final ConsumerByteBuffer buffer) {
     try {
       final RequestParser parser;
+      boolean wasIncompleteContent = false;
 
       if (!requestResponseContext.hasConsumerData()) {
         parser = RequestParser.parserFor(buffer.asByteBuffer());
         requestResponseContext.consumerData(parser);
       } else {
         parser = requestResponseContext.consumerData();
+        wasIncompleteContent = parser.isMissingContent();
         parser.parseNext(buffer.asByteBuffer());
       }
 
@@ -113,18 +113,12 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         final ResponseCompletes completes = new ResponseCompletes(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
         context = new Context(request, world.completesFor(completes));
         pooledDispatcher().dispatchFor(context);
-        requestsMissingContent.remove(requestResponseContext.id());
+        if (wasIncompleteContent) {
+          requestsMissingContent.remove(requestResponseContext.id());
+        }
       }
 
       if (parser.isMissingContent() && !requestsMissingContent.containsKey(requestResponseContext.id())) {
-        java.nio.ByteBuffer buf = buffer.asByteBuffer();
-        final String requestContentText = Converters.bytesToText(buf.array(), 0, buf.limit());
-        logger().log(requestContentText);
-        if (requestContentText.endsWith("\n")) {
-          logger().log("CORRECT LINE ENDING");
-        } else {
-          logger().log("INCORRECT LINE ENDING: " + requestContentText.substring(requestContentText.length() - 1));
-        }
         if (context == null) {
           final ResponseCompletes completes = new ResponseCompletes(requestResponseContext);
           context = new Context(world.completesFor(completes));
@@ -133,7 +127,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       }
 
     } catch (Exception e) {
-      e.printStackTrace();
+      logger().log("Request parsing failed.", e);
       new ResponseCompletes(requestResponseContext, null).with(Response.of(Response.BadRequest, e.getMessage()));
     } finally {
       buffer.release();
@@ -190,7 +184,6 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         if (parser.hasMissingContentTimeExpired(requestMissingContentTimeout)) {
           requestResponseHttpContext.requestResponseContext.consumerData(null);
           toRemove.add(id);
-          logger().log("TIME OUT: 400 BAD REQUEST; MISSING CONTENT RESPONSE");
           requestResponseHttpContext.httpContext.completes.with(Response.of(Response.BadRequest, "Missing content."));
           requestResponseHttpContext.requestResponseContext.consumerData(null);
         }
