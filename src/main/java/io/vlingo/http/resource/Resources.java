@@ -20,7 +20,7 @@ import io.vlingo.http.resource.Action.MatchResults;
 public class Resources {
   final Map<String, Resource<?>> namedResources;
 
-  public static Resources are(final ConfigurationResource<?>... resources) {
+  public static Resources are(final Resource<?>... resources) {
     final Resources all = new Resources();
     for (final Resource<?> resource : resources) {
       all.namedResources.put(resource.name, resource);
