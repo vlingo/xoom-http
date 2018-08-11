@@ -18,11 +18,11 @@ import io.vlingo.http.resource.Action.MappedParameters;
 import io.vlingo.http.resource.Action.MatchResults;
 
 public class Resources {
-  final Map<String, ConfigurationResource<?>> namedResources;
+  final Map<String, Resource<?>> namedResources;
 
   public static Resources are(final ConfigurationResource<?>... resources) {
     final Resources all = new Resources();
-    for (final ConfigurationResource<?> resource : resources) {
+    for (final Resource<?> resource : resources) {
       all.namedResources.put(resource.name, resource);
     }
     return all;
@@ -42,11 +42,11 @@ public class Resources {
     return "Resources[namedResources=" + namedResources + "]";
   }
 
-  Resources(final Map<String, ConfigurationResource<?>> namedResources) {
+  Resources(final Map<String, Resource<?>> namedResources) {
     this.namedResources = Collections.unmodifiableMap(namedResources);
   }
 
-  Resources(final ConfigurationResource<?> resource) {
+  Resources(final Resource<?> resource) {
     this.namedResources = new HashMap<>();
     this.namedResources.put(resource.name, resource);
   }
@@ -55,12 +55,12 @@ public class Resources {
     this.namedResources = new HashMap<>();
   }
 
-  ConfigurationResource<?> resourceOf(final String name) {
+  Resource<?> resourceOf(final String name) {
     return namedResources.get(name);
   }
 
   void dispatchMatching(final Context context, Logger logger) {
-    for (final ConfigurationResource<?> resource : namedResources.values()) {
+    for (final Resource<?> resource : namedResources.values()) {
       final MatchResults matchResults = resource.matchWith(context.request.method, context.request.uri);
       if (matchResults.isMatched()) {
         final MappedParameters mappedParameters = matchResults.action.map(context.request, matchResults.parameters());

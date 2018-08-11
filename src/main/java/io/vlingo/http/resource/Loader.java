@@ -20,7 +20,7 @@ public class Loader {
   private static final String resourceNamePrefix = "resource.name.";
 
   public static Resources loadResources(final java.util.Properties properties) {
-    final Map<String, ConfigurationResource<?>> namedResources = new HashMap<>();
+    final Map<String, Resource<?>> namedResources = new HashMap<>();
     
     for (String resource : findResources(properties)) {
       final ConfigurationResource<?> loaded = loadResource(properties, resource);

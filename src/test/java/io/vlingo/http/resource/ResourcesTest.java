@@ -21,7 +21,7 @@ public class ResourcesTest {
   
   @Test
   public void testLoadResources() {
-    final ConfigurationResource<?> user = resources.resourceOf("user");
+    final ConfigurationResource<?> user = (ConfigurationResource) resources.resourceOf("user");
     
     assertNotNull(user);
     assertEquals(user.name, "user");
@@ -43,7 +43,7 @@ public class ResourcesTest {
     
     assertEquals(5, countUserActions);
     
-    final ConfigurationResource<?> profile = resources.resourceOf("profile");
+    final ConfigurationResource<?> profile = (ConfigurationResource) resources.resourceOf("profile");
     
     assertNotNull(profile);
     assertEquals(profile.name, "profile");

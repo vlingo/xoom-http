@@ -157,7 +157,7 @@ public abstract class ResourceTestFixtures {
     
     resource.allocateHandlerPool(world.stage());
     
-    final Map<String, ConfigurationResource<?>> oneResource = new HashMap<>(1);
+    final Map<String, Resource<?>> oneResource = new HashMap<>(1);
     
     oneResource.put(resource.name, resource);
     
