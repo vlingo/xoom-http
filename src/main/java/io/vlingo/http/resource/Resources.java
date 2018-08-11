@@ -32,7 +32,7 @@ public class Resources {
 //    return new Resources(namedResources);
 //  }
 
-//  public Resources add(final ConfigurationResource<?> resource) {
+//  public Resources add(final Resources<?> resource) {
 //    namedResources.put(resource.name, resource);
 //    return this;
 //  }
