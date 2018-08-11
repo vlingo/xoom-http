@@ -78,7 +78,7 @@ public class ResourcesTest {
                               .also("GET", "/users", "queryUsers()", true)
                               .thatsAll()),
                    ConfigurationResource.defining("profile", ProfileResource.class, 5,
-                      Actions.canBe("PUT", "/users/{userId}/profile", "define(String userId, body:io.vlingo.http.sample.user.ProfileData profileData)", "io.vlingo.http.sample.user.ProfileDataMapper", false)
+                      Actions.canBe("PUT", "/users/{userId}/profile", "route(String userId, body:io.vlingo.http.sample.user.ProfileData profileData)", "io.vlingo.http.sample.user.ProfileDataMapper", false)
                               .also("GET", "/users/{userId}/profile", "query(String userId)", "io.vlingo.http.sample.user.ProfileDataMapper", false)
                               .thatsAll()));
 

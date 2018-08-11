@@ -18,7 +18,7 @@ import io.vlingo.http.resource.Mapper;
  * the action for which it maps resources:
  * <p>{@code action.RESOURCE_NAME.ACTION_NAME.mapper = fully.qualified.classname }</p>
  * <p>As in:</p>
- * <p>{@code action.profile.define.mapper = io.vlingo.http.sample.user.ProfileDataMapper }</p>
+ * <p>{@code action.profile.route.mapper = io.vlingo.http.sample.user.ProfileDataMapper }</p>
  */
 public class ProfileDataMapper implements Mapper {
 
