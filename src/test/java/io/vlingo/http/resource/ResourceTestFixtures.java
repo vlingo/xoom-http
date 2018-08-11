@@ -33,7 +33,7 @@ public abstract class ResourceTestFixtures {
   protected Action actionGetUser;
   protected Action actionGetUsers;
 
-  protected Resource<?> resource;
+  protected ConfigurationResource<?> resource;
   protected Class<? extends ResourceHandler> resourceHandlerClass;
   protected Resources resources;
   protected Dispatcher dispatcher;
@@ -151,13 +151,13 @@ public abstract class ResourceTestFixtures {
                     actionGetUser,
                     actionGetUsers);
 
-    resourceHandlerClass = Resource.newResourceHandlerClassFor("io.vlingo.http.sample.user.UserResource");
+    resourceHandlerClass = ConfigurationResource.newResourceHandlerClassFor("io.vlingo.http.sample.user.UserResource");
     
-    resource = Resource.newResourceFor("user", resourceHandlerClass, 5, actions);
+    resource = ConfigurationResource.newResourceFor("user", resourceHandlerClass, 5, actions);
     
     resource.allocateHandlerPool(world.stage());
     
-    final Map<String,Resource<?>> oneResource = new HashMap<>(1);
+    final Map<String, ConfigurationResource<?>> oneResource = new HashMap<>(1);
     
     oneResource.put(resource.name, resource);
     

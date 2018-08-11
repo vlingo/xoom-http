@@ -34,7 +34,7 @@ import io.vlingo.http.resource.Action.MatchResults;
 import io.vlingo.http.sample.user.NameData;
 import io.vlingo.http.sample.user.UserData;
 
-public class ResourceTest extends ResourceTestFixtures {
+public class ConfigurationResourceTest extends ResourceTestFixtures {
 
   @Test
   public void testThatPostRegisterUserDispatches() {
@@ -244,7 +244,7 @@ public class ResourceTest extends ResourceTestFixtures {
                     actionGetUser,
                     actionGetUserEmailAddress);
     
-    final Resource<?> resource = Resource.newResourceFor("user", resourceHandlerClass, 5, actions);
+    final ConfigurationResource<?> resource = ConfigurationResource.newResourceFor("user", resourceHandlerClass, 5, actions);
 
     final MatchResults actionGetUsersMatch = resource.matchWith(Method.GET, new URI("/users"));
     assertTrue(actionGetUsersMatch.isMatched());

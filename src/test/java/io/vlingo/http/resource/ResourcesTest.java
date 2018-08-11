@@ -21,7 +21,7 @@ public class ResourcesTest {
   
   @Test
   public void testLoadResources() {
-    final Resource<?> user = resources.resourceOf("user");
+    final ConfigurationResource<?> user = resources.resourceOf("user");
     
     assertNotNull(user);
     assertEquals(user.name, "user");
@@ -43,7 +43,7 @@ public class ResourcesTest {
     
     assertEquals(5, countUserActions);
     
-    final Resource<?> profile = resources.resourceOf("profile");
+    final ConfigurationResource<?> profile = resources.resourceOf("profile");
     
     assertNotNull(profile);
     assertEquals(profile.name, "profile");
@@ -70,14 +70,14 @@ public class ResourcesTest {
   public void testThatResourcesBuildFluently() {
     final Resources resources =
             Resources
-              .are(Resource.defining("user", UserResource.class, 10,
+              .are(ConfigurationResource.defining("user", UserResource.class, 10,
                       Actions.canBe("POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", true)
                               .also("PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)", true)
                               .also("PATCH", "/users/{userId}/name", "changeName(String userId, body:io.vlingo.http.sample.user.NameData nameData)", true)
                               .also("GET", "/users/{userId}", "queryUser(String userId)", true)
                               .also("GET", "/users", "queryUsers()", true)
                               .thatsAll()),
-                   Resource.defining("profile", ProfileResource.class, 5,
+                   ConfigurationResource.defining("profile", ProfileResource.class, 5,
                       Actions.canBe("PUT", "/users/{userId}/profile", "define(String userId, body:io.vlingo.http.sample.user.ProfileData profileData)", "io.vlingo.http.sample.user.ProfileDataMapper", false)
                               .also("GET", "/users/{userId}/profile", "query(String userId)", "io.vlingo.http.sample.user.ProfileDataMapper", false)
                               .thatsAll()));

@@ -24,12 +24,12 @@ import io.vlingo.http.resource.Action.MappedParameters;
 import io.vlingo.http.resource.Action.MatchResults;
 import io.vlingo.http.resource.ResourceDispatcherGenerator.Result;
 
-public abstract class Resource<T> {
+public abstract class ConfigurationResource<T> {
   static final String DispatcherPostixName = "Dispatcher";
-  
-  private static DynaClassLoader classLoader = new DynaClassLoader(Resource.class.getClassLoader());
+
+  private static DynaClassLoader classLoader = new DynaClassLoader(ConfigurationResource.class.getClassLoader());
   private static final DynaCompiler dynaCompiler = new DynaCompiler();
-  
+
   final List<Action> actions;
   private final ResourceRequestHandler[] handlerPool;
   private final AtomicLong handlerPoolIndex;
@@ -37,7 +37,7 @@ public abstract class Resource<T> {
   public final String name;
   public final Class<? extends ResourceHandler> resourceHandlerClass;
 
-  public static Resource<?> defining(
+  public static ConfigurationResource<?> defining(
           final String resourceName,
           final Class<? extends ResourceHandler> resourceHandlerClass,
           final int handlerPoolSize,
@@ -46,27 +46,27 @@ public abstract class Resource<T> {
   }
 
   @SuppressWarnings("unchecked")
-  static Resource<?> newResourceFor(
+  static ConfigurationResource<?> newResourceFor(
           final String resourceName,
           final Class<? extends ResourceHandler> resourceHandlerClass,
           final int handlerPoolSize,
           final List<Action> actions) {
-    
+
     try {
       final String targetClassname = resourceHandlerClass.getName() + DispatcherPostixName;
-      
-      Class<Resource<?>> resourceClass = null;
+
+      Class<ConfigurationResource<?>> resourceClass = null;
       try {
         // this check is done primarily for testing to prevent duplicate class type in class loader
-        resourceClass = (Class<Resource<?>>) Class.forName(targetClassname);
+        resourceClass = (Class<ConfigurationResource<?>>) Class.forName(targetClassname);
       } catch (Exception e) {
         resourceClass = tryGenerateCompile(resourceHandlerClass, targetClassname, actions);
       }
-      
+
       final Object[] ctorParams = new Object[] { resourceName, resourceHandlerClass, handlerPoolSize, actions };
       for (final Constructor<?> ctor : resourceClass.getConstructors()) {
         if (ctor.getParameterCount() == ctorParams.length) {
-          final Resource<?> resourecDispatcher = (Resource<?>) ctor.newInstance(ctorParams);
+          final ConfigurationResource<?> resourecDispatcher = (ConfigurationResource<?>) ctor.newInstance(ctorParams);
           return resourecDispatcher;
         }
       }
@@ -95,10 +95,10 @@ public abstract class Resource<T> {
       }
       superclass = superclass.getSuperclass();
     }
-    throw new IllegalStateException("Resource handler class must extends ResourceHandler: " + resourceHandlerClass.getName());
+    throw new IllegalStateException("ConfigurationResource handler class must extends ResourceHandler: " + resourceHandlerClass.getName());
   }
 
-  private static Class<Resource<?>> tryGenerateCompile(
+  private static Class<ConfigurationResource<?>> tryGenerateCompile(
           final Class<? extends ResourceHandler> resourceHandlerClass,
           final String targetClassname,
           final List<Action> actions) {
@@ -109,22 +109,22 @@ public abstract class Resource<T> {
         return tryGenerateCompile(resourceHandlerClass, generator, targetClassname);
       } catch (Exception etest) {
         etest.printStackTrace();
-        throw new IllegalArgumentException("Resource dispatcher for " + resourceHandlerClass.getName() + " not created for main or test because: " + etest.getMessage(), etest);
+        throw new IllegalArgumentException("ConfigurationResource dispatcher for " + resourceHandlerClass.getName() + " not created for main or test because: " + etest.getMessage(), etest);
       }
     }
   }
 
-  private static Class<Resource<?>> tryGenerateCompile(
+  private static Class<ConfigurationResource<?>> tryGenerateCompile(
           final Class<? extends ResourceHandler> resourceHandlerClass,
           final ResourceDispatcherGenerator generator,
           final String targetClassname) {
     try {
       final Result result = generator.generateFor(resourceHandlerClass.getName());
       final Input input = new Input(resourceHandlerClass, targetClassname, result.source, result.sourceFile, classLoader, generator.type(), true);
-      final Class<Resource<?>> resourceDispatcherClass = dynaCompiler.compile(input);
+      final Class<ConfigurationResource<?>> resourceDispatcherClass = dynaCompiler.compile(input);
       return resourceDispatcherClass;
     } catch (Exception e) {
-      throw new IllegalArgumentException("Resource instance with dispatcher for " + resourceHandlerClass.getName() + " not created because: " + e.getMessage(), e);
+      throw new IllegalArgumentException("ConfigurationResource instance with dispatcher for " + resourceHandlerClass.getName() + " not created because: " + e.getMessage(), e);
     }
   }
 
@@ -141,7 +141,7 @@ public abstract class Resource<T> {
     }
   }
 
-  
+
   MatchResults matchWith(final Method method, final URI uri) {
     for (final Action action : actions) {
       final MatchResults matchResults = action.matchWith(method, uri);
@@ -152,12 +152,12 @@ public abstract class Resource<T> {
     return Action.unmatchedResults;
   }
 
-  protected Resource(
+  protected ConfigurationResource(
           final String name,
           final Class<? extends ResourceHandler> resourceHandlerClass,
           final int handlerPoolSize,
           final List<Action> actions) {
-    
+
     this.name = name;
     this.resourceHandlerClass = resourceHandlerClass;
     this.handlerPoolSize = handlerPoolSize;

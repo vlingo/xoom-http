@@ -20,10 +20,10 @@ public class Loader {
   private static final String resourceNamePrefix = "resource.name.";
 
   public static Resources loadResources(final java.util.Properties properties) {
-    final Map<String,Resource<?>> namedResources = new HashMap<>();
+    final Map<String, ConfigurationResource<?>> namedResources = new HashMap<>();
     
     for (String resource : findResources(properties)) {
-      final Resource<?> loaded = loadResource(properties, resource);
+      final ConfigurationResource<?> loaded = loadResource(properties, resource);
       
       namedResources.put(loaded.name, loaded);
     }
@@ -44,7 +44,7 @@ public class Loader {
     return resource;
   }
 
-  private static Resource<?> loadResource(final java.util.Properties properties, final String resourceNameKey) {
+  private static ConfigurationResource<?> loadResource(final java.util.Properties properties, final String resourceNameKey) {
     final String resourceName = resourceNameKey.substring(resourceNamePrefix.length());
     final String[] resourceActionNames = actionNamesFrom(properties.getProperty(resourceNameKey), resourceNameKey);
     final String resourceHandlerKey = "resource." + resourceName + ".handler";
@@ -58,7 +58,7 @@ public class Loader {
     try {
       final List<Action> resourceActions = resourceActionsOf(properties, resourceName, resourceActionNames, disallowPathParametersWithSlash);
       
-      final Class<? extends ResourceHandler> resourceHandlerClass = Resource.newResourceHandlerClassFor(resourceHandlerClassname);
+      final Class<? extends ResourceHandler> resourceHandlerClass = ConfigurationResource.newResourceHandlerClassFor(resourceHandlerClassname);
   
       return resourceFor(resourceName, resourceHandlerClass, handlerPoolSize, resourceActions);
     } catch (Exception e) {
@@ -67,16 +67,16 @@ public class Loader {
     }
   }
 
-  private static Resource<?> resourceFor(
+  private static ConfigurationResource<?> resourceFor(
           final String resourceName,
           final Class<? extends ResourceHandler> resourceHandlerClass,
           final int handlerPoolSize,
           final List<Action> resourceActions) {
     try {
-      final Resource<?> resource = Resource.newResourceFor(resourceName, resourceHandlerClass, handlerPoolSize, resourceActions);
+      final ConfigurationResource<?> resource = ConfigurationResource.newResourceFor(resourceName, resourceHandlerClass, handlerPoolSize, resourceActions);
       return resource;
     } catch (Exception e) {
-      throw new IllegalStateException("Resource cannot be created for: " + resourceHandlerClass.getName());
+      throw new IllegalStateException("ConfigurationResource cannot be created for: " + resourceHandlerClass.getName());
     }
   }
 

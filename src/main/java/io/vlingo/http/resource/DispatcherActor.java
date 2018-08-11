@@ -23,7 +23,7 @@ public class DispatcherActor extends Actor implements Dispatcher {
   }
 
   private void allocateHandlerPools() {
-    for (final Resource<?> resource : resources.namedResources.values()) {
+    for (final ConfigurationResource<?> resource : resources.namedResources.values()) {
       resource.allocateHandlerPool(stage());
     }
   }

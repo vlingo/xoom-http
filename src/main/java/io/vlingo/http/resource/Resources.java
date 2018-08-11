@@ -18,11 +18,11 @@ import io.vlingo.http.resource.Action.MappedParameters;
 import io.vlingo.http.resource.Action.MatchResults;
 
 public class Resources {
-  final Map<String,Resource<?>> namedResources;
+  final Map<String, ConfigurationResource<?>> namedResources;
 
-  public static Resources are(final Resource<?>... resources) {
+  public static Resources are(final ConfigurationResource<?>... resources) {
     final Resources all = new Resources();
-    for (final Resource<?> resource : resources) {
+    for (final ConfigurationResource<?> resource : resources) {
       all.namedResources.put(resource.name, resource);
     }
     return all;
@@ -32,7 +32,7 @@ public class Resources {
 //    return new Resources(namedResources);
 //  }
 
-//  public Resources add(final Resource<?> resource) {
+//  public Resources add(final ConfigurationResource<?> resource) {
 //    namedResources.put(resource.name, resource);
 //    return this;
 //  }
@@ -42,11 +42,11 @@ public class Resources {
     return "Resources[namedResources=" + namedResources + "]";
   }
 
-  Resources(final Map<String,Resource<?>> namedResources) {
+  Resources(final Map<String, ConfigurationResource<?>> namedResources) {
     this.namedResources = Collections.unmodifiableMap(namedResources);
   }
 
-  Resources(final Resource<?> resource) {
+  Resources(final ConfigurationResource<?> resource) {
     this.namedResources = new HashMap<>();
     this.namedResources.put(resource.name, resource);
   }
@@ -55,12 +55,12 @@ public class Resources {
     this.namedResources = new HashMap<>();
   }
 
-  Resource<?> resourceOf(final String name) {
+  ConfigurationResource<?> resourceOf(final String name) {
     return namedResources.get(name);
   }
 
   void dispatchMatching(final Context context, Logger logger) {
-    for (final Resource<?> resource : namedResources.values()) {
+    for (final ConfigurationResource<?> resource : namedResources.values()) {
       final MatchResults matchResults = resource.matchWith(context.request.method, context.request.uri);
       if (matchResults.isMatched()) {
         final MappedParameters mappedParameters = matchResults.action.map(context.request, matchResults.parameters());
