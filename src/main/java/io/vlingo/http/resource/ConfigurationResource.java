@@ -7,24 +7,22 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.actors.Definition;
+import io.vlingo.actors.Stage;
+import io.vlingo.common.compiler.DynaClassLoader;
+import io.vlingo.common.compiler.DynaCompiler;
+import io.vlingo.common.compiler.DynaCompiler.Input;
+import io.vlingo.http.Method;
+import io.vlingo.http.resource.Action.MatchResults;
+import io.vlingo.http.resource.ResourceDispatcherGenerator.Result;
+
 import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import io.vlingo.actors.Definition;
-import io.vlingo.actors.Stage;
-import io.vlingo.common.compiler.DynaClassLoader;
-import io.vlingo.common.compiler.DynaCompiler;
-import io.vlingo.common.compiler.DynaCompiler.Input;
-import io.vlingo.http.Context;
-import io.vlingo.http.Method;
-import io.vlingo.http.resource.Action.MappedParameters;
-import io.vlingo.http.resource.Action.MatchResults;
-import io.vlingo.http.resource.ResourceDispatcherGenerator.Result;
-
-public abstract class ConfigurationResource<T> {
+public abstract class ConfigurationResource<T> extends Resource {
   static final String DispatcherPostixName = "Dispatcher";
 
   private static DynaClassLoader classLoader = new DynaClassLoader(ConfigurationResource.class.getClassLoader());
@@ -127,8 +125,6 @@ public abstract class ConfigurationResource<T> {
       throw new IllegalArgumentException("ConfigurationResource instance with dispatcher for " + resourceHandlerClass.getName() + " not created because: " + e.getMessage(), e);
     }
   }
-
-  public abstract void dispatchToHandlerWith(final Context context, final MappedParameters mappedParameters);
 
   void allocateHandlerPool(final Stage stage) {
     for (int idx = 0; idx < handlerPoolSize; ++idx) {
