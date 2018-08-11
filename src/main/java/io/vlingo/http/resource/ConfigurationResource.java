@@ -26,6 +26,7 @@ public abstract class ConfigurationResource<T> extends Resource {
   private static DynaClassLoader classLoader = new DynaClassLoader(ConfigurationResource.class.getClassLoader());
   private static final DynaCompiler dynaCompiler = new DynaCompiler();
 
+  public final Class<? extends ResourceHandler> resourceHandlerClass;
   final List<Action> actions;
 
   public static ConfigurationResource<?> defining(
@@ -134,7 +135,8 @@ public abstract class ConfigurationResource<T> extends Resource {
           final Class<? extends ResourceHandler> resourceHandlerClass,
           final int handlerPoolSize,
           final List<Action> actions) {
-      super(name, resourceHandlerClass, handlerPoolSize);
+      super(name, handlerPoolSize);
+    this.resourceHandlerClass = resourceHandlerClass;
     this.actions = Collections.unmodifiableList(actions);
   }
 

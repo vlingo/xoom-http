@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class Resource<T> {
   public final String name;
-  public final Class<? extends ResourceHandler> resourceHandlerClass;
   public final int handlerPoolSize;
 
   private final ResourceRequestHandler[] handlerPool;
@@ -39,10 +38,8 @@ public abstract class Resource<T> {
   }
 
   Resource(final String name,
-           final Class<? extends ResourceHandler> resourceHandlerClass,
            final int handlerPoolSize) {
     this.name = name;
-    this.resourceHandlerClass = resourceHandlerClass;
     this.handlerPoolSize = handlerPoolSize;
     this.handlerPool = new ResourceRequestHandler[handlerPoolSize];
     this.handlerPoolIndex = new AtomicLong(0);
