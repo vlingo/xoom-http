@@ -7,7 +7,6 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.Definition;
 import io.vlingo.actors.Stage;
 import io.vlingo.common.compiler.DynaClassLoader;
 import io.vlingo.common.compiler.DynaCompiler;
@@ -20,7 +19,6 @@ import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class ConfigurationResource<T> extends Resource {
   static final String DispatcherPostixName = "Dispatcher";
@@ -29,11 +27,6 @@ public abstract class ConfigurationResource<T> extends Resource {
   private static final DynaCompiler dynaCompiler = new DynaCompiler();
 
   final List<Action> actions;
-  private final ResourceRequestHandler[] handlerPool;
-  private final AtomicLong handlerPoolIndex;
-  public final int handlerPoolSize;
-  public final String name;
-  public final Class<? extends ResourceHandler> resourceHandlerClass;
 
   public static ConfigurationResource<?> defining(
           final String resourceName,
@@ -126,18 +119,6 @@ public abstract class ConfigurationResource<T> extends Resource {
     }
   }
 
-  void allocateHandlerPool(final Stage stage) {
-    for (int idx = 0; idx < handlerPoolSize; ++idx) {
-      handlerPool[idx] =
-              stage.actorFor(
-                      Definition.has(
-                              ResourceRequestHandlerActor.class,
-                              Definition.parameters(resourceHandlerInstance(stage))),
-                      ResourceRequestHandler.class);
-    }
-  }
-
-
   MatchResults matchWith(final Method method, final URI uri) {
     for (final Action action : actions) {
       final MatchResults matchResults = action.matchWith(method, uri);
@@ -153,28 +134,18 @@ public abstract class ConfigurationResource<T> extends Resource {
           final Class<? extends ResourceHandler> resourceHandlerClass,
           final int handlerPoolSize,
           final List<Action> actions) {
-
-    this.name = name;
-    this.resourceHandlerClass = resourceHandlerClass;
-    this.handlerPoolSize = handlerPoolSize;
+      super(name, resourceHandlerClass, handlerPoolSize);
     this.actions = Collections.unmodifiableList(actions);
-    this.handlerPool = new ResourceRequestHandler[handlerPoolSize];
-    this.handlerPoolIndex = new AtomicLong(0);
   }
 
-  protected ResourceRequestHandler pooledHandler() {
-    final int index = (int)(handlerPoolIndex.incrementAndGet() % handlerPoolSize);
-    return handlerPool[index];
-  }
-
-  private ResourceHandler resourceHandlerInstance(final Stage stage) {
+  protected ResourceHandler resourceHandlerInstance(final Stage stage) {
     try {
       for (final Constructor<?> ctor : resourceHandlerClass.getConstructors()) {
         if (ctor.getParameterCount() == 1) {
           return (ResourceHandler) ctor.newInstance(new Object[] { stage.world() } );
         }
       }
-      return resourceHandlerClass.newInstance();
+      return (ResourceHandler) resourceHandlerClass.newInstance();
     } catch (Exception e) {
       throw new IllegalArgumentException("The instance for resource handler '" + resourceHandlerClass.getName() + "' cannot be created.");
     }
