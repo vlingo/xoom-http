@@ -99,11 +99,6 @@
       <artifactId>vlingo-wire</artifactId>
       <version>0.4.3</version>
     </dependency>
-    <dependency>
-      <groupId>io.gatling.highcharts</groupId>
-      <artifactId>gatling-charts-highcharts</artifactId>
-      <version>2.3.1</version>
-    </dependency>
   </dependencies>
   <distributionManagement>
     <repository>
