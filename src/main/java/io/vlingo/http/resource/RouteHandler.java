@@ -10,9 +10,10 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.http.Request;
+import io.vlingo.http.Response;
 
 @FunctionalInterface
 public interface RouteHandler {
 
-    void handler(final Request request, final ResourceHandler response);
+  Response handler(final Request request);
 }

@@ -24,9 +24,7 @@ public class RouteTest {
     public void setting() {
         final DynamicResource userResource = route("user")
                 .withHandlerPoolSize(10)
-                .get("/user", (request, response) -> {
-                    response.completes().with(Response.of(Ok, serialized("OK")));
-                })
+                .get("/user", request -> Response.of(Ok, serialized("OK")))
                 .build();
 
         assertNotNull(userResource);

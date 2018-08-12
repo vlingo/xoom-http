@@ -26,15 +26,15 @@ public class HelloWorldResource {
   public Resource resourceHandler() {
     return route(NAME)
       .withHandlerPoolSize(10)
-      .get("/hello-world", ((request, response) -> {
+      .get("/hello-world", request -> {
         /*
         The Request variable paths, cookies and body is done via request variable (not yet implemented)
         something like:
         final String userId = request.stringPathVariable("userId")
         final UserData userData = request.body(mapper(UserData.class));
          */
-        response.completes().with(Response.of(Ok, serialized(this.helloWorld())));
-      }))
+        return Response.of(Ok, serialized(this.helloWorld()));
+      })
       .build();
   }
 }

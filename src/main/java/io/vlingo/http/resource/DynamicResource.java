@@ -28,12 +28,12 @@ public class DynamicResource extends Resource {
   }
 
   public void dispatchToHandlerWith(Context context, Action.MappedParameters mappedParameters) {
-    Consumer<SpecificResourceHandler> consumer = (resource) -> handlers
+    Consumer<ResourceHandler> consumer = (resource) -> resource.completes().with(handlers
       .stream()
       .filter(handler -> handler.equals(handler))
       .findFirst()
       .get()
-      .routeHandler.handler(context.request, this.instance);
+      .routeHandler.handler(context.request));
     pooledHandler().handleFor(context, consumer);
   }
 
