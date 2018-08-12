@@ -30,7 +30,7 @@ public class ResourceDispatcherGeneratorTest {
 
   @Test
   public void testSourceCodeGeneration() throws Exception {
-    final ResourceDispatcherGenerator generator = ResourceDispatcherGenerator.forMain(actions, false);
+    final ResourceDispatcherGenerator generator = ResourceDispatcherGenerator.forTest(actions, false);
     
     final Result result = generator.generateFor(resource.resourceHandlerClass.getName());
     
@@ -44,7 +44,7 @@ public class ResourceDispatcherGeneratorTest {
 
   @Test
   public void testSourceCodeGenerationWithPersistence() throws Exception {
-    final ResourceDispatcherGenerator generator = ResourceDispatcherGenerator.forMain(actions, true);
+    final ResourceDispatcherGenerator generator = ResourceDispatcherGenerator.forTest(actions, true);
     
     final Result result = generator.generateFor(resource.resourceHandlerClass.getName());
     
