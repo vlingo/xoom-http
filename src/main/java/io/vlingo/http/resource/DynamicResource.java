@@ -12,41 +12,55 @@ package io.vlingo.http.resource;
 import io.vlingo.actors.Stage;
 import io.vlingo.http.Context;
 import io.vlingo.http.Method;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class DynamicResource extends Resource {
-  private SpecificResourceHandler instance;
   final List<Predicate> handlers;
+  private final List<Action> actions = new ArrayList<>();
 
   protected DynamicResource(final String name, final int handlerPoolSize, final List<Predicate> handlers) {
     super(name, handlerPoolSize);
     this.handlers = handlers;
+    int currentId = 0;
+    for(Predicate predicate: handlers) {
+      actions.add(new Action(currentId++,
+        predicate.method.toString(),
+        predicate.uri,
+        "unused()",
+        null,
+        false));
+    }
   }
 
   public void dispatchToHandlerWith(Context context, Action.MappedParameters mappedParameters) {
-    Consumer<ResourceHandler> consumer = (resource) -> resource.completes().with(handlers
-      .stream()
-      .filter(handler -> handler.equals(handler))
-      .findFirst()
-      .get()
-      .routeHandler.handler(context.request));
-    pooledHandler().handleFor(context, consumer);
+    try {
+      Consumer<ResourceHandler> consumer = (resource) -> {
+        resource.completes().with(
+          handlers.get(mappedParameters.actionId).routeHandler.handler(context.request)
+        );
+      };
+      pooledHandler().handleFor(context, consumer);
+    } catch (Exception e) {
+      throw new IllegalArgumentException("Action mismatch: Request: " + context.request + "Parameters: " + mappedParameters);
+    }
   }
 
   Action.MatchResults matchWith(Method method, URI uri) {
-    /**
-     * TODO a way to reuse Action implementation.
-     */
-    throw new NotImplementedException();
+    for (final Action action : actions) {
+      final Action.MatchResults matchResults = action.matchWith(method, uri);
+      if (matchResults.isMatched()) {
+        return matchResults;
+      }
+    }
+    return Action.unmatchedResults;
   }
 
   protected ResourceHandler resourceHandlerInstance(Stage stage) {
-    this.instance = new SpecificResourceHandler(stage);
-    return this.instance;
+    return new SpecificResourceHandler(stage);
   }
 
   private static class SpecificResourceHandler extends ResourceHandler {
