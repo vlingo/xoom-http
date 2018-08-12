@@ -18,7 +18,7 @@ public abstract class ResourceHandler {
   protected ResourceHandler() {
   }
 
-  public CompletesEventually completes() {
+  protected CompletesEventually completes() {
     return context.completes;
   }
 
