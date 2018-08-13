@@ -78,10 +78,10 @@ public class ResourceDispatcherGenerator implements AutoCloseable {
       try {
         final Class<?> handlerInterface = readHandlerInterface(handlerProtocol);
         final String dispatcherClassSource = dispatcherClassSource(handlerInterface);
-        final String fullyQualifiedClassname = fullyQualifiedClassnameFor(handlerInterface, Resource.DispatcherPostixName);
+        final String fullyQualifiedClassname = fullyQualifiedClassnameFor(handlerInterface, ConfigurationResource.DispatcherPostixName);
         final String relativeTargetFile = toFullPath(fullyQualifiedClassname);
         final File sourceFile = persist ? persistDispatcherClassSource(handlerProtocol, relativeTargetFile, dispatcherClassSource) : new File(relativeTargetFile);
-        return new Result(fullyQualifiedClassname, classnameFor(handlerInterface, Resource.DispatcherPostixName), dispatcherClassSource, sourceFile);
+        return new Result(fullyQualifiedClassname, classnameFor(handlerInterface, ConfigurationResource.DispatcherPostixName), dispatcherClassSource, sourceFile);
       } catch (Exception e) {
         throw new IllegalArgumentException("Cannot generate resource dispatcher class for: " + handlerProtocol, e);
       }
@@ -139,13 +139,13 @@ public class ResourceDispatcherGenerator implements AutoCloseable {
   }
 
   private String classStatement(final Class<?> handlerInterface) {
-    return MessageFormat.format("public class {0} extends Resource<{1}> '{'\n", classnameFor(handlerInterface, Resource.DispatcherPostixName), handlerInterface.getSimpleName());
+    return MessageFormat.format("public class {0} extends ConfigurationResource<{1}> '{'\n", classnameFor(handlerInterface, ConfigurationResource.DispatcherPostixName), handlerInterface.getSimpleName());
   }
 
   private String constructor(final Class<?> protocolInterface) {
     final StringBuilder builder = new StringBuilder();
 
-    final String signature0 = MessageFormat.format("  public {0}(\n", classnameFor(protocolInterface, Resource.DispatcherPostixName));
+    final String signature0 = MessageFormat.format("  public {0}(\n", classnameFor(protocolInterface, ConfigurationResource.DispatcherPostixName));
     final String signature1 = "          final String name,\n";
     final String signature2 = "          final Class<? extends ResourceHandler> resourceHandlerClass,\n";
     final String signature3 = "          final int handlerPoolSize,\n";
@@ -187,7 +187,7 @@ public class ResourceDispatcherGenerator implements AutoCloseable {
       .append("import io.vlingo.http.Context;").append("\n")
       .append("import io.vlingo.http.resource.Action;").append("\n")
       .append("import io.vlingo.http.resource.Action.MappedParameters;").append("\n")
-      .append("import io.vlingo.http.resource.Resource;").append("\n")
+      .append("import io.vlingo.http.resource.ConfigurationResource;").append("\n")
       .append("import io.vlingo.http.resource.ResourceHandler;").append("\n");
 
     final Class<?> outerClass = handlerInterface.getDeclaringClass();

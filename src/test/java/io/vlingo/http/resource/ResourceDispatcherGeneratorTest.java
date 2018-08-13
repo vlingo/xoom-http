@@ -17,8 +17,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.vlingo.http.resource.Action;
-import io.vlingo.http.resource.Resource;
 import io.vlingo.http.resource.ResourceDispatcherGenerator.Result;
 
 public class ResourceDispatcherGeneratorTest {
@@ -28,7 +26,7 @@ public class ResourceDispatcherGeneratorTest {
   private Action actionGetUser;
   private Action actionGetUsers;
   private List<Action> actions;
-  private Resource<?> resource;
+  private ConfigurationResource<?> resource;
 
   @Test
   public void testSourceCodeGeneration() throws Exception {
@@ -82,9 +80,9 @@ public class ResourceDispatcherGeneratorTest {
     try {
       resourceHandlerClass = (Class<? extends ResourceHandler>) Class.forName("io.vlingo.http.sample.user.UserResource");
     } catch (Exception e) {
-      resourceHandlerClass = Resource.newResourceHandlerClassFor("io.vlingo.http.sample.user.UserResource");
+      resourceHandlerClass = ConfigurationResource.newResourceHandlerClassFor("io.vlingo.http.sample.user.UserResource");
     }
     
-    resource = Resource.newResourceFor("user", resourceHandlerClass, 5, actions);
+    resource = ConfigurationResource.newResourceFor("user", resourceHandlerClass, 5, actions);
   }
 }

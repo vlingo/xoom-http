@@ -18,7 +18,7 @@ import io.vlingo.http.resource.Action.MappedParameters;
 import io.vlingo.http.resource.Action.MatchResults;
 
 public class Resources {
-  final Map<String,Resource<?>> namedResources;
+  final Map<String, Resource<?>> namedResources;
 
   public static Resources are(final Resource<?>... resources) {
     final Resources all = new Resources();
@@ -42,7 +42,7 @@ public class Resources {
     return "Resources[namedResources=" + namedResources + "]";
   }
 
-  Resources(final Map<String,Resource<?>> namedResources) {
+  Resources(final Map<String, Resource<?>> namedResources) {
     this.namedResources = Collections.unmodifiableMap(namedResources);
   }
 

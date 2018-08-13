@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.vlingo.http.sample.user.HelloWorldResource;
 import org.junit.After;
 import org.junit.Before;
 
@@ -33,9 +34,10 @@ public abstract class ResourceTestFixtures {
   protected Action actionGetUser;
   protected Action actionGetUsers;
 
-  protected Resource<?> resource;
+  protected ConfigurationResource<?> resource;
   protected Class<? extends ResourceHandler> resourceHandlerClass;
   protected Resources resources;
+  protected Resources dynamicResources;
   protected Dispatcher dispatcher;
   protected World world;
   
@@ -151,17 +153,20 @@ public abstract class ResourceTestFixtures {
                     actionGetUser,
                     actionGetUsers);
 
-    resourceHandlerClass = Resource.newResourceHandlerClassFor("io.vlingo.http.sample.user.UserResource");
+    resourceHandlerClass = ConfigurationResource.newResourceHandlerClassFor("io.vlingo.http.sample.user.UserResource");
     
-    resource = Resource.newResourceFor("user", resourceHandlerClass, 5, actions);
+    resource = ConfigurationResource.newResourceFor("user", resourceHandlerClass, 5, actions);
     
     resource.allocateHandlerPool(world.stage());
     
-    final Map<String,Resource<?>> oneResource = new HashMap<>(1);
+    final Map<String, Resource<?>> oneResource = new HashMap<>(1);
     
     oneResource.put(resource.name, resource);
     
     resources = new Resources(oneResource);
+
+    final HelloWorldResource helloWorldResource = new HelloWorldResource();
+    dynamicResources = new Resources(helloWorldResource.resourceHandler());
     
     dispatcher = new TestDispatcher(resources);
   }
