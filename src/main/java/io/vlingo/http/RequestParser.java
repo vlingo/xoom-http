@@ -101,7 +101,7 @@ public class RequestParser {
         fullRequestsIterator.remove();
         return fullRequest;
       }
-      throw new IllegalStateException(Response.BadRequest + "\n\nRequest is not completed: " + method + " " + uri);
+      throw new IllegalStateException(Response.Status.BadRequest + "\n\nRequest is not completed: " + method + " " + uri);
     }
 
     boolean hasFullRequest() {
@@ -261,7 +261,7 @@ public class RequestParser {
       }
       continuation = false;
       while (true) {
-        final String maybeHeaderLine = nextLine(Response.BadRequest, "\n\nHeader is required.");
+        final String maybeHeaderLine = nextLine(Response.Status.BadRequest.toString(), "\n\nHeader is required.");
         if (maybeHeaderLine.isEmpty()) {
           break;
         }
@@ -275,14 +275,14 @@ public class RequestParser {
         }
       }
       if (headers.isEmpty()) {
-        throw new IllegalArgumentException(Response.BadRequest + "\n\nHeader is required.");
+        throw new IllegalArgumentException(Response.Status.BadRequest + "\n\nHeader is required.");
       }
       nextStep();
     }
 
     private void parseRequestLine() {
       continuation = false;
-      final String line = nextLine(Response.BadRequest, "\n\nRequest line is required.");
+      final String line = nextLine(Response.Status.BadRequest.toString(), "\n\nRequest line is required.");
       final String[] parts = line.split(" ");
 
       try {
@@ -292,7 +292,7 @@ public class RequestParser {
         
         nextStep();
       } catch (Exception e) {
-        throw new IllegalArgumentException(Response.BadRequest + "\n\nParsing exception: " + e.getMessage(), e);
+        throw new IllegalArgumentException(Response.Status.BadRequest.toString() + "\n\nParsing exception: " + e.getMessage(), e);
       }
     }
 
@@ -305,7 +305,7 @@ public class RequestParser {
           }
         }
       }
-      throw new IllegalArgumentException(Response.BadRequest + "\n\nRequest line part missing: " + name);
+      throw new IllegalArgumentException(Response.Status.BadRequest + "\n\nRequest line part missing: " + name);
     }
 
     private void newRequest() {

@@ -13,7 +13,7 @@ import io.vlingo.http.Response;
 import io.vlingo.http.resource.Resource;
 
 import static io.vlingo.common.serialization.JsonSerialization.serialized;
-import static io.vlingo.http.Response.Ok;
+import static io.vlingo.http.Response.Status.Ok;
 import static io.vlingo.http.resource.ResourceBuilder.route;
 
 public class HelloWorldResource {

@@ -71,6 +71,6 @@ public class Resources {
 
     final String message = "No matching resource for method " + context.request.method + " and URI " + context.request.uri;
     logger.log(message);
-    context.completes.with(Response.of(Response.NotFound, message));
+    context.completes.with(Response.of(Response.Status.NotFound, message));
   }
 }

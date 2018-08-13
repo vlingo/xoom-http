@@ -12,119 +12,48 @@ import io.vlingo.wire.message.ConsumerByteBuffer;
 import io.vlingo.wire.message.Converters;
 
 public class Response {
-  // 1xx Informational responses
-  public static final String Continue = "100 Continue";
-  public static final String SwitchingProtocols = "101 Switching Protocols";
-  public static final String Processing = "102 Processing";
-  public static final String EarlyHints = "103 Early Hints";
 
-  // 2xx Success
-  public static final String Ok = "200 OK";
-  public static final String Created = "201 Created";
-  public static final String Accepted = "202 Accepted";
-  public static final String NonAuthoritativeInformation = "203 Non-Authoritative Information";
-  public static final String NoContent = "204 No Content";
-  public static final String ResetContent = "205 Reset Content";
-  public static final String PartialContent = "206 Partial Content";
-  public static final String MultiStatus = "207 Multi-Status";
-  public static final String AlreadyReported = "208 Already Reported";
-  public static final String IMUsed = "226 IM Used";
-  
-  // 3xx Redirection
-  public static final String MultipleChoices = "300 Multiple Choices";
-  public static final String MovedPermanently = "301 Moved Permanently";
-  public static final String Found = "302 Found";
-  public static final String SeeOther = "303 See Other";
-  public static final String NotModified = "304 Not Modified";
-  public static final String UseProxy = "305 Use Proxy";
-  public static final String SwitchProxy = "306 Switch Proxy";
-  public static final String TemporaryRedirect = "307 Temporary Redirect";
-  public static final String PermanentRedirect = "308 Permanent Redirect";
-  
-  // 4xx Client errors
-  public static final String BadRequest = "400 Bad Request";
-  public static final String Unauthorized = "401 Unauthorized";
-  public static final String PaymentRequired = "402 Payment Required";
-  public static final String Forbidden = "403 Forbidden";
-  public static final String NotFound = "404 Not Found";
-  public static final String MethodNotAllowed = "405 Method Not Allowed";
-  public static final String NotAcceptable = "406 Not Acceptable";
-  public static final String ProxyAuthenticationRequired = "407 Proxy Authentication Required";
-  public static final String RequestTimeout = "408 Request Timeout";
-  public static final String Conflict = "409 Conflict";
-  public static final String Gone = "410 Gone";
-  public static final String LengthRequired = "411 Length Required";
-  public static final String PreconditionFailed = "412 Precondition Failed";
-  public static final String PayloadTooLarge = "413 Payload Too Large";
-  public static final String URITooLong = "414 URI Too Long";
-  public static final String UnsupportedMediaType = "415 Unsupported Media Type";
-  public static final String RangeNotSatisfiable = "416 Range Not Satisfiable";
-  public static final String ExpectationFailed = "417 Expectation Failed";
-  public static final String Imateapot = "418 I'm a teapot";
-  public static final String MisdirectedRequest = "421 Misdirected Request";
-  public static final String UnprocessableEntity = "422 Unprocessable Entity";
-  public static final String Locked = "423 Locked";
-  public static final String FailedDependency = "424 Failed Dependency";
-  public static final String UpgradeRequired = "426 Upgrade Required";
-  public static final String PreconditionRequired = "428 Precondition Required";
-  public static final String TooManyRequests = "429 Too Many Requests";
-  public static final String RequestHeaderFieldsTooLarge = "431 Request Header Fields Too Large";
-  public static final String UnavailableForLegalReasons = "451 Unavailable For Legal Reasons";
-  
-  // 5xx Server errors
-  public static final String InternalServerError = "500 Internal Server Error";
-  public static final String NotImplemented = "501 Not Implemented";
-  public static final String BadGateway = "502 Bad Gateway";
-  public static final String ServiceUnavailable = "503 Service Unavailable";
-  public static final String GatewayTimeout = "504 Gateway Timeout";
-  public static final String HTTPVersionNotSupported = "505 HTTP Version Not Supported";
-  public static final String VariantAlsoNegotiates = "506 Variant Also Negotiates";
-  public static final String InsufficientStorage = "507 Insufficient Storage";
-  public static final String LoopDetected = "508 Loop Detected";
-  public static final String NotExtended = "510 Not Extended";
-  public static final String NetworkAuthenticationRequired = "511 Network Authentication Required";
-
-  public static Response of(final String statusCode) {
+  public static Response of(final Status statusCode) {
     return new Response(Version.Http1_1, statusCode, Headers.empty(), Body.from(""));
   }
 
-  public static Response of(final Version version, final String statusCode) {
+  public static Response of(final Version version, final Status statusCode) {
     return new Response(version, statusCode, Headers.empty(), Body.from(""));
   }
 
-  public static Response of(final String statusCode, final String entity) {
+  public static Response of(final Status statusCode, final String entity) {
     return new Response(Version.Http1_1, statusCode, Headers.empty(), Body.from(entity));
   }
 
-  public static Response of(final Version version, final String statusCode, final String entity) {
+  public static Response of(final Version version, final Status statusCode, final String entity) {
     return new Response(version, statusCode, Headers.empty(), Body.from(entity));
   }
 
-  public static Response of(final String statusCode, final Headers<ResponseHeader> headers) {
+  public static Response of(final Status statusCode, final Headers<ResponseHeader> headers) {
     return new Response(Version.Http1_1, statusCode, headers, Body.from(""));
   }
 
-  public static Response of(final Version version, final String statusCode, final Headers<ResponseHeader> headers) {
+  public static Response of(final Version version, final Status statusCode, final Headers<ResponseHeader> headers) {
     return new Response(version, statusCode, headers, Body.from(""));
   }
 
-  public static Response of(final String statusCode, final Headers<ResponseHeader> headers, final String entity) {
+  public static Response of(final Status statusCode, final Headers<ResponseHeader> headers, final String entity) {
     return new Response(Version.Http1_1, statusCode, headers, Body.from(entity));
   }
 
-  public static Response of(final Version version, final String statusCode, final Headers<ResponseHeader> headers, final String entity) {
+  public static Response of(final Version version, final Status statusCode, final Headers<ResponseHeader> headers, final String entity) {
     return new Response(version, statusCode, headers, Body.from(entity));
   }
 
-  public static Response of(final String statusCode, final Headers<ResponseHeader> headers, final Body entity) {
+  public static Response of(final Status statusCode, final Headers<ResponseHeader> headers, final Body entity) {
     return new Response(Version.Http1_1, statusCode, headers, entity);
   }
 
-  public static Response of(final Version version, final String statusCode, final Headers<ResponseHeader> headers, final Body entity) {
+  public static Response of(final Version version, final Status statusCode, final Headers<ResponseHeader> headers, final Body entity) {
     return new Response(version, statusCode, headers, entity);
   }
 
-  public final String status;
+  public final Status status;
   public final String statusCode;
   public final Headers<ResponseHeader> headers;
   public final Body entity;
@@ -163,10 +92,10 @@ public class Response {
     return builder.toString();
   }
   
-  Response(final Version version, final String status, final Headers<ResponseHeader> headers, final Body entity) {
+  Response(final Version version, final Status status, final Headers<ResponseHeader> headers, final Body entity) {
     this.version = version;
     this.status = status;
-    this.statusCode = status.substring(0, status.indexOf(' '));
+    this.statusCode = status.value.substring(0, status.value.indexOf(' '));
     this.headers = headers;
     this.entity = entity == null ? Body.from("") : entity;
     addMissingContentLengthHeader();
@@ -197,5 +126,99 @@ public class Response {
     }
     // HTTP/1.1 + 1 + status code + "\n" + headers + "\n" + entity + just-in-case
     return 9 + statusCode.length() + 1 + headersSize + 1 + entity.content.length() + 5;
+  }
+
+  public enum Status {
+    // 1xx Informational responses
+    Continue("100 Continue"),
+    SwitchingProtocols("101 Switching Protocols"),
+    Processing("102 Processing"),
+    EarlyHints ("103 Early Hints"),
+
+    // 2xx Success
+    Ok("200 OK"),
+    Created("201 Created"),
+    Accepted("202 Accepted"),
+    NonAuthoritativeInformation("203 Non-Authoritative Information"),
+    NoContent("204 No Content"),
+    ResetContent("205 Reset Content"),
+    PartialContent("206 Partial Content"),
+    MultiStatus("207 Multi-Status"),
+    AlreadyReported("208 Already Reported"),
+    IMUsed("226 IM Used"),
+
+    // 3xx Redirection
+    MultipleChoices("300 Multiple Choices"),
+    MovedPermanently("301 Moved Permanently"),
+    Found("302 Found"),
+    SeeOther("303 See Other"),
+    NotModified("304 Not Modified"),
+    UseProxy("305 Use Proxy"),
+    SwitchProxy("306 Switch Proxy"),
+    TemporaryRedirect("307 Temporary Redirect"),
+    PermanentRedirect("308 Permanent Redirect"),
+
+    // 4xx Client errors
+    BadRequest("400 Bad Request"),
+    Unauthorized("401 Unauthorized"),
+    PaymentRequired("402 Payment Required"),
+    Forbidden("403 Forbidden"),
+    NotFound("404 Not Found"),
+    MethodNotAllowed("405 Method Not Allowed"),
+    NotAcceptable("406 Not Acceptable"),
+    ProxyAuthenticationRequired("407 Proxy Authentication Required"),
+    RequestTimeout("408 Request Timeout"),
+    Conflict("409 Conflict"),
+    Gone("410 Gone"),
+    LengthRequired("411 Length Required"),
+    PreconditionFailed("412 Precondition Failed"),
+    PayloadTooLarge("413 Payload Too Large"),
+    URITooLong("414 URI Too Long"),
+    UnsupportedMediaType("415 Unsupported Media Type"),
+    RangeNotSatisfiable("416 Range Not Satisfiable"),
+    ExpectationFailed("417 Expectation Failed"),
+    Imateapot("418 I'm a teapot"),
+    MisdirectedRequest("421 Misdirected Request"),
+    UnprocessableEntity("422 Unprocessable Entity"),
+    Locked("423 Locked"),
+    FailedDependency("424 Failed Dependency"),
+    UpgradeRequired("426 Upgrade Required"),
+    PreconditionRequired("428 Precondition Required"),
+    TooManyRequests("429 Too Many Requests"),
+    RequestHeaderFieldsTooLarge("431 Request Header Fields Too Large"),
+    UnavailableForLegalReasons("451 Unavailable For Legal Reasons"),
+
+    // 5xx Server errors
+    InternalServerError("500 Internal Server Error"),
+    NotImplemented("501 Not Implemented"),
+    BadGateway("502 Bad Gateway"),
+    ServiceUnavailable("503 Service Unavailable"),
+    GatewayTimeout("504 Gateway Timeout"),
+    HTTPVersionNotSupported("505 HTTP Version Not Supported"),
+    VariantAlsoNegotiates("506 Variant Also Negotiates"),
+    InsufficientStorage("507 Insufficient Storage"),
+    LoopDetected("508 Loop Detected"),
+    NotExtended("510 Not Extended"),
+    NetworkAuthenticationRequired("511 Network Authentication Required");
+
+    private final String value;
+    Status(final String status) {
+      this.value = status;
+    }
+
+
+    @Override
+    public String toString() {
+      return this.value;
+    }
+
+    public static Status valueOfRawState(final String value) {
+      for(Status status: Status.values()) {
+        if (status.value.toLowerCase().equals(value.toLowerCase())) {
+          return status;
+        }
+      }
+      throw new IllegalArgumentException("status " + value + " is not valid");
+    }
   }
 }
