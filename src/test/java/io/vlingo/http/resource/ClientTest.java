@@ -22,8 +22,8 @@ import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 import io.vlingo.http.ResponseHeader;
 import io.vlingo.http.resource.Client.Configuration;
-import io.vlingo.http.resource.Server.Sizing;
-import io.vlingo.http.resource.Server.Timing;
+import io.vlingo.http.resource.Configuration.Sizing;
+import io.vlingo.http.resource.Configuration.Timing;
 import io.vlingo.http.sample.user.model.User;
 
 public class ClientTest extends ResourceTestFixtures {
