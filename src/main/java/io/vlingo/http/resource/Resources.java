@@ -60,17 +60,24 @@ public class Resources {
   }
 
   void dispatchMatching(final Context context, Logger logger) {
-    for (final Resource<?> resource : namedResources.values()) {
-      final MatchResults matchResults = resource.matchWith(context.request.method, context.request.uri);
-      if (matchResults.isMatched()) {
-        final MappedParameters mappedParameters = matchResults.action.map(context.request, matchResults.parameters());
-        resource.dispatchToHandlerWith(context, mappedParameters);
-        return;
+    String message;
+
+    try {
+      for (final Resource<?> resource : namedResources.values()) {
+        final MatchResults matchResults = resource.matchWith(context.request.method, context.request.uri);
+        if (matchResults.isMatched()) {
+          final MappedParameters mappedParameters = matchResults.action.map(context.request, matchResults.parameters());
+          resource.dispatchToHandlerWith(context, mappedParameters);
+          return;
+        }
       }
+      message = "No matching resource for method " + context.request.method + " and URI " + context.request.uri;
+      logger.log(message);
+    } catch (Exception e) {
+      message = "Problem dispatching request for method " + context.request.method + " and URI " + context.request.uri + " because: " + e.getMessage();
+      logger.log(message, e);
     }
 
-    final String message = "No matching resource for method " + context.request.method + " and URI " + context.request.uri;
-    logger.log(message);
     context.completes.with(Response.of(Response.NotFound, message));
   }
 }
