@@ -78,14 +78,30 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       logger().log("Server " + ServerName + " is listening on port: " + port);
 
       this.requestMissingContentTimeout = timing.requestMissingContentTimeout;
-      
-      stage().scheduler().schedule(selfAs(Scheduled.class), null, 1000L, requestMissingContentTimeout);
 
     } catch (Exception e) {
       final String message = "Failed to start server because: " + e.getMessage();
       logger().log(message, e);
       throw new IllegalStateException(message);
     }
+  }
+
+  //=========================================
+  // Server
+  //=========================================
+
+  @Override
+  public Completes<Boolean> shutDown() {
+    stop();
+
+    return completes().with(true);
+  }
+
+  @Override
+  public Completes<Boolean> startUp() {
+    stage().scheduler().schedule(selfAs(Scheduled.class), null, 1000L, requestMissingContentTimeout);
+
+    return completes().with(true);
   }
 
 

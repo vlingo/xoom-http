@@ -32,8 +32,11 @@ import io.vlingo.wire.node.Host;
 public class ServerTest extends ResourceTestFixtures {
   private static final int TOTAL_REQUESTS_RESPONSES = 1_000;
   
+  private static int baseServerPort = 18080;
+  
   private ClientRequestResponseChannel client;
   private ResponseChannelConsumer consumer;
+  private int serverPort;
   private Progress progress;
   private Server server;
   
@@ -106,22 +109,25 @@ public class ServerTest extends ResourceTestFixtures {
 
     User.resetId();
 
-    server = Server.startWith(world.stage(), resources, 18080, new Sizing(10, 100, 10240), new Timing(1, 2, 100));
+    serverPort = baseServerPort++;
+    server = Server.startWith(world.stage(), resources, serverPort, new Sizing(10, 100, 10240), new Timing(1, 2, 100));
     Thread.sleep(10); // delay for server startup
 
     progress = new Progress();
     
     consumer = world.actorFor(Definition.has(TestResponseChannelConsumer.class, Definition.parameters(progress)), ResponseChannelConsumer.class);
 
-    client = new ClientRequestResponseChannel(Address.from(Host.of("localhost"), 18080, AddressType.NONE), consumer, 100, 10240, world.defaultLogger());
+    client = new ClientRequestResponseChannel(Address.from(Host.of("localhost"), serverPort, AddressType.NONE), consumer, 100, 10240, world.defaultLogger());
   }
 
   @After
   public void tearDown() {
     client.close();
-    
-    server.stop();
-    
+
+    if (!server.shutDown().await(2000)) {
+      System.out.println("Server did not shut down properly.");
+    }
+
     super.tearDown();
   }
 }
