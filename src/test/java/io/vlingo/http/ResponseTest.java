@@ -7,7 +7,7 @@
 
 package io.vlingo.http;
 
-import static io.vlingo.http.Response.Ok;
+import static io.vlingo.http.Response.Status.Ok;
 import static io.vlingo.http.ResponseHeader.CacheControl;
 import static io.vlingo.http.ResponseHeader.ETag;
 import static io.vlingo.http.ResponseHeader.headers;

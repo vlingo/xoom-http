@@ -69,7 +69,7 @@ public class ServerTest extends ResourceTestFixtures {
     final Response getResponse = progress.responses.poll();
 
     assertEquals(2, progress.consumeCount.get());
-    assertEquals(Response.Ok, getResponse.status);
+    assertEquals(Response.Status.Ok, getResponse.status);
     assertNotNull(getResponse.entity);
     assertNotNull(getResponse.entity.content);
     assertFalse(getResponse.entity.content.isEmpty());

@@ -57,7 +57,7 @@ public enum Method {
     case "CONNECT":
       return CONNECT;
     default:
-      throw new IllegalArgumentException(Response.MethodNotAllowed + "\n\n" + methodNameText);
+      throw new IllegalArgumentException(Response.Status.MethodNotAllowed + "\n\n" + methodNameText);
     }
   }
   

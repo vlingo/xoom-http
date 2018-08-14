@@ -78,7 +78,7 @@ public class ResponseParser {
     private ListIterator<Response> fullResponsesIterator;
     private Headers<ResponseHeader> headers;
     private long outOfContentTime;
-    private String status;
+    private Response.Status status;
     private Version version;
 
     VirtualStateParser() {
@@ -285,7 +285,7 @@ public class ResponseParser {
       
       try {
         version = Version.from(line.substring(0, spaceIndex).trim());
-        status = line.substring(spaceIndex + 1).trim();
+        status = Response.Status.valueOfRawState(line.substring(spaceIndex + 1).trim());
         
         nextStep();
       } catch (Throwable e) {

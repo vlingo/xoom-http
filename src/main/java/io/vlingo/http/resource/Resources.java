@@ -78,6 +78,6 @@ public class Resources {
       logger.log(message, e);
     }
 
-    context.completes.with(Response.of(Response.NotFound, message));
+    context.completes.with(Response.of(Response.Status.NotFound, message));
   }
 }

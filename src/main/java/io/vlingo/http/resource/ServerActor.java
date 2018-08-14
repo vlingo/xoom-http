@@ -146,7 +146,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
     } catch (Exception e) {
       logger().log("Request parsing failed.", e);
-      new ResponseCompletes(requestResponseContext, null).with(Response.of(Response.BadRequest, e.getMessage()));
+      new ResponseCompletes(requestResponseContext, null).with(Response.of(Response.Status.BadRequest, e.getMessage()));
     } finally {
       buffer.release();
     }
@@ -202,7 +202,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         if (parser.hasMissingContentTimeExpired(requestMissingContentTimeout)) {
           requestResponseHttpContext.requestResponseContext.consumerData(null);
           toRemove.add(id);
-          requestResponseHttpContext.httpContext.completes.with(Response.of(Response.BadRequest, "Missing content."));
+          requestResponseHttpContext.httpContext.completes.with(Response.of(Response.Status.BadRequest, "Missing content."));
           requestResponseHttpContext.requestResponseContext.consumerData(null);
         }
       } else {
