@@ -7,6 +7,11 @@
 
 package io.vlingo.http.resource;
 
+import java.lang.reflect.Constructor;
+import java.net.URI;
+import java.util.Collections;
+import java.util.List;
+
 import io.vlingo.actors.Stage;
 import io.vlingo.common.compiler.DynaClassLoader;
 import io.vlingo.common.compiler.DynaCompiler;
@@ -15,12 +20,7 @@ import io.vlingo.http.Method;
 import io.vlingo.http.resource.Action.MatchResults;
 import io.vlingo.http.resource.ResourceDispatcherGenerator.Result;
 
-import java.lang.reflect.Constructor;
-import java.net.URI;
-import java.util.Collections;
-import java.util.List;
-
-public abstract class ConfigurationResource<T> extends Resource {
+public abstract class ConfigurationResource<T> extends Resource<T> {
   static final String DispatcherPostixName = "Dispatcher";
 
   private static DynaClassLoader classLoader = new DynaClassLoader(ConfigurationResource.class.getClassLoader());
