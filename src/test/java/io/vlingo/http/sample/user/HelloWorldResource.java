@@ -23,7 +23,7 @@ public class HelloWorldResource {
     return "Hello World";
   }
 
-  public Resource resourceHandler() {
+  public Resource<?> resourceHandler() {
     return route(NAME)
       .withHandlerPoolSize(10)
       .get("/hello-world", request -> {
