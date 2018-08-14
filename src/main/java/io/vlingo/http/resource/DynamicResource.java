@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class DynamicResource extends Resource {
+public class DynamicResource extends Resource<ResourceHandler> {
   final List<Predicate> handlers;
   private final List<Action> actions = new ArrayList<>();
 
@@ -36,7 +36,7 @@ public class DynamicResource extends Resource {
     }
   }
 
-  public void dispatchToHandlerWith(Context context, Action.MappedParameters mappedParameters) {
+  public void dispatchToHandlerWith(final Context context, final Action.MappedParameters mappedParameters) {
     try {
       Consumer<ResourceHandler> consumer = (resource) -> {
         resource.completes().with(
@@ -49,7 +49,7 @@ public class DynamicResource extends Resource {
     }
   }
 
-  Action.MatchResults matchWith(Method method, URI uri) {
+  Action.MatchResults matchWith(final Method method, final URI uri) {
     for (final Action action : actions) {
       final Action.MatchResults matchResults = action.matchWith(method, uri);
       if (matchResults.isMatched()) {
@@ -59,7 +59,7 @@ public class DynamicResource extends Resource {
     return Action.unmatchedResults;
   }
 
-  protected ResourceHandler resourceHandlerInstance(Stage stage) {
+  protected ResourceHandler resourceHandlerInstance(final Stage stage) {
     return new SpecificResourceHandler(stage);
   }
 
