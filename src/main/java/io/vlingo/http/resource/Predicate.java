@@ -11,7 +11,7 @@ package io.vlingo.http.resource;
 
 import io.vlingo.http.Method;
 
-public class Predicate {
+class Predicate {
     public final Method method;
     public final String uri;
     public final RouteHandler routeHandler;
