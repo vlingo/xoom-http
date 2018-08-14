@@ -119,9 +119,11 @@ public class ServerTest extends ResourceTestFixtures {
   @After
   public void tearDown() {
     client.close();
-    
-    server.stop();
-    
+
+    if (!server.shutDown().await(2000)) {
+      System.out.println("Server did not shut down properly.");
+    }
+
     super.tearDown();
   }
 }

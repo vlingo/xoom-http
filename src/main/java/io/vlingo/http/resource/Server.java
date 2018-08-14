@@ -7,6 +7,7 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.actors.Completes;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.Stage;
 import io.vlingo.actors.Stoppable;
@@ -49,7 +50,11 @@ public interface Server extends Stoppable {
             stage.world().addressFactory().withHighId(),
             stage.world().defaultLogger());
 
+    server.startUp();
+
     return server;
   }
 
+  Completes<Boolean> shutDown();
+  Completes<Boolean> startUp();
 }
