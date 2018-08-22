@@ -38,11 +38,9 @@ public class DynamicResource extends Resource<ResourceHandler> {
 
   public void dispatchToHandlerWith(final Context context, final Action.MappedParameters mappedParameters) {
     try {
-      Consumer<ResourceHandler> consumer = (resource) -> {
-        resource.completes().with(
-          handlers.get(mappedParameters.actionId).routeHandler.handler(context.request)
-        );
-      };
+      Consumer<ResourceHandler> consumer = (resource) -> resource.completes().with(
+        handlers.get(mappedParameters.actionId).routeHandler.handler(context.request)
+      );
       pooledHandler().handleFor(context, consumer);
     } catch (Exception e) {
       throw new IllegalArgumentException("Action mismatch: Request: " + context.request + "Parameters: " + mappedParameters);
