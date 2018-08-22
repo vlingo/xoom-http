@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.vlingo.http.sample.user.HelloWorldResource;
 import org.junit.After;
 import org.junit.Before;
 
@@ -164,9 +163,6 @@ public abstract class ResourceTestFixtures {
     oneResource.put(resource.name, resource);
     
     resources = new Resources(oneResource);
-
-    final HelloWorldResource helloWorldResource = new HelloWorldResource();
-    dynamicResources = new Resources(helloWorldResource.resourceHandler());
     
     dispatcher = new TestDispatcher(resources);
   }
