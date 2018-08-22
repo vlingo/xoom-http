@@ -11,6 +11,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
 
 import io.vlingo.http.sample.user.ProfileResource;
@@ -84,5 +87,31 @@ public class ResourcesTest {
 
     assertNotNull(resources.resourceOf("user"));
     assertNotNull(resources.resourceOf("profile"));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testThatWrongIdSequenceBreaks() {
+    final Action actionPostUser = new Action(0, "POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", null, true);
+    final Action actionPatchUserContact = new Action(3, "PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)", null, true);
+
+    final List<Action> actions = Arrays.asList(actionPostUser, actionPatchUserContact);
+
+    final Class<? extends ResourceHandler> resourceHandlerClass =
+            ConfigurationResource.newResourceHandlerClassFor("io.vlingo.http.sample.user.UserResource");
+    
+    ConfigurationResource.newResourceFor("user", resourceHandlerClass, 5, actions);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testThatWrongIdOrderBreaks() {
+    final Action actionPostUser = new Action(3, "POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", null, true);
+    final Action actionPatchUserContact = new Action(1, "PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)", null, true);
+
+    final List<Action> actions = Arrays.asList(actionPostUser, actionPatchUserContact);
+
+    final Class<? extends ResourceHandler> resourceHandlerClass =
+            ConfigurationResource.newResourceHandlerClassFor("io.vlingo.http.sample.user.UserResource");
+    
+    ConfigurationResource.newResourceFor("user", resourceHandlerClass, 5, actions);
   }
 }

@@ -44,6 +44,8 @@ public abstract class ConfigurationResource<T> extends Resource<T> {
           final int handlerPoolSize,
           final List<Action> actions) {
 
+    assertSaneActions(actions);
+
     try {
       final String targetClassname = resourceHandlerClass.getName() + DispatcherPostixName;
 
@@ -76,6 +78,20 @@ public abstract class ConfigurationResource<T> extends Resource<T> {
       return resourceHandlerClass;
     } catch (Exception e) {
       throw new IllegalArgumentException("The resource handler class " + resourceHandlerClassname + " cannot be loaded because: " + e.getMessage());
+    }
+  }
+
+  private static void assertSaneActions(final List<Action> actions) {
+    int expectedId = 0;
+    for (final Action action : actions) {
+      if (action.id != expectedId) {
+        throw new IllegalArgumentException(
+                "Action id in conflict with expected ordering: expected id: " +
+                expectedId +
+                " Action is: " +
+                action);
+      }
+      ++expectedId;
     }
   }
 
