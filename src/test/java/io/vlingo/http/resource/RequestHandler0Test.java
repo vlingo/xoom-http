@@ -37,7 +37,7 @@ public class RequestHandler0Test {
   }
 
   @Test()
-  public void throwExceptionWhenNoHandlerIsSet() {
+  public void throwExceptionWhenNoHandlerIsDefined() {
     thrown.expect(HandlerMissingException.class);
     thrown.expectMessage("No handler defined for GET /helloworld");
 
