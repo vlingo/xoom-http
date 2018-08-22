@@ -12,28 +12,28 @@ package io.vlingo.http.resource;
 import io.vlingo.http.Method;
 import io.vlingo.http.Response;
 
-public class RequestHandler0 {
+public class RequestHandler1<T> {
   final Method method;
   final String path;
-  private Handler0 handler;
+  private Handler1<T> handler;
 
-  public RequestHandler0(final Method method, final String path) {
+  public RequestHandler1(final Method method, final String path) {
     this.method = method;
     this.path = path;
   }
 
   @FunctionalInterface
-  interface Handler0 {
-    Response execute();
+  interface Handler1<T> {
+    Response execute(T param1);
   }
 
-  public RequestHandler0 handle(final Handler0 handler) {
+  public RequestHandler1<T> handle(final Handler1<T> handler) {
     this.handler = handler;
     return this;
   }
 
-  public Response execute() {
+  public Response execute(final T param1) {
     if(this.handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
-    return this.handler.execute();
+    return this.handler.execute(param1);
   }
 }

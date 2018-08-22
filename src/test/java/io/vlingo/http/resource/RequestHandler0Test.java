@@ -28,7 +28,7 @@ public class RequestHandler0Test {
   public void simpleHandler() {
     final Response response = Response.of(Created);
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      .handler(() -> response);
+      .handle(() -> response);
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
@@ -39,7 +39,7 @@ public class RequestHandler0Test {
   @Test()
   public void throwExceptionWhenNoHandlerIsDefined() {
     thrown.expect(HandlerMissingException.class);
-    thrown.expectMessage("No handler defined for GET /helloworld");
+    thrown.expectMessage("No handle defined for GET /helloworld");
 
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld");
     handler.execute();
