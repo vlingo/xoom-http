@@ -15,7 +15,7 @@ import io.vlingo.http.Response;
 public class RequestHandler0 {
   final Method method;
   final String path;
-  private Handler handler;
+  private Handler0 handler;
 
   public RequestHandler0(final Method method, final String path) {
     this.method = method;
@@ -23,11 +23,11 @@ public class RequestHandler0 {
   }
 
   @FunctionalInterface
-  interface Handler {
+  interface Handler0 {
     Response execute();
   }
 
-  public RequestHandler0 handler(final Handler handler) {
+  public RequestHandler0 handler(final Handler0 handler) {
     this.handler = handler;
     return this;
   }
