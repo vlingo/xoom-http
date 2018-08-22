@@ -27,14 +27,16 @@ public class RequestHandler1Test {
 
   @Test
   public void handlerWithOneParam() {
-    final RequestHandler1<String> handler = new RequestHandler1<String>(
+    final RequestHandler1<String> handler = new RequestHandler1<>(
       Method.GET,
-      "/posts/{postId}"
+      "/posts/{postId}",
+      String.class
     ).handle(postId -> Response.of(Ok, serialized(postId)));
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
     assertEquals("/posts/{postId}", handler.path);
+    assertEquals(String.class, handler.param1Class);
     assertEquals(handler.execute("my-post").toString(), Response.of(Ok, serialized("my-post")).toString());
   }
 
@@ -43,7 +45,20 @@ public class RequestHandler1Test {
     thrown.expect(HandlerMissingException.class);
     thrown.expectMessage("No handle defined for GET /posts/{postId}");
 
-    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}");
+    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", String.class);
     handler.execute("my-post");
+  }
+
+  @Test
+  public void convertingRequestHandler0ToRequestHandler1() {
+    final RequestHandler1<String> handler = new RequestHandler0(Method.GET, "/posts/{postId}")
+      .param1(String.class)
+      .handle(postId -> Response.of(Ok, serialized(postId)));
+
+    assertNotNull(handler);
+    assertEquals(Method.GET, handler.method);
+    assertEquals("/posts/{postId}", handler.path);
+    assertEquals(String.class, handler.param1Class);
+    assertEquals(handler.execute("my-post").toString(), Response.of(Ok, serialized("my-post")).toString());
   }
 }

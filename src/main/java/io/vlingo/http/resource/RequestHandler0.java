@@ -17,9 +17,13 @@ public class RequestHandler0 {
   final String path;
   private Handler0 handler;
 
-  public RequestHandler0(final Method method, final String path) {
+  RequestHandler0(final Method method, final String path) {
     this.method = method;
     this.path = path;
+  }
+
+  public <T> RequestHandler1<T> param1(Class<T> paramClass) {
+    return new RequestHandler1<>(this.method, this.path, paramClass);
   }
 
   @FunctionalInterface
@@ -32,7 +36,7 @@ public class RequestHandler0 {
     return this;
   }
 
-  public Response execute() {
+  Response execute() {
     if(this.handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
     return this.handler.execute();
   }

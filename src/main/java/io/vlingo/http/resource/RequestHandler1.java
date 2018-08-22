@@ -15,11 +15,13 @@ import io.vlingo.http.Response;
 public class RequestHandler1<T> {
   final Method method;
   final String path;
+  final Class<T> param1Class;
   private Handler1<T> handler;
 
-  public RequestHandler1(final Method method, final String path) {
+  RequestHandler1(final Method method, final String path, final Class<T> param1) {
     this.method = method;
     this.path = path;
+    this.param1Class = param1;
   }
 
   @FunctionalInterface
@@ -32,7 +34,7 @@ public class RequestHandler1<T> {
     return this;
   }
 
-  public Response execute(final T param1) {
+  Response execute(final T param1) {
     if(this.handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
     return this.handler.execute(param1);
   }
