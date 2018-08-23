@@ -11,39 +11,23 @@ package io.vlingo.http.resource;
 
 import io.vlingo.http.Method;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
-public class ResourceBuilder {
-  private String name;
-  private int handlerPoolSize;
-  private final List<Predicate> handlers;
+public interface ResourceBuilder {
 
-  public static ResourceBuilder route(final String name) {
-    return new ResourceBuilder(name);
+  static Resource<?> resource(final String name, RequestHandler... requestHandlers) {
+    return resource(name, 10, requestHandlers);
   }
 
-  public static RequestHandler0 get(final String uri) {
+  static Resource<?> resource(final String name, final int handlerPoolSize, RequestHandler... requestHandlers) {
+    return new DynamicResource(name, handlerPoolSize, Arrays.asList(requestHandlers));
+  }
+
+  static RequestHandler0 get(final String uri) {
     return new RequestHandler0(Method.GET, uri);
   }
 
-  public ResourceBuilder post(final String uri, final RouteHandler routeHandler) {
-    this.handlers.add(new Predicate(Method.POST, uri, routeHandler));
-    return this;
-  }
-
-  public ResourceBuilder withHandlerPoolSize(final int handlerPoolSize) {
-    this.handlerPoolSize = handlerPoolSize;
-    return this;
-  }
-
-  public DynamicResource build() {
-    return new DynamicResource(this.name, this.handlerPoolSize, this.handlers);
-  }
-
-  public ResourceBuilder(String name) {
-    this.name = name;
-    this.handlerPoolSize = 10;
-    this.handlers = new ArrayList<>();
+  static RequestHandler0 post(final String uri) {
+    return new RequestHandler0(Method.POST, uri);
   }
 }
