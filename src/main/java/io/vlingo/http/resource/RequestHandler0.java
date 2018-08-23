@@ -23,7 +23,7 @@ public class RequestHandler0 implements RequestHandler {
     this.path = path;
   }
 
-  public <T> RequestHandler1<T> param1(Class<T> paramClass) {
+  public <T> RequestHandler1<T> param(Class<T> paramClass) {
     return new RequestHandler1<>(this.method, this.path, paramClass);
   }
 

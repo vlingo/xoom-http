@@ -15,41 +15,40 @@ import io.vlingo.http.Response;
 
 import java.lang.reflect.InvocationTargetException;
 
-public class RequestHandler1<T> implements RequestHandler {
+public class RequestHandler2<T, R> implements RequestHandler {
   private final Method method;
   private final String path;
-  final Class<T> param1Class;
-  private Handler1<T> handler;
+  private final Class<T> param1Class;
+  private final Class<R> param2Class;
+  private Handler2<T,R> handler;
 
-  RequestHandler1(final Method method, final String path, final Class<T> param1) {
+  RequestHandler2(final Method method, final String path, final Class<T> param1, final Class<R> param2) {
     this.method = method;
     this.path = path;
     this.param1Class = param1;
-  }
-
-  public <R> RequestHandler2<T,R> body(final Class<R> bodyClass) {
-    return new RequestHandler2<>(this.method, this.path, this.param1Class, bodyClass);
+    this.param2Class = param2;
   }
 
   @FunctionalInterface
-  interface Handler1<T> {
-    Response execute(T param1);
+  interface Handler2<T,R> {
+    Response execute(T param1, R param2);
   }
 
-  public RequestHandler1<T> handle(final Handler1<T> handler) {
+  public RequestHandler2<T,R> handle(final Handler2<T,R> handler) {
     this.handler = handler;
     return this;
   }
 
-  Response execute(final T param1) {
+  Response execute(final T param1, final R param2) {
     if(this.handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
-    return this.handler.execute(param1);
+    return this.handler.execute(param1, param2);
   }
 
   @Override
   public Response execute(Request request, Action.MappedParameters mappedParameters) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
     final T param1 = this.param1Class.getConstructor(this.param1Class).newInstance(mappedParameters.mapped.get(0));
-    return this.execute(param1);
+    final R param2 = this.param2Class.getConstructor(this.param2Class).newInstance(mappedParameters.mapped.get(1));
+    return this.execute(param1, param2);
   }
 
   @Override

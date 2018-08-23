@@ -52,7 +52,7 @@ public class RequestHandler1Test {
   @Test
   public void convertingRequestHandler0ToRequestHandler1() {
     final RequestHandler1<String> handler = new RequestHandler0(Method.GET, "/posts/{postId}")
-      .param1(String.class)
+      .param(String.class)
       .handle(postId -> Response.of(Ok, serialized(postId)));
 
     assertNotNull(handler);
