@@ -10,11 +10,12 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.http.Method;
+import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
-public class RequestHandler0 {
-  final Method method;
-  final String path;
+public class RequestHandler0 implements RequestHandler {
+  private final Method method;
+  private final String path;
   private Handler0 handler;
 
   RequestHandler0(final Method method, final String path) {
@@ -39,5 +40,20 @@ public class RequestHandler0 {
   Response execute() {
     if(this.handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
     return this.handler.execute();
+  }
+
+  @Override
+  public Response execute(Request request, Action.MappedParameters mappedParameters) {
+    return this.execute();
+  }
+
+  @Override
+  public Method method() {
+    return this.method;
+  }
+
+  @Override
+  public String path() {
+    return this.path;
   }
 }

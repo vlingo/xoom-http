@@ -10,11 +10,14 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.http.Method;
+import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
-public class RequestHandler1<T> {
-  final Method method;
-  final String path;
+import java.lang.reflect.InvocationTargetException;
+
+public class RequestHandler1<T> implements RequestHandler {
+  private final Method method;
+  private final String path;
   final Class<T> param1Class;
   private Handler1<T> handler;
 
@@ -37,5 +40,21 @@ public class RequestHandler1<T> {
   Response execute(final T param1) {
     if(this.handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
     return this.handler.execute(param1);
+  }
+
+  @Override
+  public Response execute(Request request, Action.MappedParameters mappedParameters) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    final T param1 = this.param1Class.getConstructor(this.param1Class).newInstance(mappedParameters.mapped.get(0));
+    return this.execute(param1);
+  }
+
+  @Override
+  public Method method() {
+    return this.method;
+  }
+
+  @Override
+  public String path() {
+    return this.path;
   }
 }

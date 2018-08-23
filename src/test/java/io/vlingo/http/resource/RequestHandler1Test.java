@@ -34,8 +34,8 @@ public class RequestHandler1Test {
     ).handle(postId -> Response.of(Ok, serialized(postId)));
 
     assertNotNull(handler);
-    assertEquals(Method.GET, handler.method);
-    assertEquals("/posts/{postId}", handler.path);
+    assertEquals(Method.GET, handler.method());
+    assertEquals("/posts/{postId}", handler.path());
     assertEquals(String.class, handler.param1Class);
     assertEquals(handler.execute("my-post").toString(), Response.of(Ok, serialized("my-post")).toString());
   }
@@ -56,8 +56,8 @@ public class RequestHandler1Test {
       .handle(postId -> Response.of(Ok, serialized(postId)));
 
     assertNotNull(handler);
-    assertEquals(Method.GET, handler.method);
-    assertEquals("/posts/{postId}", handler.path);
+    assertEquals(Method.GET, handler.method());
+    assertEquals("/posts/{postId}", handler.path());
     assertEquals(String.class, handler.param1Class);
     assertEquals(handler.execute("my-post").toString(), Response.of(Ok, serialized("my-post")).toString());
   }

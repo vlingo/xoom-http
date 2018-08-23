@@ -31,8 +31,8 @@ public class RequestHandler0Test {
       .handle(() -> response);
 
     assertNotNull(handler);
-    assertEquals(Method.GET, handler.method);
-    assertEquals("/helloworld", handler.path);
+    assertEquals(Method.GET, handler.method());
+    assertEquals("/helloworld", handler.path());
     assertEquals(response, handler.execute());
   }
 
