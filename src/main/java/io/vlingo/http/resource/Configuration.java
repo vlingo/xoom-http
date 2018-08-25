@@ -61,6 +61,7 @@ public class Configuration {
     this();
 
     this.port = Integer.parseInt(properties.getProperty("server.http.port", String.valueOf(this.port)));
+    final int processorPoolSize = Integer.parseInt(properties.getProperty("server.processor.pool.size", String.valueOf(this.sizing.processorPoolSize)));
     final int dispatcherPoolSize = Integer.parseInt(properties.getProperty("server.dispatcher.pool", String.valueOf(this.sizing.dispatcherPoolSize)));
     final int maxBufferPoolSize = Integer.parseInt(properties.getProperty("server.buffer.pool.size", String.valueOf(this.sizing.maxBufferPoolSize)));
     final int maxMessageSize = Integer.parseInt(properties.getProperty("server.message.buffer.size", String.valueOf(this.sizing.maxMessageSize)));
@@ -68,35 +69,41 @@ public class Configuration {
     final long probeTimeout = Long.parseLong(properties.getProperty("server.probe.timeout", String.valueOf(this.timing.probeTimeout)));
     final long requestMissingContentTimeout = Long.parseLong(properties.getProperty("server.request.missing.content.timeout", String.valueOf(this.timing.requestMissingContentTimeout)));
 
-    this.sizing = new Sizing(dispatcherPoolSize, maxBufferPoolSize, maxMessageSize);
+    this.sizing = new Sizing(processorPoolSize, dispatcherPoolSize, maxBufferPoolSize, maxMessageSize);
     this.timing = new Timing(probeInterval, probeTimeout, requestMissingContentTimeout);
   }
 
   public static class Sizing {
+    public final int processorPoolSize;
     public final int dispatcherPoolSize;
     public final int maxBufferPoolSize;
     public final int maxMessageSize;
 
-    public Sizing(final int dispatcherPoolSize, final int maxBufferPoolSize, final int maxMessageSize) {
+    public Sizing(final int processorPoolSize, final int dispatcherPoolSize, final int maxBufferPoolSize, final int maxMessageSize) {
+      this.processorPoolSize = processorPoolSize;
       this.dispatcherPoolSize = dispatcherPoolSize;
       this.maxBufferPoolSize = maxBufferPoolSize;
       this.maxMessageSize = maxMessageSize;
     }
 
     public static Sizing define() {
-      return new Sizing(10, 100, 65535);
+      return new Sizing(10, 10, 100, 65535);
+    }
+
+    public Sizing withProcessorPoolSize(final int processorPoolSize) {
+      return new Sizing(processorPoolSize, this.dispatcherPoolSize, this.maxBufferPoolSize, this.maxMessageSize);
     }
 
     public Sizing withDispatcherPoolSize(final int dispatcherPoolSize) {
-      return new Sizing(dispatcherPoolSize, this.maxBufferPoolSize, this.maxMessageSize);
+      return new Sizing(this.processorPoolSize, dispatcherPoolSize, this.maxBufferPoolSize, this.maxMessageSize);
     }
 
     public Sizing withMaxBufferPoolSize(final int maxBufferPoolSize) {
-      return new Sizing(this.dispatcherPoolSize, maxBufferPoolSize, this.maxMessageSize);
+      return new Sizing(this.processorPoolSize, this.dispatcherPoolSize, maxBufferPoolSize, this.maxMessageSize);
     }
 
     public Sizing withMaxMessageSize(final int maxMessageSize) {
-      return new Sizing(this.dispatcherPoolSize, this.maxBufferPoolSize, maxMessageSize);
+      return new Sizing(this.processorPoolSize, this.dispatcherPoolSize, this.maxBufferPoolSize, maxMessageSize);
     }
   }
 
