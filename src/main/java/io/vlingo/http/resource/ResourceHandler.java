@@ -8,6 +8,8 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.actors.CompletesEventually;
+import io.vlingo.actors.Logger;
+import io.vlingo.actors.Scheduler;
 import io.vlingo.actors.Stage;
 import io.vlingo.http.Context;
 
@@ -24,6 +26,14 @@ public abstract class ResourceHandler {
 
   protected Context context() {
     return context;
+  }
+
+  protected Logger logger() {
+    return stage.world().defaultLogger();
+  }
+
+  public Scheduler scheduler() {
+    return stage.scheduler();
   }
 
   protected Stage stage() {
