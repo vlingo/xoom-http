@@ -71,7 +71,7 @@ public class ClientTest extends ResourceTestFixtures {
 
     User.resetId();
 
-    server = Server.startWith(world.stage(), resources, 8080, new Sizing(10, 100, 10240), new Timing(1, 2, 100));
+    server = Server.startWith(world.stage(), resources, 8080, new Sizing(1, 10, 100, 10240), new Timing(1, 2, 100));
 
     Thread.sleep(10); // delay for server startup
   }
