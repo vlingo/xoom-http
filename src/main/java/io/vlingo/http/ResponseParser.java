@@ -258,7 +258,7 @@ public class ResponseParser {
 
     private void parseHeaders() {
       if (!continuation) {
-        headers.clear();
+        headers = new Headers<>(2);
       }
       continuation = false;
       while (true) {
