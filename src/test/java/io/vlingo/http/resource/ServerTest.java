@@ -44,24 +44,14 @@ public class ServerTest extends ResourceTestFixtures {
   
   @Test
   public void testThatServerDispatchesRequests() throws Exception {
-    System.out.println("================================ testThatServerDispatchesRequests()");
-
-    int count = 0;
-
     final String request = postRequest(uniqueJohnDoe());
     client.requestWith(toByteBuffer(request));
-    System.out.println("testThatServerDispatchesRequests(): 1");
 
     progress.untilConsumed = TestUntil.happenings(1);
     while (progress.untilConsumed.remaining() > 0) {
-      if (++count % 250 == 0) {
-        System.out.print(".");
-      }
       client.probeChannel();
     }
-    System.out.println("x");
     progress.untilConsumed.completes();
-    System.out.println("testThatServerDispatchesRequests(): 2");
 
     final Response createdResponse = progress.responses.poll();
 
@@ -71,18 +61,12 @@ public class ServerTest extends ResourceTestFixtures {
     final String getUserMessage = "GET " + createdResponse.headerOf(ResponseHeader.Location).value + " HTTP/1.1\nHost: vlingo.io\n\n";
 
     client.requestWith(toByteBuffer(getUserMessage));
-    System.out.println("testThatServerDispatchesRequests(): 3");
-    count = 0;
+    
     progress.untilConsumed = TestUntil.happenings(1);
     while (progress.untilConsumed.remaining() > 0) {
-      if (++count % 250 == 0) {
-        System.out.print(".");
-      }
       client.probeChannel();
     }
-    System.out.println("x");
     progress.untilConsumed.completes();
-    System.out.println("testThatServerDispatchesRequests(): 4");
 
     final Response getResponse = progress.responses.poll();
 
@@ -95,39 +79,24 @@ public class ServerTest extends ResourceTestFixtures {
 
   @Test
   public void testThatServerDispatchesManyRequests() throws Exception {
-    System.out.println("================================ testThatServerDispatchesManyRequests()");
-
     final long startTime = System.currentTimeMillis();
-    int count = 0;
+    
     progress.untilConsumed = TestUntil.happenings(TOTAL_REQUESTS_RESPONSES);
     final int totalPairs = TOTAL_REQUESTS_RESPONSES / 2;
     int currentConsumeCount = 0;
     for (int idx = 0; idx < totalPairs; ++idx) {
-      if (++count % 250 == 0) {
-        System.out.print("o");
-      }
       client.requestWith(toByteBuffer(postRequest(uniqueJohnDoe())));
       client.requestWith(toByteBuffer(postRequest(uniqueJaneDoe())));
       final int expected = currentConsumeCount + 2;
-      count = 0;
       while (progress.consumeCount.get() < expected) {
-        if (++count % 250 == 0) {
-          System.out.print("O");
-        }
         client.probeChannel();
       }
       currentConsumeCount = expected;
     }
-    System.out.println("X");
 
-    count = 0;
     while (progress.untilConsumed.remaining() > 0) {
-      if (++count % 250 == 0) {
-        System.out.print(".");
-      }
       client.probeChannel();
     }
-    System.out.println("X");
     
     System.out.println("TOTAL REQUESTS-RESPONSES: " + TOTAL_REQUESTS_RESPONSES + " TIME: " + (System.currentTimeMillis() - startTime) + " ms");
 
