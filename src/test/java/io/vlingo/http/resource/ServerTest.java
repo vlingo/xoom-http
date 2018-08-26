@@ -44,6 +44,8 @@ public class ServerTest extends ResourceTestFixtures {
   
   @Test
   public void testThatServerDispatchesRequests() throws Exception {
+    System.out.println("================================ testThatServerDispatchesRequests()");
+
     final String request = postRequest(uniqueJohnDoe());
     client.requestWith(toByteBuffer(request));
 
@@ -79,6 +81,8 @@ public class ServerTest extends ResourceTestFixtures {
 
   @Test
   public void testThatServerDispatchesManyRequests() throws Exception {
+    System.out.println("================================ testThatServerDispatchesManyRequests()");
+
     final long startTime = System.currentTimeMillis();
     
     progress.untilConsumed = TestUntil.happenings(TOTAL_REQUESTS_RESPONSES);
