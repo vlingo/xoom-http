@@ -113,7 +113,7 @@ public class ServerTest extends ResourceTestFixtures {
 
     serverPort = baseServerPort.getAndIncrement();
     server = Server.startWith(world.stage(), resources, serverPort, new Sizing(10, 10, 100, 10240), new Timing(1, 2, 100));
-    Thread.sleep(10); // delay for server startup
+    Thread.sleep(1000); // delay for server startup
 
     progress = new Progress();
     
