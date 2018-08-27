@@ -19,10 +19,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class Resource<T> {
   public final String name;
-  public final int handlerPoolSize;
-
-  private final ResourceRequestHandler[] handlerPool;
-  private final AtomicLong handlerPoolIndex;
+  public final ThreadLocal<ResourceRequestHandler> handler;
+  private Stage stageForPool;
 
   public abstract void dispatchToHandlerWith(final Context context, final Action.MappedParameters mappedParameters);
 
@@ -31,27 +29,27 @@ public abstract class Resource<T> {
   protected abstract ResourceHandler resourceHandlerInstance(final Stage stage);
 
   void allocateHandlerPool(final Stage stage) {
-    for (int idx = 0; idx < handlerPoolSize; ++idx) {
-      handlerPool[idx] =
-        stage.actorFor(
-          Definition.has(
-            ResourceRequestHandlerActor.class,
-            Definition.parameters(resourceHandlerInstance(stage))),
-          ResourceRequestHandler.class);
-    }
+    stageForPool = stage;
   }
 
   protected ResourceRequestHandler pooledHandler() {
-    final int index = (int) (handlerPoolIndex.incrementAndGet() % handlerPoolSize);
-    return handlerPool[index];
+    ResourceRequestHandler resourceHandler = handler.get();
+    if (resourceHandler == null) {
+      resourceHandler = stageForPool.actorFor(
+        Definition.has(
+          ResourceRequestHandlerActor.class,
+          Definition.parameters(resourceHandlerInstance(stageForPool))),
+        ResourceRequestHandler.class);
+
+      handler.set(resourceHandler);
+    }
+
+    return resourceHandler;
   }
 
-  Resource(final String name,
-           final int handlerPoolSize) {
+  Resource(final String name, final int unused) {
     this.name = name;
-    this.handlerPoolSize = handlerPoolSize;
-    this.handlerPool = new ResourceRequestHandler[handlerPoolSize];
-    this.handlerPoolIndex = new AtomicLong(0);
+    this.handler = ThreadLocal.withInitial(() -> null);
   }
 
 }
