@@ -16,13 +16,11 @@ import io.vlingo.http.Method;
 
 import java.net.URI;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class Resource<T> {
   public final String name;
-  public final int handlerPoolSize;
-
-  private final ResourceRequestHandler[] handlerPool;
-  private final AtomicLong handlerPoolIndex;
+  private ThreadLocal<ResourceRequestHandler> handler;
 
   public abstract void dispatchToHandlerWith(final Context context, final Action.MappedParameters mappedParameters);
 
@@ -31,27 +29,19 @@ public abstract class Resource<T> {
   protected abstract ResourceHandler resourceHandlerInstance(final Stage stage);
 
   void allocateHandlerPool(final Stage stage) {
-    for (int idx = 0; idx < handlerPoolSize; ++idx) {
-      handlerPool[idx] =
-        stage.actorFor(
-          Definition.has(
-            ResourceRequestHandlerActor.class,
-            Definition.parameters(resourceHandlerInstance(stage))),
-          ResourceRequestHandler.class);
-    }
+    this.handler = ThreadLocal.withInitial(() -> stage.actorFor(
+      Definition.has(
+        ResourceRequestHandlerActor.class,
+        Definition.parameters(resourceHandlerInstance(stage))),
+      ResourceRequestHandler.class));
   }
 
   protected ResourceRequestHandler pooledHandler() {
-    final int index = (int) (handlerPoolIndex.incrementAndGet() % handlerPoolSize);
-    return handlerPool[index];
+    return handler.get();
   }
 
-  Resource(final String name,
-           final int handlerPoolSize) {
+  Resource(final String name, final int unused) {
     this.name = name;
-    this.handlerPoolSize = handlerPoolSize;
-    this.handlerPool = new ResourceRequestHandler[handlerPoolSize];
-    this.handlerPoolIndex = new AtomicLong(0);
   }
 
 }
