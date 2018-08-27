@@ -56,4 +56,9 @@ public class RequestHandler0 implements RequestHandler {
   public String path() {
     return this.path;
   }
+
+  @Override
+  public String actionSignature() {
+    return "";
+  }
 }

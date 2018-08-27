@@ -22,4 +22,6 @@ public interface RequestHandler {
   Method method();
 
   String path();
+
+  String actionSignature();
 }

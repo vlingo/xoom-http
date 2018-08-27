@@ -14,12 +14,15 @@ import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class RequestHandler1<T> implements RequestHandler {
   private final Method method;
   private final String path;
   final Class<T> param1Class;
   private Handler1<T> handler;
+  final private Pattern p = Pattern.compile("\\{(.*?)\\}");
 
   RequestHandler1(final Method method, final String path, final Class<T> param1) {
     this.method = method;
@@ -48,7 +51,7 @@ public class RequestHandler1<T> implements RequestHandler {
 
   @Override
   public Response execute(Request request, Action.MappedParameters mappedParameters) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-    final T param1 = this.param1Class.getConstructor(this.param1Class).newInstance(mappedParameters.mapped.get(0));
+    final T param1 = this.param1Class.getConstructor(this.param1Class).newInstance(mappedParameters.mapped.get(0).value);
     return this.execute(param1);
   }
 
@@ -60,5 +63,16 @@ public class RequestHandler1<T> implements RequestHandler {
   @Override
   public String path() {
     return this.path;
+  }
+
+  @Override
+  public String actionSignature() {
+    return this.param1Class.getSimpleName() + " " + this.findParamName();
+  }
+
+  private String findParamName() {
+    final Matcher m = p.matcher(this.path);
+    m.find();
+    return m.group(1);
   }
 }

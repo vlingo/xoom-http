@@ -60,4 +60,9 @@ public class RequestHandler2<T, R> implements RequestHandler {
   public String path() {
     return this.path;
   }
+
+  @Override
+  public String actionSignature() {
+    return param1Class.getSimpleName() + " param1, " + param2Class.getSimpleName() + " param2";
+  }
 }

@@ -13,7 +13,6 @@ import io.vlingo.actors.Stage;
 import io.vlingo.http.Context;
 import io.vlingo.http.Method;
 
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +30,7 @@ public class DynamicResource extends Resource<ResourceHandler> {
       actions.add(new Action(currentId++,
         predicate.method().toString(),
         predicate.path(),
-        "unused()",
+        "unused(" + predicate.actionSignature() + ")",
         null,
         false));
     }
