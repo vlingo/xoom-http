@@ -20,8 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class Resource<T> {
   public final String name;
-  private final ThreadLocal<ResourceRequestHandler> handler;
-  private final AtomicReference<Stage> stageForPool;
+  private ThreadLocal<ResourceRequestHandler> handler;
 
   public abstract void dispatchToHandlerWith(final Context context, final Action.MappedParameters mappedParameters);
 
@@ -30,29 +29,19 @@ public abstract class Resource<T> {
   protected abstract ResourceHandler resourceHandlerInstance(final Stage stage);
 
   void allocateHandlerPool(final Stage stage) {
-    stageForPool.set(stage);
+    this.handler = ThreadLocal.withInitial(() -> stage.actorFor(
+      Definition.has(
+        ResourceRequestHandlerActor.class,
+        Definition.parameters(resourceHandlerInstance(stage))),
+      ResourceRequestHandler.class));
   }
 
   protected ResourceRequestHandler pooledHandler() {
-    ResourceRequestHandler resourceHandler = handler.get();
-    if (resourceHandler == null) {
-      final Stage unwrappedStage = this.stageForPool.get();
-      resourceHandler = unwrappedStage.actorFor(
-        Definition.has(
-          ResourceRequestHandlerActor.class,
-          Definition.parameters(resourceHandlerInstance(unwrappedStage))),
-        ResourceRequestHandler.class);
-
-      handler.set(resourceHandler);
-    }
-
-    return resourceHandler;
+    return handler.get();
   }
 
   Resource(final String name, final int unused) {
     this.name = name;
-    this.handler = ThreadLocal.withInitial(() -> null);
-    this.stageForPool = new AtomicReference<>(null);
   }
 
 }
