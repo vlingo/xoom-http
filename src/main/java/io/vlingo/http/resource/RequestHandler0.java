@@ -28,7 +28,7 @@ public class RequestHandler0 implements RequestHandler {
   }
 
   @FunctionalInterface
-  interface Handler0 {
+  public interface Handler0 {
     Response execute();
   }
 

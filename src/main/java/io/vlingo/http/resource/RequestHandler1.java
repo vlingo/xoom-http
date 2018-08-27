@@ -32,7 +32,7 @@ public class RequestHandler1<T> implements RequestHandler {
   }
 
   @FunctionalInterface
-  interface Handler1<T> {
+  public interface Handler1<T> {
     Response execute(T param1);
   }
 

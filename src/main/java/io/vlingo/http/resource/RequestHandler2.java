@@ -30,7 +30,7 @@ public class RequestHandler2<T, R> implements RequestHandler {
   }
 
   @FunctionalInterface
-  interface Handler2<T,R> {
+  public interface Handler2<T,R> {
     Response execute(T param1, R param2);
   }
 
