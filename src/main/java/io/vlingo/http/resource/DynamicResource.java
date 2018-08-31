@@ -30,7 +30,7 @@ public class DynamicResource extends Resource<ResourceHandler> {
       actions.add(new Action(currentId++,
         predicate.method().toString(),
         predicate.path(),
-        "unused(" + predicate.actionSignature() + ")",
+        "dynamic" + currentId + "(" + predicate.actionSignature() + ")",
         null,
         false));
     }

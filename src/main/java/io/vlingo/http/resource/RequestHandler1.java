@@ -49,9 +49,10 @@ public class RequestHandler1<T> implements RequestHandler {
     return this.handler.execute(param1);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Response execute(Request request, Action.MappedParameters mappedParameters) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-    final T param1 = this.param1Class.getConstructor(this.param1Class).newInstance(mappedParameters.mapped.get(0).value);
+    final T param1 = (T) mappedParameters.mapped.get(0).value;
     return this.execute(param1);
   }
 
