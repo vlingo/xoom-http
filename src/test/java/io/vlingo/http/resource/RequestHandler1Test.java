@@ -10,10 +10,15 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.http.Method;
+import io.vlingo.http.Request;
 import io.vlingo.http.Response;
+import io.vlingo.http.Version;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.net.URI;
+import java.util.Collections;
 
 import static io.vlingo.http.Response.Status.Ok;
 import static io.vlingo.http.resource.serialization.JsonSerialization.serialized;
@@ -85,5 +90,39 @@ public class RequestHandler1Test {
 
     new RequestHandler1<>(Method.GET, "/posts/{ }", String.class)
       .handle(postId -> Response.of(Ok, serialized(postId)));
+  }
+
+  @Test
+  public void executeWithRequestAndMappedParameters() {
+    final Request request = Request.has(Method.GET)
+      .and(URI.create("/posts/my-post"))
+      .and(Version.Http1_1);
+    final Action.MappedParameters mappedParameters =
+      new Action.MappedParameters(1, Method.GET, "ignored", Collections.singletonList(
+        new Action.MappedParameter("String", "my-post"))
+      );
+    final Response response = Response.of(Ok, serialized("it is my-post"));
+    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", String.class)
+      .handle((postId) -> response);
+
+    assertEquals(response, handler.execute(request, mappedParameters));
+  }
+
+  @Test
+  public void executeWithRequestAndMappedParametersWithWrongSignatureType() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Value my-post is of type String instead of Integer");
+
+    final Request request = Request.has(Method.GET)
+      .and(URI.create("/posts/my-post"))
+      .and(Version.Http1_1);
+    final Action.MappedParameters mappedParameters =
+      new Action.MappedParameters(1, Method.GET, "ignored", Collections.singletonList(
+        new Action.MappedParameter("String", "my-post"))
+      );
+    final RequestHandler1<Integer> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", Integer.class)
+      .handle((postId) -> Response.of(Ok, serialized("it is my-post")));
+
+    handler.execute(request, mappedParameters);
   }
 }

@@ -13,7 +13,6 @@ import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,8 +50,11 @@ public class RequestHandler1<T> extends RequestHandler {
   @SuppressWarnings("unchecked")
   @Override
   Response execute(Request request, Action.MappedParameters mappedParameters) {
-    final T param1 = (T) mappedParameters.mapped.get(0).value;
-    return execute(param1);
+    Object value = mappedParameters.mapped.get(0).value;
+    if (param1Class.isInstance(value)) {
+      return execute((T) value);
+    }
+    throw new IllegalArgumentException("Value " + value + " is of type " + mappedParameters.mapped.get(0).type + " instead of " + param1Class.getSimpleName());
   }
 
   @Override
