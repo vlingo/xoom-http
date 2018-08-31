@@ -35,7 +35,6 @@ public class User__Proxy implements User {
   }
   public Completes<State> withName(io.vlingo.http.sample.user.model.Name arg0) {
     if (!actor.isStopped()) {
-      System.out.println("PROXY ACTOR: " + actor.getClass());
       final Consumer<User> consumer = (actor) -> actor.withName(arg0);
       final Completes<State> completes = new BasicCompletes<>(actor.scheduler());
       mailbox.send(new LocalMessage<User>(actor, User.class, consumer, completes, withNameRepresentation2));

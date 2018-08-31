@@ -11,6 +11,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,8 +34,8 @@ import io.vlingo.wire.node.Host;
 public class ServerTest extends ResourceTestFixtures {
   private static final int TOTAL_REQUESTS_RESPONSES = 1_000;
   
-  private static int baseServerPort = 18080;
-  
+  private static final AtomicInteger baseServerPort = new AtomicInteger(18080);
+
   private ClientRequestResponseChannel client;
   private ResponseChannelConsumer consumer;
   private int serverPort;
@@ -109,9 +111,9 @@ public class ServerTest extends ResourceTestFixtures {
 
     User.resetId();
 
-    serverPort = baseServerPort++;
-    server = Server.startWith(world.stage(), resources, serverPort, new Sizing(10, 100, 10240), new Timing(1, 2, 100));
-    Thread.sleep(10); // delay for server startup
+    serverPort = baseServerPort.getAndIncrement();
+    server = Server.startWith(world.stage(), resources, serverPort, new Sizing(1, 1, 100, 10240), new Timing(1, 2, 100));
+    Thread.sleep(1000); // delay for server startup
 
     progress = new Progress();
     

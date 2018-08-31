@@ -23,24 +23,26 @@ import io.vlingo.http.Request;
 import io.vlingo.http.RequestHeader;
 import io.vlingo.http.RequestParser;
 import io.vlingo.http.Response;
-import io.vlingo.http.resource.Configuration.Timing;
 import io.vlingo.http.resource.Configuration.Sizing;
+import io.vlingo.http.resource.Configuration.Timing;
 import io.vlingo.wire.channel.RequestChannelConsumer;
+import io.vlingo.wire.channel.RequestChannelConsumerProvider;
 import io.vlingo.wire.channel.RequestResponseContext;
 import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
-import io.vlingo.wire.message.ByteBufferPool;
+import io.vlingo.wire.message.BasicConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 
-public class ServerActor extends Actor implements Server, RequestChannelConsumer, Scheduled {
+public class ServerActor extends Actor implements Server, RequestChannelConsumerProvider, Scheduled {
   static final String ChannelName = "server-request-response-channel";
   static final String ServerName = "vlingo-http-server";
 
   private final ServerRequestResponseChannel channel;
   private final Dispatcher[] dispatcherPool;
   private int dispatcherPoolIndex;
+  private final int maxMessageSize;
   private final Map<String,RequestResponseHttpContext> requestsMissingContent;
   private final long requestMissingContentTimeout;
-  private final ByteBufferPool responseBufferPool;
+  //private final ByteBufferPool responseBufferPool;
   private final World world;
 
   public ServerActor(
@@ -52,9 +54,10 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     this.dispatcherPoolIndex = 0;
     this.world = stage().world();
     this.requestsMissingContent = new HashMap<>();
+    this.maxMessageSize = sizing.maxMessageSize;
 
     try {
-      this.responseBufferPool = new ByteBufferPool(sizing.maxBufferPoolSize, sizing.maxMessageSize);
+      //this.responseBufferPool = new ByteBufferPool(sizing.maxBufferPoolSize, sizing.maxMessageSize);
 
       this.dispatcherPool = new Dispatcher[sizing.dispatcherPoolSize];
 
@@ -67,9 +70,10 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
                       stage(),
                       stage().world().addressFactory().withHighId(ChannelName),
                       "queueMailbox",
-                      selfAs(RequestChannelConsumer.class),
+                      this,
                       port,
                       ChannelName,
+                      sizing.processorPoolSize,
                       sizing.maxBufferPoolSize,
                       sizing.maxMessageSize,
                       timing.probeTimeout,
@@ -106,50 +110,12 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
 
   //=========================================
-  // RequestChannelConsumer
+  // RequestChannelConsumerProvider
   //=========================================
 
   @Override
-  public void consume(final RequestResponseContext<?> requestResponseContext, final ConsumerByteBuffer buffer) {
-    try {
-      final RequestParser parser;
-      boolean wasIncompleteContent = false;
-
-      if (!requestResponseContext.hasConsumerData()) {
-        parser = RequestParser.parserFor(buffer.asByteBuffer());
-        requestResponseContext.consumerData(parser);
-      } else {
-        parser = requestResponseContext.consumerData();
-        wasIncompleteContent = parser.isMissingContent();
-        parser.parseNext(buffer.asByteBuffer());
-      }
-
-      Context context = null;
-
-      while (parser.hasFullRequest()) {
-        final Request request = parser.fullRequest();
-        final ResponseCompletes completes = new ResponseCompletes(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
-        context = new Context(request, world.completesFor(completes));
-        pooledDispatcher().dispatchFor(context);
-        if (wasIncompleteContent) {
-          requestsMissingContent.remove(requestResponseContext.id());
-        }
-      }
-
-      if (parser.isMissingContent() && !requestsMissingContent.containsKey(requestResponseContext.id())) {
-        if (context == null) {
-          final ResponseCompletes completes = new ResponseCompletes(requestResponseContext);
-          context = new Context(world.completesFor(completes));
-        }
-        requestsMissingContent.put(requestResponseContext.id(), new RequestResponseHttpContext(requestResponseContext, context));
-      }
-
-    } catch (Exception e) {
-      logger().log("Request parsing failed.", e);
-      new ResponseCompletes(requestResponseContext, null).with(Response.of(Response.Status.BadRequest, e.getMessage()));
-    } finally {
-      buffer.release();
-    }
+  public RequestChannelConsumer requestChannelConsumer() {
+    return new ServerRequestChannelConsumer(pooledDispatcher());
   }
 
 
@@ -169,7 +135,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
   @Override
   public void stop() {
-    logger().log("Server stopped.");
+    logger().log("Server stopping...");
 
     failTimedOutMissingContentRequests();
 
@@ -179,6 +145,8 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     for (final Dispatcher dispatcher : dispatcherPool) {
       dispatcher.stop();
     }
+
+    logger().log("Server stopped.");
 
     super.stop();
   }
@@ -224,6 +192,61 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
 
   //=========================================
+  // RequestChannelConsumer
+  //=========================================
+
+  private class ServerRequestChannelConsumer implements RequestChannelConsumer {
+    private final Dispatcher dispatcher;
+
+    ServerRequestChannelConsumer(final Dispatcher dispatcher) {
+      this.dispatcher = dispatcher;
+    }
+
+    @Override
+    public void consume(final RequestResponseContext<?> requestResponseContext, final ConsumerByteBuffer buffer) {
+      try {
+        final RequestParser parser;
+        boolean wasIncompleteContent = false;
+
+        if (!requestResponseContext.hasConsumerData()) {
+          parser = RequestParser.parserFor(buffer.asByteBuffer());
+          requestResponseContext.consumerData(parser);
+        } else {
+          parser = requestResponseContext.consumerData();
+          wasIncompleteContent = parser.isMissingContent();
+          parser.parseNext(buffer.asByteBuffer());
+        }
+
+        Context context = null;
+
+        while (parser.hasFullRequest()) {
+          final Request request = parser.fullRequest();
+          final ResponseCompletes completes = new ResponseCompletes(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
+          context = new Context(request, world.completesFor(completes));
+          dispatcher.dispatchFor(context);
+          if (wasIncompleteContent) {
+            requestsMissingContent.remove(requestResponseContext.id());
+          }
+        }
+
+        if (parser.isMissingContent() && !requestsMissingContent.containsKey(requestResponseContext.id())) {
+          if (context == null) {
+            final ResponseCompletes completes = new ResponseCompletes(requestResponseContext);
+            context = new Context(world.completesFor(completes));
+          }
+          requestsMissingContent.put(requestResponseContext.id(), new RequestResponseHttpContext(requestResponseContext, context));
+        }
+
+      } catch (Exception e) {
+        logger().log("Request parsing failed.", e);
+        new ResponseCompletes(requestResponseContext, null).with(Response.of(Response.Status.BadRequest, e.getMessage()));
+      } finally {
+        buffer.release();
+      }
+    }
+  }
+
+  //=========================================
   // RequestResponseHttpContext
   //=========================================
 
@@ -258,7 +281,8 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     @Override
     @SuppressWarnings("unchecked")
     public <O> Completes<O> with(final O response) {
-      requestResponseContext.respondWith(((Response) response).include(correlationId).into(responseBufferPool.accessFor("response")));
+      final ConsumerByteBuffer buffer = BasicConsumerByteBuffer.allocate(0, maxMessageSize);
+      requestResponseContext.respondWith(((Response) response).include(correlationId).into(buffer));
       return (Completes<O>) this;
     }
   }

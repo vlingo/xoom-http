@@ -15,6 +15,7 @@ import java.util.UUID;
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.Cancellable;
 import io.vlingo.actors.Completes;
+import io.vlingo.actors.CompletesEventually;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.Scheduled;
 import io.vlingo.actors.Stage;
@@ -129,7 +130,7 @@ public class Client {
 
   public static class ClientRequesterConsumerActor extends Actor implements ClientConsumer {
     private final ByteBuffer buffer;
-    private final Map<String, Completes<Response>> completables;
+    private final Map<String, CompletesEventually> completables;
     private final ClientRequestResponseChannel channel;
     private final Configuration configuration;
     private ResponseParser parser;
@@ -159,11 +160,11 @@ public class Client {
           logger().log("Client Consumer: Cannot complete response because no correlation id.");
           configuration.consumerOfUnknownResponses.consume(response);
         } else {
-          final Completes<Response> completes = completables.remove(correlationId.value);
+          final CompletesEventually completes = completables.remove(correlationId.value);
           if (completes == null) {
             configuration.stage.world().defaultLogger().log(
                     "Client Consumer: Cannot complete response because mismatched correlation id: " +
-                     correlationId.name);
+                     correlationId.value);
             configuration.consumerOfUnknownResponses.consume(response);
           } else {
             completes.with(response);
@@ -189,7 +190,7 @@ public class Client {
         readyRequest = request;
       }
 
-      completables.put(correlationId.value, completes());
+      completables.put(correlationId.value, completesEventually());
 
       buffer.clear();
       buffer.put(Converters.textToBytes(readyRequest.toString()));
