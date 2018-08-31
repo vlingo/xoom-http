@@ -61,4 +61,29 @@ public class RequestHandler1Test {
     assertEquals(String.class, handler.param1Class);
     assertEquals(handler.execute("my-post").toString(), Response.of(Ok, serialized("my-post")).toString());
   }
+
+  @Test
+  public void actionSignature() {
+    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", String.class)
+      .handle(postId -> Response.of(Ok, serialized(postId)));
+
+    assertEquals("String postId", handler.actionSignature());
+  }
+
+  @Test
+  public void actionSignatureWithEmptyParamNameThrowsException() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Empty path parameter for GET /posts/{}");
+    new RequestHandler1<>(Method.GET, "/posts/{}", String.class)
+      .handle(postId -> Response.of(Ok, serialized(postId)));
+  }
+
+  @Test
+  public void actionSignatureWithBlankParamNameThrowsException() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Empty path parameter for GET /posts/{ }");
+
+    new RequestHandler1<>(Method.GET, "/posts/{ }", String.class)
+      .handle(postId -> Response.of(Ok, serialized(postId)));
+  }
 }

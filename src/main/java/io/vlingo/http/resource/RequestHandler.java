@@ -15,13 +15,24 @@ import io.vlingo.http.Response;
 
 import java.lang.reflect.InvocationTargetException;
 
-public interface RequestHandler {
+public abstract class RequestHandler {
+  private final Method method;
+  private final String path;
 
-  Response execute(final Request request, final Action.MappedParameters mappedParameters) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException;
+  RequestHandler(final Method method, final String path) {
+    this.method = method;
+    this.path = path;
+  }
 
-  Method method();
+  abstract Response execute(final Request request, final Action.MappedParameters mappedParameters) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException;
 
-  String path();
+  Method method() {
+    return this.method;
+  }
 
-  String actionSignature();
+  String path() {
+    return this.path;
+  }
+
+  abstract String actionSignature();
 }

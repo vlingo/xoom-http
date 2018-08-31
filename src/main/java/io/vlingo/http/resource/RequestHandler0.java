@@ -13,18 +13,15 @@ import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
-public class RequestHandler0 implements RequestHandler {
-  private final Method method;
-  private final String path;
+public class RequestHandler0 extends RequestHandler {
   private Handler0 handler;
 
   RequestHandler0(final Method method, final String path) {
-    this.method = method;
-    this.path = path;
+    super(method, path);
   }
 
   public <T> RequestHandler1<T> param(Class<T> paramClass) {
-    return new RequestHandler1<>(this.method, this.path, paramClass);
+    return new RequestHandler1<>(method(), path(), paramClass);
   }
 
   @FunctionalInterface
@@ -38,27 +35,17 @@ public class RequestHandler0 implements RequestHandler {
   }
 
   Response execute() {
-    if(this.handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
-    return this.handler.execute();
+    if(handler == null) throw new HandlerMissingException("No handle defined for " + method().toString() + " " + path());
+    return handler.execute();
   }
 
   @Override
-  public Response execute(Request request, Action.MappedParameters mappedParameters) {
-    return this.execute();
+  Response execute(Request request, Action.MappedParameters mappedParameters) {
+    return execute();
   }
 
   @Override
-  public Method method() {
-    return this.method;
-  }
-
-  @Override
-  public String path() {
-    return this.path;
-  }
-
-  @Override
-  public String actionSignature() {
+  String actionSignature() {
     return "";
   }
 }

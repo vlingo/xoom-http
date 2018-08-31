@@ -15,16 +15,13 @@ import io.vlingo.http.Response;
 
 import java.lang.reflect.InvocationTargetException;
 
-public class RequestHandler2<T, R> implements RequestHandler {
-  private final Method method;
-  private final String path;
+public class RequestHandler2<T, R> extends RequestHandler {
   private final Class<T> param1Class;
   private final Class<R> param2Class;
   private Handler2<T,R> handler;
 
   RequestHandler2(final Method method, final String path, final Class<T> param1, final Class<R> param2) {
-    this.method = method;
-    this.path = path;
+    super(method, path);
     this.param1Class = param1;
     this.param2Class = param2;
   }
@@ -40,29 +37,20 @@ public class RequestHandler2<T, R> implements RequestHandler {
   }
 
   Response execute(final T param1, final R param2) {
-    if(this.handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
-    return this.handler.execute(param1, param2);
+    if(handler == null) throw new HandlerMissingException("No handle defined for " + method().toString() + " " + path());
+    return handler.execute(param1, param2);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public Response execute(Request request, Action.MappedParameters mappedParameters) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-    final T param1 = this.param1Class.getConstructor(this.param1Class).newInstance(mappedParameters.mapped.get(0));
-    final R param2 = this.param2Class.getConstructor(this.param2Class).newInstance(mappedParameters.mapped.get(1));
+  public Response execute(Request request, Action.MappedParameters mappedParameters) {
+    final T param1 = (T) mappedParameters.mapped.get(0).value;
+    final R param2 = (R) mappedParameters.mapped.get(1).value;
     return this.execute(param1, param2);
   }
 
   @Override
-  public Method method() {
-    return this.method;
-  }
-
-  @Override
-  public String path() {
-    return this.path;
-  }
-
-  @Override
-  public String actionSignature() {
+  String actionSignature() {
     return param1Class.getSimpleName() + " param1, " + param2Class.getSimpleName() + " param2";
   }
 }

@@ -17,21 +17,20 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RequestHandler1<T> implements RequestHandler {
-  private final Method method;
-  private final String path;
+public class RequestHandler1<T> extends RequestHandler {
   final Class<T> param1Class;
   private Handler1<T> handler;
   final private Pattern p = Pattern.compile("\\{(.*?)\\}");
+  final private String actionSignature;
 
   RequestHandler1(final Method method, final String path, final Class<T> param1) {
-    this.method = method;
-    this.path = path;
+    super(method, path);
     this.param1Class = param1;
+    this.actionSignature = generateActionSignature();
   }
 
   public <R> RequestHandler2<T,R> body(final Class<R> bodyClass) {
-    return new RequestHandler2<>(this.method, this.path, this.param1Class, bodyClass);
+    return new RequestHandler2<>(method(), path(), param1Class, bodyClass);
   }
 
   @FunctionalInterface
@@ -45,35 +44,27 @@ public class RequestHandler1<T> implements RequestHandler {
   }
 
   Response execute(final T param1) {
-    if(this.handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
-    return this.handler.execute(param1);
+    if(handler == null) throw new HandlerMissingException("No handle defined for " + method().toString() + " " + path());
+    return handler.execute(param1);
   }
 
   @SuppressWarnings("unchecked")
   @Override
-  public Response execute(Request request, Action.MappedParameters mappedParameters) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+  Response execute(Request request, Action.MappedParameters mappedParameters) {
     final T param1 = (T) mappedParameters.mapped.get(0).value;
-    return this.execute(param1);
+    return execute(param1);
   }
 
   @Override
-  public Method method() {
-    return this.method;
+  String actionSignature() {
+    return actionSignature;
   }
 
-  @Override
-  public String path() {
-    return this.path;
-  }
-
-  @Override
-  public String actionSignature() {
-    return this.param1Class.getSimpleName() + " " + this.findParamName();
-  }
-
-  private String findParamName() {
-    final Matcher m = p.matcher(this.path);
+  private String generateActionSignature() {
+    final Matcher m = p.matcher(path());
     m.find();
-    return m.group(1);
+    String paramName = m.group(1);
+    if(paramName.trim().isEmpty()) throw new IllegalArgumentException("Empty path parameter for " + method() + " " + path());
+    return param1Class.getSimpleName() + " " + paramName;
   }
 }
