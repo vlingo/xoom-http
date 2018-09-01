@@ -13,26 +13,23 @@ import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
-import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RequestHandler1<T> extends RequestHandler {
-  final Class<T> param1Class;
-  private Handler1<T> handler;
   final private Pattern p = Pattern.compile("\\{(.*?)\\}");
   final private String actionSignature;
-  final private BiFunction<Request, Action.MappedParameters, T> resolver;
+  final ParameterResolver<T> resolver;
+  private Handler1<T> handler;
 
-  RequestHandler1(final Method method, final String path, final Class<T> param1, final BiFunction<Request, Action.MappedParameters, T> resolver) {
+  RequestHandler1(final Method method, final String path, final ParameterResolver<T> resolver) {
     super(method, path);
-    this.param1Class = param1;
     this.actionSignature = generateActionSignature();
     this.resolver = resolver;
   }
 
-  public <R> RequestHandler2<T,R> body(final Class<R> bodyClass) {
-    return new RequestHandler2<>(method(), path(), param1Class, bodyClass);
+  public <R> RequestHandler2<T, R> body(final Class<R> bodyClass) {
+    return new RequestHandler2<>(method(), path(), resolver, ParameterResolver.body(bodyClass));
   }
 
   @FunctionalInterface
@@ -46,7 +43,8 @@ public class RequestHandler1<T> extends RequestHandler {
   }
 
   Response execute(final T param1) {
-    if(handler == null) throw new HandlerMissingException("No handle defined for " + method().toString() + " " + path());
+    if (handler == null)
+      throw new HandlerMissingException("No handle defined for " + method().toString() + " " + path());
     return handler.execute(param1);
   }
 
@@ -63,14 +61,15 @@ public class RequestHandler1<T> extends RequestHandler {
 
   private String generateActionSignature() {
     if (path().replaceAll(" ", "").contains("{}")) {
-      throw new IllegalArgumentException("Empty path parameter for " + method() + " " + path());
+      throw new IllegalArgumentException("Empty path parameter name for " + method() + " " + path());
     }
     final Matcher m = p.matcher(path());
     if (!m.find()) {
       return "";
     }
     String paramName = m.group(1);
-    if(paramName.trim().isEmpty()) throw new IllegalArgumentException("Empty path parameter for " + method() + " " + path());
-    return param1Class.getSimpleName() + " " + paramName;
+    if (paramName.trim().isEmpty())
+      throw new IllegalArgumentException("Empty path parameter for " + method() + " " + path());
+    return resolver.paramClass.getSimpleName() + " " + paramName;
   }
 }

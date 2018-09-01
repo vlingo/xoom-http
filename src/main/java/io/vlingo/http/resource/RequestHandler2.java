@@ -13,17 +13,18 @@ import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
-import java.lang.reflect.InvocationTargetException;
-
 public class RequestHandler2<T, R> extends RequestHandler {
-  private final Class<T> param1Class;
-  private final Class<R> param2Class;
+  final private ParameterResolver<T> resolverParam1;
+  final private ParameterResolver<R> resolverParam2;
   private Handler2<T,R> handler;
 
-  RequestHandler2(final Method method, final String path, final Class<T> param1, final Class<R> param2) {
+  RequestHandler2(final Method method,
+                  final String path,
+                  final ParameterResolver<T> resolverParam1,
+                  final ParameterResolver<R> resolverParam2) {
     super(method, path);
-    this.param1Class = param1;
-    this.param2Class = param2;
+    this.resolverParam1 = resolverParam1;
+    this.resolverParam2 = resolverParam2;
   }
 
   @FunctionalInterface
@@ -44,13 +45,13 @@ public class RequestHandler2<T, R> extends RequestHandler {
   @SuppressWarnings("unchecked")
   @Override
   public Response execute(Request request, Action.MappedParameters mappedParameters) {
-    final T param1 = (T) mappedParameters.mapped.get(0).value;
-    final R param2 = (R) mappedParameters.mapped.get(1).value;
+    final T param1 = resolverParam1.apply(request, mappedParameters);
+    final R param2 = resolverParam2.apply(request, mappedParameters);
     return this.execute(param1, param2);
   }
 
   @Override
   String actionSignature() {
-    return param1Class.getSimpleName() + " param1, " + param2Class.getSimpleName() + " param2";
+    return resolverParam1.paramClass.getSimpleName() + " userId";
   }
 }

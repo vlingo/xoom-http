@@ -35,14 +35,13 @@ public class RequestHandler1Test {
     final RequestHandler1<String> handler = new RequestHandler1<>(
       Method.GET,
       "/posts/{postId}",
-      String.class,
-      ((request, mappedParameters) -> "my-post")
+      ParameterResolver.path(0, String.class)
     ).handle(postId -> Response.of(Ok, serialized(postId)));
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method());
     assertEquals("/posts/{postId}", handler.path());
-    assertEquals(String.class, handler.param1Class);
+    assertEquals(String.class, handler.resolver.paramClass);
     assertEquals(handler.execute("my-post").toString(), Response.of(Ok, serialized("my-post")).toString());
   }
 
@@ -51,7 +50,7 @@ public class RequestHandler1Test {
     thrown.expect(HandlerMissingException.class);
     thrown.expectMessage("No handle defined for GET /posts/{postId}");
 
-    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", String.class, (request, mappedParameters) -> "my-post");
+    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", ParameterResolver.path(0, String.class));
     handler.execute("my-post");
   }
 
@@ -64,13 +63,13 @@ public class RequestHandler1Test {
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method());
     assertEquals("/posts/{postId}", handler.path());
-    assertEquals(String.class, handler.param1Class);
+    assertEquals(String.class, handler.resolver.paramClass);
     assertEquals(handler.execute("my-post").toString(), Response.of(Ok, serialized("my-post")).toString());
   }
 
   @Test
   public void actionSignature() {
-    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", String.class, (request, mappedParameters) -> "ignored")
+    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", ParameterResolver.path(0, String.class))
       .handle(postId -> Response.of(Ok, serialized(postId)));
 
     assertEquals("String postId", handler.actionSignature());
@@ -79,23 +78,24 @@ public class RequestHandler1Test {
   @Test
   public void actionSignatureWithEmptyParamNameThrowsException() {
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Empty path parameter for GET /posts/{}");
-    new RequestHandler1<>(Method.GET, "/posts/{}", String.class, (request, mappedParameters) -> "ignored")
+    thrown.expectMessage("Empty path parameter name for GET /posts/{}");
+
+    new RequestHandler1<>(Method.GET, "/posts/{}", ParameterResolver.path(0, String.class))
       .handle(postId -> Response.of(Ok, serialized(postId)));
   }
 
   @Test
   public void actionSignatureWithBlankParamNameThrowsException() {
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Empty path parameter for GET /posts/{ }");
+    thrown.expectMessage("Empty path parameter name for GET /posts/{ }");
 
-    new RequestHandler1<>(Method.GET, "/posts/{ }", String.class, ((request, mappedParameters) -> "ignored"))
+    new RequestHandler1<>(Method.GET, "/posts/{ }", ParameterResolver.path(0, String.class))
       .handle(postId -> Response.of(Ok, serialized(postId)));
   }
 
   @Test
   public void actionWithoutParamNameShouldNotThrowException() {
-    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts", String.class, (request, mappedParameters) -> "ignored")
+    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts", ParameterResolver.path(0, String.class))
       .handle(postId -> Response.of(Ok, serialized(postId)));
 
     assertEquals("", handler.actionSignature());
@@ -111,7 +111,7 @@ public class RequestHandler1Test {
         new Action.MappedParameter("String", "my-post"))
       );
     final Response response = Response.of(Ok, serialized("it is my-post"));
-    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", String.class, ((request1, mappedParameters1) -> "my-post"))
+    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", ParameterResolver.path(0, String.class))
       .handle((postId) -> response);
 
     assertEquals(response, handler.execute(request, mappedParameters));
@@ -129,13 +129,11 @@ public class RequestHandler1Test {
       new Action.MappedParameters(1, Method.GET, "ignored", Collections.singletonList(
         new Action.MappedParameter("String", "my-post"))
       );
-    final RequestHandler1<Integer> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", Integer.class, (request1, mappedParameters1) -> {
-      Object value = mappedParameters.mapped.get(0).value;
-      if (Integer.class.isInstance(value)) {
-        return (Integer) value;
-      }
-      throw new IllegalArgumentException("Value " + value + " is of type " + mappedParameters.mapped.get(0).type + " instead of Integer");
-    }).handle((postId) -> Response.of(Ok, serialized("it is my-post")));
+    final RequestHandler1<Integer> handler = new RequestHandler1<>(
+      Method.GET,
+      "/posts/{postId}",
+      ParameterResolver.path(0, Integer.class)
+      ).handle((postId) -> Response.of(Ok, serialized("it is my-post")));
 
     handler.execute(request, mappedParameters);
   }

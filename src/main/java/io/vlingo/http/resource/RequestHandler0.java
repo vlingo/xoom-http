@@ -13,9 +13,6 @@ import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
-import static io.vlingo.http.resource.BodyResolver.resolveBody;
-import static io.vlingo.http.resource.PathParameterResolver.resolvePathParameter;
-
 public class RequestHandler0 extends RequestHandler {
   private Handler0 handler;
 
@@ -24,11 +21,11 @@ public class RequestHandler0 extends RequestHandler {
   }
 
   public <T> RequestHandler1<T> param(Class<T> paramClass) {
-    return new RequestHandler1<>(method(), path(), paramClass, resolvePathParameter(0, paramClass));
+    return new RequestHandler1<>(method(), path(), ParameterResolver.path(0, paramClass));
   }
 
   public <T> RequestHandler1<T> body(Class<T> paramClass) {
-    return new RequestHandler1<>(method(), path(), paramClass, resolveBody(paramClass));
+    return new RequestHandler1<>(method(), path(), ParameterResolver.body(paramClass));
   }
 
   @FunctionalInterface
