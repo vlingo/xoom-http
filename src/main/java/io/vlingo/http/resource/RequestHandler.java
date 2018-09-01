@@ -54,18 +54,6 @@ public abstract class RequestHandler {
       }
     }
     return result.toString();
-    /*
-     if (path.replaceAll(" ", "").contains("{}")) {
-      throw new IllegalArgumentException("Empty path parameter name for " + method + " " + path);
-    }
-    final Matcher matcher = pattern.matcher(path);
-    final StringBuilder result = new StringBuilder();
-    if (matcher.find()) {
-      return "";
-    }
-    String paramName = matcher.group(1);
-    return resolver.paramClass.getSimpleName() + " " + paramName;
-     */
   }
 
   private void checkOrder(final List<ParameterResolver<?>> parameterResolvers) {
