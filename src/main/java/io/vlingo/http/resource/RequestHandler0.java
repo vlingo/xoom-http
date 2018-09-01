@@ -9,6 +9,7 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.http.Header;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
@@ -22,12 +23,24 @@ public class RequestHandler0 extends RequestHandler {
     super(method, path, Collections.emptyList());
   }
 
-  public <T> RequestHandler1<T> param(Class<T> paramClass) {
+  public <T> RequestHandler1<T> param(final Class<T> paramClass) {
     return new RequestHandler1<>(method, path, ParameterResolver.path(0, paramClass));
   }
 
-  public <T> RequestHandler1<T> body(Class<T> paramClass) {
+  public <T> RequestHandler1<T> body(final Class<T> paramClass) {
     return new RequestHandler1<>(method, path, ParameterResolver.body(paramClass));
+  }
+
+  public RequestHandler1<String> query(final String name) {
+    return query(name, String.class);
+  }
+
+  public <T> RequestHandler1<T> query(final String name, final Class<T> queryClass) {
+    return new RequestHandler1<>(method, path, ParameterResolver.query(name, queryClass));
+  }
+
+  public RequestHandler1<Header> header(final String name) {
+    return new RequestHandler1<>(method, path, ParameterResolver.header(name));
   }
 
   @FunctionalInterface
@@ -41,7 +54,7 @@ public class RequestHandler0 extends RequestHandler {
   }
 
   Response execute() {
-    if(handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
+    if (handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
     return handler.execute();
   }
 

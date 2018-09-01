@@ -13,12 +13,12 @@ import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class RequestHandler {
-  final private Pattern p = Pattern.compile("\\{(.*?)\\}");
+  final private Pattern pattern = Pattern.compile("\\{(.*?)\\}");
 
   public final Method method;
   public final String path;
@@ -30,21 +30,53 @@ public abstract class RequestHandler {
     this.actionSignature = generateActionSignature(parameterResolvers);
   }
 
-  abstract Response execute(final Request request, final Action.MappedParameters mappedParameters) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException;
+  abstract Response execute(final Request request, final Action.MappedParameters mappedParameters);
 
-  String generateActionSignature(final List<ParameterResolver<?>> parameterResolvers) {
-    return "";
+  private String generateActionSignature(final List<ParameterResolver<?>> parameterResolvers) {
+    checkOrder(parameterResolvers);
+
+    if (path.replaceAll(" ", "").contains("{}")) {
+      throw new IllegalArgumentException("Empty path parameter name for " + method + " " + path);
+    }
+
+    final StringBuilder result = new StringBuilder();
+    final Matcher matcher = pattern.matcher(path);
+    boolean first = true;
+    for (ParameterResolver<?> resolver: parameterResolvers) {
+      if(resolver.type == ParameterResolver.Type.PATH) {
+        matcher.find();
+        if (first) {
+          first = false;
+        } else {
+          result.append(", ");
+        }
+        result.append(resolver.paramClass.getSimpleName()).append(" ").append(matcher.group(1));
+      }
+    }
+    return result.toString();
     /*
      if (path.replaceAll(" ", "").contains("{}")) {
       throw new IllegalArgumentException("Empty path parameter name for " + method + " " + path);
     }
-    final Matcher m = p.matcher(path);
+    final Matcher matcher = pattern.matcher(path);
     final StringBuilder result = new StringBuilder();
-    if (m.find()) {
+    if (matcher.find()) {
       return "";
     }
-    String paramName = m.group(1);
+    String paramName = matcher.group(1);
     return resolver.paramClass.getSimpleName() + " " + paramName;
      */
+  }
+
+  private void checkOrder(final List<ParameterResolver<?>> parameterResolvers) {
+    boolean firstNonPathResolver = false;
+    for(ParameterResolver<?> resolver: parameterResolvers) {
+      if(resolver.type != ParameterResolver.Type.PATH) {
+        firstNonPathResolver = true;
+      }
+      if(firstNonPathResolver && resolver.type == ParameterResolver.Type.PATH) {
+        throw new IllegalArgumentException("Path parameters are unsorted");
+      }
+    }
   }
 }

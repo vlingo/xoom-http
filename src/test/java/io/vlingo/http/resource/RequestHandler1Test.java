@@ -95,7 +95,7 @@ public class RequestHandler1Test {
 
   @Test
   public void actionWithoutParamNameShouldNotThrowException() {
-    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts", ParameterResolver.path(0, String.class))
+    final RequestHandler1<String> handler = new RequestHandler1<>(Method.POST, "/posts", ParameterResolver.body(String.class))
       .handle(postId -> Response.of(Ok, serialized(postId)));
 
     assertEquals("", handler.actionSignature);
