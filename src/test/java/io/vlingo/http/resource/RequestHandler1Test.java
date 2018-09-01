@@ -35,7 +35,8 @@ public class RequestHandler1Test {
     final RequestHandler1<String> handler = new RequestHandler1<>(
       Method.GET,
       "/posts/{postId}",
-      String.class
+      String.class,
+      ((request, mappedParameters) -> "my-post")
     ).handle(postId -> Response.of(Ok, serialized(postId)));
 
     assertNotNull(handler);
@@ -50,7 +51,7 @@ public class RequestHandler1Test {
     thrown.expect(HandlerMissingException.class);
     thrown.expectMessage("No handle defined for GET /posts/{postId}");
 
-    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", String.class);
+    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", String.class, (request, mappedParameters) -> "my-post");
     handler.execute("my-post");
   }
 
@@ -69,7 +70,7 @@ public class RequestHandler1Test {
 
   @Test
   public void actionSignature() {
-    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", String.class)
+    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", String.class, (request, mappedParameters) -> "ignored")
       .handle(postId -> Response.of(Ok, serialized(postId)));
 
     assertEquals("String postId", handler.actionSignature());
@@ -79,7 +80,7 @@ public class RequestHandler1Test {
   public void actionSignatureWithEmptyParamNameThrowsException() {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("Empty path parameter for GET /posts/{}");
-    new RequestHandler1<>(Method.GET, "/posts/{}", String.class)
+    new RequestHandler1<>(Method.GET, "/posts/{}", String.class, (request, mappedParameters) -> "ignored")
       .handle(postId -> Response.of(Ok, serialized(postId)));
   }
 
@@ -88,8 +89,16 @@ public class RequestHandler1Test {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("Empty path parameter for GET /posts/{ }");
 
-    new RequestHandler1<>(Method.GET, "/posts/{ }", String.class)
+    new RequestHandler1<>(Method.GET, "/posts/{ }", String.class, ((request, mappedParameters) -> "ignored"))
       .handle(postId -> Response.of(Ok, serialized(postId)));
+  }
+
+  @Test
+  public void actionWithoutParamNameShouldNotThrowException() {
+    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts", String.class, (request, mappedParameters) -> "ignored")
+      .handle(postId -> Response.of(Ok, serialized(postId)));
+
+    assertEquals("", handler.actionSignature());
   }
 
   @Test
@@ -102,7 +111,7 @@ public class RequestHandler1Test {
         new Action.MappedParameter("String", "my-post"))
       );
     final Response response = Response.of(Ok, serialized("it is my-post"));
-    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", String.class)
+    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", String.class, ((request1, mappedParameters1) -> "my-post"))
       .handle((postId) -> response);
 
     assertEquals(response, handler.execute(request, mappedParameters));
@@ -120,8 +129,13 @@ public class RequestHandler1Test {
       new Action.MappedParameters(1, Method.GET, "ignored", Collections.singletonList(
         new Action.MappedParameter("String", "my-post"))
       );
-    final RequestHandler1<Integer> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", Integer.class)
-      .handle((postId) -> Response.of(Ok, serialized("it is my-post")));
+    final RequestHandler1<Integer> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", Integer.class, (request1, mappedParameters1) -> {
+      Object value = mappedParameters.mapped.get(0).value;
+      if (Integer.class.isInstance(value)) {
+        return (Integer) value;
+      }
+      throw new IllegalArgumentException("Value " + value + " is of type " + mappedParameters.mapped.get(0).type + " instead of Integer");
+    }).handle((postId) -> Response.of(Ok, serialized("it is my-post")));
 
     handler.execute(request, mappedParameters);
   }

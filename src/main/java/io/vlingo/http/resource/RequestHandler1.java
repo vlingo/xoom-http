@@ -13,6 +13,7 @@ import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
+import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,11 +22,13 @@ public class RequestHandler1<T> extends RequestHandler {
   private Handler1<T> handler;
   final private Pattern p = Pattern.compile("\\{(.*?)\\}");
   final private String actionSignature;
+  final private BiFunction<Request, Action.MappedParameters, T> resolver;
 
-  RequestHandler1(final Method method, final String path, final Class<T> param1) {
+  RequestHandler1(final Method method, final String path, final Class<T> param1, final BiFunction<Request, Action.MappedParameters, T> resolver) {
     super(method, path);
     this.param1Class = param1;
     this.actionSignature = generateActionSignature();
+    this.resolver = resolver;
   }
 
   public <R> RequestHandler2<T,R> body(final Class<R> bodyClass) {
@@ -50,11 +53,7 @@ public class RequestHandler1<T> extends RequestHandler {
   @SuppressWarnings("unchecked")
   @Override
   Response execute(Request request, Action.MappedParameters mappedParameters) {
-    Object value = mappedParameters.mapped.get(0).value;
-    if (param1Class.isInstance(value)) {
-      return execute((T) value);
-    }
-    throw new IllegalArgumentException("Value " + value + " is of type " + mappedParameters.mapped.get(0).type + " instead of " + param1Class.getSimpleName());
+    return execute(resolver.apply(request, mappedParameters));
   }
 
   @Override
@@ -63,8 +62,13 @@ public class RequestHandler1<T> extends RequestHandler {
   }
 
   private String generateActionSignature() {
+    if (path().replaceAll(" ", "").contains("{}")) {
+      throw new IllegalArgumentException("Empty path parameter for " + method() + " " + path());
+    }
     final Matcher m = p.matcher(path());
-    m.find();
+    if (!m.find()) {
+      return "";
+    }
     String paramName = m.group(1);
     if(paramName.trim().isEmpty()) throw new IllegalArgumentException("Empty path parameter for " + method() + " " + path());
     return param1Class.getSimpleName() + " " + paramName;

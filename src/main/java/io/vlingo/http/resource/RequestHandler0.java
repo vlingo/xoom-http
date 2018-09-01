@@ -21,7 +21,18 @@ public class RequestHandler0 extends RequestHandler {
   }
 
   public <T> RequestHandler1<T> param(Class<T> paramClass) {
-    return new RequestHandler1<>(method(), path(), paramClass);
+    return new RequestHandler1<>(method(), path(), paramClass, (request, mappedParameters) -> {
+      Object value = mappedParameters.mapped.get(0).value;
+      if (paramClass.isInstance(value)) {
+        return (T) value;
+      }
+      throw new IllegalArgumentException("Value " + value + " is of type " + mappedParameters.mapped.get(0).type + " instead of " + paramClass.getSimpleName());
+    });
+  }
+
+  public <T> RequestHandler1<T> body(Class<T> paramClass) {
+    return new RequestHandler1<>(method(), path(), paramClass, ((request, mappedParameters) ->
+      DefaultMapper.instance.from(request.body.toString(), paramClass)));
   }
 
   @FunctionalInterface

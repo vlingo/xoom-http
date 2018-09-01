@@ -9,10 +9,8 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.http.Method;
-import io.vlingo.http.Request;
-import io.vlingo.http.Response;
-import io.vlingo.http.Version;
+import io.vlingo.http.*;
+import io.vlingo.http.sample.user.NameData;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -21,6 +19,8 @@ import java.net.URI;
 import java.util.Collections;
 
 import static io.vlingo.http.Response.Status.Created;
+import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.resource.serialization.JsonSerialization.serialized;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -64,7 +64,7 @@ public class RequestHandler0Test {
       .and(URI.create("/hellworld"))
       .and(Version.Http1_1);
     final Action.MappedParameters mappedParameters =
-      new Action.MappedParameters(1, Method.GET, "/helloworld", Collections.emptyList());
+      new Action.MappedParameters(1, Method.GET, "ignored", Collections.emptyList());
     final Response response = Response.of(Created);
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
       .handle(() -> response);
@@ -72,6 +72,22 @@ public class RequestHandler0Test {
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method());
     assertEquals("/helloworld", handler.path());
+    assertEquals(response, handler.execute(request, mappedParameters));
+  }
+
+  @Test
+  public void executeWithBody() {
+    final Request request = Request.has(Method.POST)
+      .and(URI.create("/user/admin/name"))
+      .and(Version.Http1_1)
+      .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"));
+    final Action.MappedParameters mappedParameters =
+      new Action.MappedParameters(1, Method.POST, "ignored", Collections.emptyList());
+    final Response response = Response.of(Ok, serialized(new NameData("John", "Doe")));
+    final RequestHandler1<NameData> handler = new RequestHandler0(Method.GET, "/user/admin/name")
+      .body(NameData.class)
+      .handle((nameData) -> response);
+
     assertEquals(response, handler.execute(request, mappedParameters));
   }
 }
