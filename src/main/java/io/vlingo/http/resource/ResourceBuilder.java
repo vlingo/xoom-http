@@ -30,4 +30,32 @@ public interface ResourceBuilder {
   static RequestHandler0 post(final String uri) {
     return new RequestHandler0(Method.POST, uri);
   }
+
+  static RequestHandler0 put(final String uri) {
+    return new RequestHandler0(Method.PUT, uri);
+  }
+
+  static RequestHandler0 delete(final String uri) {
+    return new RequestHandler0(Method.DELETE, uri);
+  }
+
+  static RequestHandler0 patch(final String uri) {
+    return new RequestHandler0(Method.PATCH, uri);
+  }
+
+  static RequestHandler0 head(final String uri) {
+    return new RequestHandler0(Method.HEAD, uri);
+  }
+
+  static RequestHandler0 options(final String uri) {
+    return new RequestHandler0(Method.OPTIONS, uri);
+  }
+
+  static RequestHandler0 trace(final String uri) {
+    return new RequestHandler0(Method.TRACE, uri);
+  }
+
+  static RequestHandler0 connect(final String uri) {
+    return new RequestHandler0(Method.CONNECT, uri);
+  }
 }
