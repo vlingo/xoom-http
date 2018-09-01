@@ -39,8 +39,8 @@ public class RequestHandler1Test {
     ).handle(postId -> Response.of(Ok, serialized(postId)));
 
     assertNotNull(handler);
-    assertEquals(Method.GET, handler.method());
-    assertEquals("/posts/{postId}", handler.path());
+    assertEquals(Method.GET, handler.method);
+    assertEquals("/posts/{postId}", handler.path);
     assertEquals(String.class, handler.resolver.paramClass);
     assertEquals(handler.execute("my-post").toString(), Response.of(Ok, serialized("my-post")).toString());
   }
@@ -61,8 +61,8 @@ public class RequestHandler1Test {
       .handle(postId -> Response.of(Ok, serialized(postId)));
 
     assertNotNull(handler);
-    assertEquals(Method.GET, handler.method());
-    assertEquals("/posts/{postId}", handler.path());
+    assertEquals(Method.GET, handler.method);
+    assertEquals("/posts/{postId}", handler.path);
     assertEquals(String.class, handler.resolver.paramClass);
     assertEquals(handler.execute("my-post").toString(), Response.of(Ok, serialized("my-post")).toString());
   }
@@ -72,7 +72,7 @@ public class RequestHandler1Test {
     final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", ParameterResolver.path(0, String.class))
       .handle(postId -> Response.of(Ok, serialized(postId)));
 
-    assertEquals("String postId", handler.actionSignature());
+    assertEquals("String postId", handler.actionSignature);
   }
 
   @Test
@@ -98,7 +98,7 @@ public class RequestHandler1Test {
     final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts", ParameterResolver.path(0, String.class))
       .handle(postId -> Response.of(Ok, serialized(postId)));
 
-    assertEquals("", handler.actionSignature());
+    assertEquals("", handler.actionSignature);
   }
 
   @Test

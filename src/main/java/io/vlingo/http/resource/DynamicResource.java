@@ -28,9 +28,9 @@ public class DynamicResource extends Resource<ResourceHandler> {
     int currentId = 0;
     for(RequestHandler predicate: handlers) {
       actions.add(new Action(currentId++,
-        predicate.method().toString(),
-        predicate.path(),
-        "dynamic" + currentId + "(" + predicate.actionSignature() + ")",
+        predicate.method.toString(),
+        predicate.path,
+        "dynamic" + currentId + "(" + predicate.actionSignature + ")",
         null,
         false));
     }

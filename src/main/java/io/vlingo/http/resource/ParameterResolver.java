@@ -56,6 +56,12 @@ class ParameterResolver<T> {
         return type.cast(Float.valueOf(request.queryParameters().valuesOf(name).get(0)));
       } else if (type == Long.class) {
         return type.cast(Integer.valueOf(request.queryParameters().valuesOf(name).get(0)));
+      } else if (type == Boolean.class) {
+        return type.cast(Boolean.valueOf(request.queryParameters().valuesOf(name).get(0)));
+      } else if (type == Short.class) {
+        return type.cast(Short.valueOf(request.queryParameters().valuesOf(name).get(0)));
+      } else if (type == Byte.class) {
+        return type.cast(Byte.valueOf(request.queryParameters().valuesOf(name).get(0)));
       }
       throw new IllegalArgumentException("unknown type " + type.getSimpleName());
     })));

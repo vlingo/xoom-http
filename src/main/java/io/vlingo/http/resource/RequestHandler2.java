@@ -13,6 +13,8 @@ import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
+import java.util.Arrays;
+
 public class RequestHandler2<T, R> extends RequestHandler {
   final private ParameterResolver<T> resolverParam1;
   final private ParameterResolver<R> resolverParam2;
@@ -22,7 +24,7 @@ public class RequestHandler2<T, R> extends RequestHandler {
                   final String path,
                   final ParameterResolver<T> resolverParam1,
                   final ParameterResolver<R> resolverParam2) {
-    super(method, path);
+    super(method, path, Arrays.asList(resolverParam1, resolverParam2));
     this.resolverParam1 = resolverParam1;
     this.resolverParam2 = resolverParam2;
   }
@@ -38,7 +40,7 @@ public class RequestHandler2<T, R> extends RequestHandler {
   }
 
   Response execute(final T param1, final R param2) {
-    if(handler == null) throw new HandlerMissingException("No handle defined for " + method().toString() + " " + path());
+    if(handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
     return handler.execute(param1, param2);
   }
 
@@ -48,10 +50,5 @@ public class RequestHandler2<T, R> extends RequestHandler {
     final T param1 = resolverParam1.apply(request, mappedParameters);
     final R param2 = resolverParam2.apply(request, mappedParameters);
     return this.execute(param1, param2);
-  }
-
-  @Override
-  String actionSignature() {
-    return resolverParam1.paramClass.getSimpleName() + " userId";
   }
 }

@@ -36,8 +36,8 @@ public class RequestHandler0Test {
       .handle(() -> response);
 
     assertNotNull(handler);
-    assertEquals(Method.GET, handler.method());
-    assertEquals("/helloworld", handler.path());
+    assertEquals(Method.GET, handler.method);
+    assertEquals("/helloworld", handler.path);
     assertEquals(response, handler.execute());
   }
 
@@ -55,7 +55,7 @@ public class RequestHandler0Test {
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
       .handle(() -> Response.of(Created));
 
-    assertEquals("", handler.actionSignature());
+    assertEquals("", handler.actionSignature);
   }
 
   @Test
@@ -70,8 +70,8 @@ public class RequestHandler0Test {
       .handle(() -> response);
 
     assertNotNull(handler);
-    assertEquals(Method.GET, handler.method());
-    assertEquals("/helloworld", handler.path());
+    assertEquals(Method.GET, handler.method);
+    assertEquals("/helloworld", handler.path);
     assertEquals(response, handler.execute(request, mappedParameters));
   }
 
