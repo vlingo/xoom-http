@@ -23,7 +23,7 @@ class ParameterResolver<T> {
       if (paramClass.isInstance(value)) {
         return (T) value;
       }
-      throw new IllegalArgumentException("Value " + value + " is of type " + mappedParameters.mapped.get(0).type + " instead of " + paramClass.getSimpleName());
+      throw new IllegalArgumentException("Value " + value + " is of type " + mappedParameters.mapped.get(position).type + " instead of " + paramClass.getSimpleName());
     });
   }
 
