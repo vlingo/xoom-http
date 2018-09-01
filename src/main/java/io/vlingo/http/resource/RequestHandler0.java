@@ -23,26 +23,6 @@ public class RequestHandler0 extends RequestHandler {
     super(method, path, Collections.emptyList());
   }
 
-  public <T> RequestHandler1<T> param(final Class<T> paramClass) {
-    return new RequestHandler1<>(method, path, ParameterResolver.path(0, paramClass));
-  }
-
-  public <T> RequestHandler1<T> body(final Class<T> paramClass) {
-    return new RequestHandler1<>(method, path, ParameterResolver.body(paramClass));
-  }
-
-  public RequestHandler1<String> query(final String name) {
-    return query(name, String.class);
-  }
-
-  public <T> RequestHandler1<T> query(final String name, final Class<T> queryClass) {
-    return new RequestHandler1<>(method, path, ParameterResolver.query(name, queryClass));
-  }
-
-  public RequestHandler1<Header> header(final String name) {
-    return new RequestHandler1<>(method, path, ParameterResolver.header(name));
-  }
-
   @FunctionalInterface
   public interface Handler0 {
     Response execute();
@@ -63,4 +43,25 @@ public class RequestHandler0 extends RequestHandler {
     return execute();
   }
 
+  // region FluentAPI
+  public <T> RequestHandler1<T> param(final Class<T> paramClass) {
+    return new RequestHandler1<>(method, path, ParameterResolver.path(0, paramClass));
+  }
+
+  public <T> RequestHandler1<T> body(final Class<T> paramClass) {
+    return new RequestHandler1<>(method, path, ParameterResolver.body(paramClass));
+  }
+
+  public RequestHandler1<String> query(final String name) {
+    return query(name, String.class);
+  }
+
+  public <T> RequestHandler1<T> query(final String name, final Class<T> queryClass) {
+    return new RequestHandler1<>(method, path, ParameterResolver.query(name, queryClass));
+  }
+
+  public RequestHandler1<Header> header(final String name) {
+    return new RequestHandler1<>(method, path, ParameterResolver.header(name));
+  }
+  // endregion
 }

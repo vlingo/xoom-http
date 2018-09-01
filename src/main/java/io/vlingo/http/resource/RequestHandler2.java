@@ -52,7 +52,7 @@ public class RequestHandler2<T, R> extends RequestHandler {
     return this.execute(param1, param2);
   }
 
-
+  // region FluentAPI
   public <U> RequestHandler3<T, R, U> param(final Class<U> paramClass) {
     return new RequestHandler3<>(method, path, resolverParam1, resolverParam2, ParameterResolver.path(2, paramClass));
   }
@@ -72,4 +72,5 @@ public class RequestHandler2<T, R> extends RequestHandler {
   public RequestHandler3<T, R, Header> header(final String name) {
     return new RequestHandler3<>(method, path, resolverParam1, resolverParam2, ParameterResolver.header(name));
   }
+  // endregion
 }
