@@ -11,40 +11,51 @@ package io.vlingo.http.resource;
 
 import io.vlingo.http.Method;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
-public class ResourceBuilder {
-    private String name;
-    private int handlerPoolSize;
-    private final List<Predicate> handlers;
+public interface ResourceBuilder {
 
-    public static ResourceBuilder route(final String name) {
-        return new ResourceBuilder(name);
-    }
-
-    public ResourceBuilder get(final String uri, final RouteHandler routeHandler) {
-        this.handlers.add(new Predicate(Method.GET, uri, routeHandler));
-        return this;
-    }
-
-  public ResourceBuilder post(final String uri, final RouteHandler routeHandler) {
-    this.handlers.add(new Predicate(Method.POST, uri, routeHandler));
-    return this;
+  static Resource<?> resource(final String name, RequestHandler... requestHandlers) {
+    return resource(name, 10, requestHandlers);
   }
 
-    public ResourceBuilder withHandlerPoolSize(final int pool) {
-        this.handlerPoolSize = pool;
-        return this;
-    }
+  static Resource<?> resource(final String name, final int handlerPoolSize, RequestHandler... requestHandlers) {
+    return new DynamicResource(name, handlerPoolSize, Arrays.asList(requestHandlers));
+  }
 
-    public DynamicResource build() {
-        return new DynamicResource(this.name, this.handlerPoolSize, this.handlers);
-    }
+  static RequestHandler0 get(final String uri) {
+    return new RequestHandler0(Method.GET, uri);
+  }
 
-    public ResourceBuilder(String name) {
-        this.name = name;
-        this.handlerPoolSize = 10;
-        this.handlers = new ArrayList<>();
-    }
+  static RequestHandler0 post(final String uri) {
+    return new RequestHandler0(Method.POST, uri);
+  }
+
+  static RequestHandler0 put(final String uri) {
+    return new RequestHandler0(Method.PUT, uri);
+  }
+
+  static RequestHandler0 delete(final String uri) {
+    return new RequestHandler0(Method.DELETE, uri);
+  }
+
+  static RequestHandler0 patch(final String uri) {
+    return new RequestHandler0(Method.PATCH, uri);
+  }
+
+  static RequestHandler0 head(final String uri) {
+    return new RequestHandler0(Method.HEAD, uri);
+  }
+
+  static RequestHandler0 options(final String uri) {
+    return new RequestHandler0(Method.OPTIONS, uri);
+  }
+
+  static RequestHandler0 trace(final String uri) {
+    return new RequestHandler0(Method.TRACE, uri);
+  }
+
+  static RequestHandler0 connect(final String uri) {
+    return new RequestHandler0(Method.CONNECT, uri);
+  }
 }

@@ -19,18 +19,18 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class DynamicResource extends Resource<ResourceHandler> {
-  final List<Predicate> handlers;
+  final List<RequestHandler> handlers;
   private final List<Action> actions = new ArrayList<>();
 
-  protected DynamicResource(final String name, final int handlerPoolSize, final List<Predicate> handlers) {
+  protected DynamicResource(final String name, final int handlerPoolSize, final List<RequestHandler> handlers) {
     super(name, handlerPoolSize);
     this.handlers = handlers;
     int currentId = 0;
-    for(Predicate predicate: handlers) {
+    for(RequestHandler predicate: handlers) {
       actions.add(new Action(currentId++,
         predicate.method.toString(),
-        predicate.uri,
-        "unused()",
+        predicate.path,
+        "dynamic" + currentId + "(" + predicate.actionSignature + ")",
         null,
         false));
     }
@@ -39,9 +39,13 @@ public class DynamicResource extends Resource<ResourceHandler> {
   public void dispatchToHandlerWith(final Context context, final Action.MappedParameters mappedParameters) {
     try {
       Consumer<ResourceHandler> consumer = (resource) -> {
-        resource.completes().with(
-          handlers.get(mappedParameters.actionId).routeHandler.handler(context.request)
-        );
+        try {
+          resource.completes().with(
+            handlers.get(mappedParameters.actionId).execute(context.request, mappedParameters)
+          );
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
       };
       pooledHandler().handleFor(context, consumer);
     } catch (Exception e) {
