@@ -12,6 +12,8 @@ package io.vlingo.http.resource;
 import java.util.Properties;
 
 public class Configuration {
+  public static Configuration instance;
+  
   private int port;
   private Sizing sizing;
   private Timing timing;
@@ -21,7 +23,8 @@ public class Configuration {
   }
 
   public static Configuration defineWith(final Properties properties) {
-    return new Configuration(properties);
+    instance = new Configuration(properties);
+    return instance;
   }
 
   public Configuration withPort(final int port) {
@@ -54,7 +57,7 @@ public class Configuration {
   private Configuration() {
     this.port = 8080;
     this.sizing = Sizing.define();
-    this.timing = new Timing(10, 10, 100);
+    this.timing = new Timing(10, 100);
   }
 
   private Configuration(final Properties properties) {
@@ -65,12 +68,11 @@ public class Configuration {
     final int dispatcherPoolSize = Integer.parseInt(properties.getProperty("server.dispatcher.pool", String.valueOf(this.sizing.dispatcherPoolSize)));
     final int maxBufferPoolSize = Integer.parseInt(properties.getProperty("server.buffer.pool.size", String.valueOf(this.sizing.maxBufferPoolSize)));
     final int maxMessageSize = Integer.parseInt(properties.getProperty("server.message.buffer.size", String.valueOf(this.sizing.maxMessageSize)));
-    final int probeInterval = Integer.parseInt(properties.getProperty("server.probe.interval", String.valueOf(this.timing.probeInterval)));
-    final long probeTimeout = Long.parseLong(properties.getProperty("server.probe.timeout", String.valueOf(this.timing.probeTimeout)));
+    final long probeInterval = Long.parseLong(properties.getProperty("server.probe.interval", String.valueOf(this.timing.probeInterval)));
     final long requestMissingContentTimeout = Long.parseLong(properties.getProperty("server.request.missing.content.timeout", String.valueOf(this.timing.requestMissingContentTimeout)));
 
     this.sizing = new Sizing(processorPoolSize, dispatcherPoolSize, maxBufferPoolSize, maxMessageSize);
-    this.timing = new Timing(probeInterval, probeTimeout, requestMissingContentTimeout);
+    this.timing = new Timing(probeInterval, requestMissingContentTimeout);
   }
 
   public static class Sizing {
@@ -108,30 +110,24 @@ public class Configuration {
   }
 
   public static class Timing {
-    public final int probeInterval;
-    public final long probeTimeout;
+    public final long probeInterval;
     public final long requestMissingContentTimeout;
 
-    public Timing(final int probeInterval, final long probeTimeout, final long requestMissingContentTimeout) {
+    public Timing(final long probeInterval, final long requestMissingContentTimeout) {
       this.probeInterval = probeInterval;
-      this.probeTimeout = probeTimeout;
       this.requestMissingContentTimeout = requestMissingContentTimeout;
     }
 
     public static Timing define() {
-      return new Timing(10, 10, 100);
+      return new Timing(10, 100);
     }
 
     public Timing withProbeInterval(final int probeInterval) {
-      return new Timing(probeInterval, this.probeTimeout, this.requestMissingContentTimeout);
-    }
-
-    public Timing withProbeTimeout(final long probeTimeout) {
-      return new Timing(this.probeInterval, probeTimeout, this.requestMissingContentTimeout);
+      return new Timing(probeInterval, this.requestMissingContentTimeout);
     }
 
     public Timing withRequestMissingContentTimeout(final long requestMissingContentTimeout) {
-      return new Timing(this.probeInterval, this.probeTimeout, requestMissingContentTimeout);
+      return new Timing(this.probeInterval, requestMissingContentTimeout);
     }
   }
 }
