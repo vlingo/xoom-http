@@ -24,7 +24,6 @@ public class ConfigurationTest {
 
     assertNotNull(configuration.timing());
     assertEquals(10, configuration.timing().probeInterval);
-    assertEquals(10, configuration.timing().probeTimeout);
     assertEquals(100, configuration.timing().requestMissingContentTimeout);
   }
 
@@ -39,7 +38,6 @@ public class ConfigurationTest {
           .withMaxMessageSize(3333))
         .with(Timing.define()
           .withProbeInterval(30)
-          .withProbeTimeout(40)
           .withRequestMissingContentTimeout(200));
 
     assertNotNull(configuration);
@@ -52,7 +50,6 @@ public class ConfigurationTest {
 
     assertNotNull(configuration.timing());
     assertEquals(30, configuration.timing().probeInterval);
-    assertEquals(40, configuration.timing().probeTimeout);
     assertEquals(200, configuration.timing().requestMissingContentTimeout);
   }
 }
