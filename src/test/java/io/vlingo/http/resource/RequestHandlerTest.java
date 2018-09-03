@@ -1,8 +1,8 @@
 package io.vlingo.http.resource;
 
+import io.vlingo.actors.CompletesEventually;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
-import io.vlingo.http.Response;
 import io.vlingo.http.sample.user.NameData;
 import org.junit.Test;
 
@@ -70,7 +70,7 @@ class RequestHandlerFake extends RequestHandler {
   }
 
   @Override
-  Response execute(Request request, Action.MappedParameters mappedParameters) {
+  void execute(final Request request, final Action.MappedParameters mappedParameters, final CompletesEventually completes) {
     throw new UnsupportedOperationException();
   }
 }

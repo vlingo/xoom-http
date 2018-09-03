@@ -9,10 +9,10 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.actors.CompletesEventually;
 import io.vlingo.http.Header;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
-import io.vlingo.http.Response;
 
 import java.util.Collections;
 
@@ -25,7 +25,7 @@ public class RequestHandler0 extends RequestHandler {
 
   @FunctionalInterface
   public interface Handler0 {
-    Response execute();
+    void execute(CompletesEventually completes);
   }
 
   public RequestHandler0 handle(final Handler0 handler) {
@@ -33,14 +33,16 @@ public class RequestHandler0 extends RequestHandler {
     return this;
   }
 
-  Response execute() {
+  void execute(final CompletesEventually completes) {
     if (handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
-    return handler.execute();
+    handler.execute(completes);
   }
 
   @Override
-  Response execute(Request request, Action.MappedParameters mappedParameters) {
-    return execute();
+  void execute(final Request request,
+                   final Action.MappedParameters mappedParameters,
+                   final CompletesEventually completes) {
+    execute(completes);
   }
 
   // region FluentAPI

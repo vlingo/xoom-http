@@ -13,6 +13,7 @@ import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 import io.vlingo.http.Version;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -26,6 +27,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class RequestHandler1Test {
+  private MockCompletesEventuallyResponse completes;
+
+  @Before()
+  public void setup() {
+    completes = new MockCompletesEventuallyResponse();
+  }
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -36,13 +43,14 @@ public class RequestHandler1Test {
       Method.GET,
       "/posts/{postId}",
       ParameterResolver.path(0, String.class)
-    ).handle(postId -> Response.of(Ok, serialized(postId)));
+    ).handle((completes, postId) -> completes.with(Response.of(Ok, serialized(postId))));
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
     assertEquals("/posts/{postId}", handler.path);
     assertEquals(String.class, handler.resolver.paramClass);
-    assertEquals(handler.execute("my-post").toString(), Response.of(Ok, serialized("my-post")).toString());
+    handler.execute(completes, "my-post");
+    assertEquals(completes.response.toString(), Response.of(Ok, serialized("my-post")).toString());
   }
 
   @Test()
@@ -51,26 +59,28 @@ public class RequestHandler1Test {
     thrown.expectMessage("No handle defined for GET /posts/{postId}");
 
     final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", ParameterResolver.path(0, String.class));
-    handler.execute("my-post");
+    final MockCompletesEventuallyResponse completes = new MockCompletesEventuallyResponse();
+    handler.execute(completes, "my-post");
   }
 
   @Test
   public void convertingRequestHandler0ToRequestHandler1() {
     final RequestHandler1<String> handler = new RequestHandler0(Method.GET, "/posts/{postId}")
       .param(String.class)
-      .handle(postId -> Response.of(Ok, serialized(postId)));
+      .handle((completes, postId) -> completes.with(Response.of(Ok, serialized(postId))));
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
     assertEquals("/posts/{postId}", handler.path);
     assertEquals(String.class, handler.resolver.paramClass);
-    assertEquals(handler.execute("my-post").toString(), Response.of(Ok, serialized("my-post")).toString());
+    handler.execute(completes,"my-post");
+    assertEquals(completes.response.toString(), Response.of(Ok, serialized("my-post")).toString());
   }
 
   @Test
   public void actionSignature() {
     final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", ParameterResolver.path(0, String.class))
-      .handle(postId -> Response.of(Ok, serialized(postId)));
+      .handle((completes, postId) -> Response.of(Ok, serialized(postId)));
 
     assertEquals("String postId", handler.actionSignature);
   }
@@ -81,7 +91,7 @@ public class RequestHandler1Test {
     thrown.expectMessage("Empty path parameter name for GET /posts/{}");
 
     new RequestHandler1<>(Method.GET, "/posts/{}", ParameterResolver.path(0, String.class))
-      .handle(postId -> Response.of(Ok, serialized(postId)));
+      .handle((completes, postId) -> completes.with(Response.of(Ok, serialized(postId))));
   }
 
   @Test
@@ -90,13 +100,13 @@ public class RequestHandler1Test {
     thrown.expectMessage("Empty path parameter name for GET /posts/{ }");
 
     new RequestHandler1<>(Method.GET, "/posts/{ }", ParameterResolver.path(0, String.class))
-      .handle(postId -> Response.of(Ok, serialized(postId)));
+      .handle((completes, postId) -> completes.with(Response.of(Ok, serialized(postId))));
   }
 
   @Test
   public void actionWithoutParamNameShouldNotThrowException() {
     final RequestHandler1<String> handler = new RequestHandler1<>(Method.POST, "/posts", ParameterResolver.body(String.class))
-      .handle(postId -> Response.of(Ok, serialized(postId)));
+      .handle((completes, postId) -> Response.of(Ok, serialized(postId)));
 
     assertEquals("", handler.actionSignature);
   }
@@ -112,9 +122,10 @@ public class RequestHandler1Test {
       );
     final Response response = Response.of(Ok, serialized("it is my-post"));
     final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", ParameterResolver.path(0, String.class))
-      .handle((postId) -> response);
+      .handle((completes, postId) -> completes.with(response));
+    handler.execute(request, mappedParameters, completes);
 
-    assertEquals(response, handler.execute(request, mappedParameters));
+    assertEquals(response, completes.response);
   }
 
   @Test
@@ -133,8 +144,8 @@ public class RequestHandler1Test {
       Method.GET,
       "/posts/{postId}",
       ParameterResolver.path(0, Integer.class)
-      ).handle((postId) -> Response.of(Ok, serialized("it is my-post")));
+      ).handle((completes, postId) -> completes.with(Response.of(Ok, serialized("it is my-post"))));
 
-    handler.execute(request, mappedParameters);
+    handler.execute(request, mappedParameters, completes);
   }
 }
