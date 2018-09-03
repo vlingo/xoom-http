@@ -76,7 +76,6 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
                       sizing.processorPoolSize,
                       sizing.maxBufferPoolSize,
                       sizing.maxMessageSize,
-                      timing.probeTimeout,
                       timing.probeInterval);
 
       logger().log("Server " + ServerName + " is listening on port: " + port);

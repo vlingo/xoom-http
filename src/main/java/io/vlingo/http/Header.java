@@ -70,9 +70,8 @@ public class Header {
       return null;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <T extends Header> Headers<T> empty() {
-      return new Headers(0);
+      return new Headers<T>(0);
     }
     
     @SuppressWarnings("unchecked")
