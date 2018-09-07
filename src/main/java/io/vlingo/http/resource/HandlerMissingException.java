@@ -10,6 +10,7 @@
 package io.vlingo.http.resource;
 
 public class HandlerMissingException extends RuntimeException {
+  private static final long serialVersionUID = 1L;
 
   public HandlerMissingException() {
     super();
