@@ -8,35 +8,60 @@
 package io.vlingo.http.resource;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
+
+import io.vlingo.actors.Actor;
+import io.vlingo.actors.ActorFactory;
+import io.vlingo.http.Method;
+import io.vlingo.http.resource.Action.MappedParameter;
+import io.vlingo.http.resource.sse.SseFeed;
+import io.vlingo.http.resource.sse.SseStreamResource;
 
 public class Loader {
 
   private static final String resourceNamePrefix = "resource.name.";
+  private static final String ssePublisherFeedClassnameParameter = "Class<? extends Actor> feedClass";
+  private static final String ssePublisherFeedDefaultId = "String feedDefaultId";
+  private static final String ssePublisherFeedIntervalParameter = "int feedInterval";
+  private static final String ssePublisherFeedPayloadParameter = "int feedPayload";
+  private static final String ssePublisherIdPathParameter = "{id}";
+  private static final String ssePublisherNamePrefix = "sse.stream.name.";
+  private static final String ssePublisherNamePathParameter = "{streamName}";
+  private static final String ssePublisherSubscribeTo =
+          "subscribeToStream(String streamName, " +
+                  ssePublisherFeedClassnameParameter + ", " +
+                  ssePublisherFeedPayloadParameter + ", " +
+                  ssePublisherFeedIntervalParameter + ", " +
+                  ssePublisherFeedDefaultId + ")";
+  private static final String ssePublisherUnsubscribeTo = "unsubscribeFromStream(String streamName, String id)";
 
   public static Resources loadResources(final java.util.Properties properties) {
     final Map<String, Resource<?>> namedResources = new HashMap<>();
-    
-    for (String resource : findResources(properties)) {
+
+    for (String resource : findResources(properties, resourceNamePrefix)) {
       final ConfigurationResource<?> loaded = loadResource(properties, resource);
       
       namedResources.put(loaded.name, loaded);
     }
-    
+
+    namedResources.putAll(loadSseResources(properties));
+
     return new Resources(namedResources);
   }
 
-  private static Set<String> findResources(final java.util.Properties properties) {
+  private static Set<String> findResources(final java.util.Properties properties, final String namePrefix) {
     final Set<String> resource = new HashSet<String>();
 
     for (Enumeration<?> e = properties.keys(); e.hasMoreElements(); ) {
       final String key = (String) e.nextElement();
-      if (key.startsWith(resourceNamePrefix)) {
+      if (key.startsWith(namePrefix)) {
         resource.add(key);
       }
     }
@@ -65,6 +90,51 @@ public class Loader {
       System.out.println("vlingo/http: Failed to load resource: " + resourceName + " because: " + e.getMessage());
       throw e;
     }
+  }
+
+  private static Map<String, ConfigurationResource<?>> loadSseResources(final Properties properties) {
+    final Map<String, ConfigurationResource<?>> sseResourceActions = new HashMap<>();
+
+    for (final String streamResourceName : findResources(properties, ssePublisherNamePrefix)) {
+      final String streamURI = properties.getProperty(streamResourceName);
+      final String resourceName = streamResourceName.substring(ssePublisherNamePrefix.length());
+      final String feedClassnameKey = "sse.stream." + resourceName + ".feed.class";
+      final String feedClassname = properties.getProperty(feedClassnameKey);
+      final String feedPayloadKey = "sse.stream." + resourceName + ".feed.payload";
+      final int maybeFeedPayload = Integer.parseInt(properties.getProperty(feedPayloadKey, "20"));
+      final int feedPayload = maybeFeedPayload <= 0 ? 20 : maybeFeedPayload;
+      final String feedIntervalKey = "sse.stream." + resourceName + ".feed.interval";
+      final int maybeFeedInterval = Integer.parseInt(properties.getProperty(feedIntervalKey, "1000"));
+      final int feedInterval = maybeFeedInterval <= 0 ? 1000 : maybeFeedInterval;
+      final String feedDefaultIdKey = "sse.stream." + resourceName + ".feed.default.id";
+      final String feedDefaultId = properties.getProperty(feedDefaultIdKey, "");
+      final String poolKey = "sse.stream." + resourceName + ".pool";
+      final int maybePoolSize = Integer.parseInt(properties.getProperty(poolKey, "1"));
+      final int handlerPoolSize = maybePoolSize <= 0 ? 1 : maybePoolSize;
+      final String subscribeURI = streamURI.replaceAll(resourceName, ssePublisherNamePathParameter);
+      final String unsubscribeURI = subscribeURI + "/" + ssePublisherIdPathParameter;
+
+      try {
+        final Class<? extends Actor> feedClass = ActorFactory.actorClassWithProtocol(feedClassname, SseFeed.class);
+        final MappedParameter mappedParameterClass = new MappedParameter("Class<? extends Actor>", feedClass);
+        final MappedParameter mappedParameterPayload = new MappedParameter("int", feedPayload);
+        final MappedParameter mappedParameterInterval = new MappedParameter("int", feedInterval);
+        final MappedParameter mappedParameterDefaultId = new MappedParameter("String", feedDefaultId);
+  
+        final List<Action> actions = new ArrayList<>(2);
+        final List<MappedParameter> additionalParameters = Arrays.asList(mappedParameterClass, mappedParameterPayload, mappedParameterInterval, mappedParameterDefaultId);
+        actions.add(new Action(0, Method.GET.name, subscribeURI, ssePublisherSubscribeTo, null, true, additionalParameters));
+        actions.add(new Action(1, Method.DELETE.name, unsubscribeURI, ssePublisherUnsubscribeTo, null, true));
+        final ConfigurationResource<?> resource = resourceFor(resourceName, SseStreamResource.class, handlerPoolSize, actions);
+        sseResourceActions.put(resourceName, resource);
+      } catch (Exception e) {
+        System.out.println("vlingo/http: Failed to load SSE resource: " + streamResourceName + " because: " + e.getMessage());
+        e.printStackTrace();
+        throw e;
+      }
+    }
+
+    return sseResourceActions;
   }
 
   private static ConfigurationResource<?> resourceFor(
