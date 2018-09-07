@@ -7,39 +7,46 @@
 
 package io.vlingo.http.resource.sse;
 
-import io.vlingo.wire.channel.RequestResponseContext;
-import io.vlingo.wire.message.ConsumerByteBuffer;
-
 public class SseSubscriber {
-  private final RequestResponseContext<?> context;
-  private final String lastEventId;
+  private final SseClient client;
+  private String currentEventId;
+  private final String streamName;
 
-  public SseSubscriber(final RequestResponseContext<?> context, final String lastEventId) {
-    this.context = context;
-    this.lastEventId = lastEventId;
+  public SseSubscriber(final String streamName, final SseClient client, final String lastEventId) {
+    this.streamName = streamName;
+    this.client = client;
+    this.currentEventId = lastEventId;
   }
 
-  public SseSubscriber(final RequestResponseContext<?> context) {
-    this(context, "");
+  public SseSubscriber(final String streamName, final SseClient client) {
+    this(streamName, client, "");
+  }
+
+  public SseClient client() {
+    return client;
   }
 
   public void close() {
-    context.abandon();
+    client.close();
+  }
+
+  public boolean isCompatibleWith(final String streamName) {
+    return this.streamName.equals(streamName);
+  }
+
+  public String currentEventId() {
+    return currentEventId;
+  }
+
+  public void currentEventId(final String currentEventId) {
+    this.currentEventId = currentEventId;
   }
 
   public String id() {
-    return context.id();
+    return client.id();
   }
 
-  public boolean hasLastEventId() {
-    return lastEventId != null && !lastEventId.isEmpty();
-  }
-
-  public String lastEventId() {
-    return lastEventId;
-  }
-
-  public void sendRawEvent(final ConsumerByteBuffer buffer) {
-    context.respondWith(buffer);
+  public String streamName() {
+    return streamName;
   }
 }
