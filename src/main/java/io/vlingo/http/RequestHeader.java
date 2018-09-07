@@ -32,6 +32,7 @@ public class RequestHeader extends Header {
   public static final String IfNoneMatch = "If-None-Match";
   public static final String IfRange = "If-Range";
   public static final String IfUnmodifiedSince = "If-Unmodified-Since";
+  public static final String LastEventID = "Last-Event-ID";
   public static final String MaxForwards = "Max-Forwards";
   public static final String Origin = "Origin";
   public static final String Pragma = "Pragma";
@@ -88,6 +89,10 @@ public class RequestHeader extends Header {
 
   public static RequestHeader contentLength(final byte[] body) {
     return new RequestHeader(ContentLength, String.valueOf(body.length));
+  }
+
+  public static RequestHeader contentType(final String type) {
+    return new RequestHeader(ContentType, type);
   }
 
   public static RequestHeader host(final String value) {
