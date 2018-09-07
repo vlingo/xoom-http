@@ -19,7 +19,8 @@ public class Configuration {
   private Timing timing;
 
   public static Configuration define() {
-    return new Configuration();
+    instance = new Configuration();
+    return instance;
   }
 
   public static Configuration defineWith(final Properties properties) {
