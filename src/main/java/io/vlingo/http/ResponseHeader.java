@@ -87,8 +87,32 @@ public class ResponseHeader extends Header {
     return Headers.of(header);
   }
 
+  public static ResponseHeader contentLength(final int length) {
+    return new ResponseHeader(ContentLength, String.valueOf(length));
+  }
+
+  public static ResponseHeader contentLength(final String body) {
+    return new ResponseHeader(ContentLength, String.valueOf(body.length()));
+  }
+
+  public static ResponseHeader contentLength(final byte[] body) {
+    return new ResponseHeader(ContentLength, String.valueOf(body.length));
+  }
+
+  public static ResponseHeader contentType(final String type) {
+    return new ResponseHeader(ContentType, type);
+  }
+
   public static ResponseHeader of(final String name, final String value) {
     return new ResponseHeader(name, value);
+  }
+
+  public static ResponseHeader of(final String name, final int value) {
+    return new ResponseHeader(name, String.valueOf(value));
+  }
+
+  public static ResponseHeader of(final String name, final long value) {
+    return new ResponseHeader(name, String.valueOf(value));
   }
 
   int ifContentLength() {
