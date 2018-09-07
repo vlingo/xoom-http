@@ -8,18 +8,33 @@
 package io.vlingo.http;
 
 import io.vlingo.actors.CompletesEventually;
+import io.vlingo.wire.channel.RequestResponseContext;
 
 public class Context {
   public final CompletesEventually completes;
   public final Request request;
+  private final RequestResponseContext<?> requestResponseContext;
 
-  public Context(final Request request, final CompletesEventually completes) {
+  public Context(final RequestResponseContext<?> requestResponseContext, final Request request, final CompletesEventually completes) {
+    this.requestResponseContext = requestResponseContext;
     this.request = request;
     this.completes = completes;
   }
 
+  public Context(final Request request, final CompletesEventually completes) {
+    this(null, request, completes);
+  }
+
   public Context(final CompletesEventually completes) {
     this(null, completes);
+  }
+
+  public RequestResponseContext<?> clientContext() {
+    return requestResponseContext;
+  }
+
+  public boolean hasClientContext() {
+    return requestResponseContext != null;
   }
 
   public boolean hasRequest() {
