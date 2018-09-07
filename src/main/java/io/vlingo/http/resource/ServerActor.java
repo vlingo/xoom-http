@@ -202,6 +202,16 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     }
 
     @Override
+    public void closeWith(final RequestResponseContext<?> requestResponseContext, final Object data) {
+      if (data != null) {
+        final Request request = (Request) data;
+        final ResponseCompletes completes = new ResponseCompletes(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
+        final Context context = new Context(requestResponseContext, request, world.completesFor(completes));
+        dispatcher.dispatchFor(context);
+      }
+    }
+
+    @Override
     public void consume(final RequestResponseContext<?> requestResponseContext, final ConsumerByteBuffer buffer) {
       try {
         final RequestParser parser;
@@ -221,7 +231,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         while (parser.hasFullRequest()) {
           final Request request = parser.fullRequest();
           final ResponseCompletes completes = new ResponseCompletes(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
-          context = new Context(request, world.completesFor(completes));
+          context = new Context(requestResponseContext, request, world.completesFor(completes));
           dispatcher.dispatchFor(context);
           if (wasIncompleteContent) {
             requestsMissingContent.remove(requestResponseContext.id());
