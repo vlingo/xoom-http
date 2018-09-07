@@ -7,7 +7,8 @@
 
 package io.vlingo.http.resource.sse;
 
+import java.util.Collection;
+
 public interface SseFeed {
-  void startFor(final SseStream stream, final String streamName, final String clientId);
-  void stopFor(final String streamName, final String clientId);
+  void to(final Collection<SseSubscriber> subscribers);
 }
