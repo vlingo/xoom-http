@@ -51,6 +51,14 @@ public class Header {
   public static class Headers<T extends Header> extends ArrayList<T> implements List<T> {
     private static final long serialVersionUID = 1L;
     
+    public static Headers<RequestHeader> of(final RequestHeader... requestHeaders) {
+      final Headers<RequestHeader> headers = new Headers<>(requestHeaders.length);
+      for (final RequestHeader requestHeader : requestHeaders) {
+        headers.add(requestHeader);
+      }
+      return headers;
+    }
+
     public static Headers<ResponseHeader> of(final ResponseHeader... responseHeaders) {
       final Headers<ResponseHeader> headers = new Headers<>(responseHeaders.length);
       for (final ResponseHeader responseHeader : responseHeaders) {
@@ -91,7 +99,15 @@ public class Header {
       add((T) new Header(name, value));
       return this;
     }
-    
+
+    public Headers<T> copy() {
+      final Headers<T> headers = new Headers<>(this.size());
+      for (final T header : this) {
+        headers.add(header);
+      }
+      return headers;
+    }
+
     @Override
     public T set(int index, T element) {
       throw new UnsupportedOperationException();

@@ -7,13 +7,9 @@
 
 package io.vlingo.http.resource.sse;
 
-import java.util.Collection;
+import io.vlingo.actors.Stoppable;
 
-public interface SseStream {
-  void publish(final SseEvent event);
-  void publish(final Collection<SseEvent> events);
-  void sendTo(final SseSubscriber subscriber, final SseEvent event);
-  void sendTo(final SseSubscriber subscriber, final Collection<SseEvent> events);
+public interface SsePublisher extends Stoppable {
   void subscribe(final SseSubscriber subscriber);
   void unsubscribe(final SseSubscriber subscriber);
 }

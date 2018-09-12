@@ -7,115 +7,137 @@
 
 package io.vlingo.http.resource.sse;
 
-import static io.vlingo.http.Response.Status.Ok;
-
+import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.vlingo.actors.Actor;
+import io.vlingo.actors.Cancellable;
 import io.vlingo.actors.Definition;
+import io.vlingo.actors.Scheduled;
+import io.vlingo.actors.Stoppable;
 import io.vlingo.actors.World;
-import io.vlingo.http.Response;
-import io.vlingo.http.ResponseHeader;
-import io.vlingo.http.Header.Headers;
-import io.vlingo.http.resource.Configuration;
+import io.vlingo.http.Header;
+import io.vlingo.http.Method;
+import io.vlingo.http.Request;
+import io.vlingo.http.RequestHeader;
 import io.vlingo.http.resource.ResourceHandler;
 import io.vlingo.wire.channel.RequestResponseContext;
-import io.vlingo.wire.message.BasicConsumerByteBuffer;
-import io.vlingo.wire.message.ConsumerByteBuffer;
 
 public class SseStreamResource extends ResourceHandler {
-  private static final ResponseHeader Connection;
-  private static final ResponseHeader ContentType;
-  private static final ResponseHeader TransferEncoding;
-  private static final Headers<ResponseHeader> headers;
-
-  static {
-    Connection = ResponseHeader.of(ResponseHeader.Connection, "keep-alive");
-    ContentType = ResponseHeader.of(ResponseHeader.ContentType, "text/event-stream");
-    TransferEncoding = ResponseHeader.of(ResponseHeader.TransferEncoding, "chunked");
-
-    headers = Headers.empty();
-    headers.and(Connection).and(ContentType).and(TransferEncoding);
-  }
-
-  private final SseStream stream;
+  private static final Map<String,SsePublisher> publishers = new ConcurrentHashMap<>();
+  private final World world;
 
   public SseStreamResource(final World world) {
-    this.stream = world.actorFor(Definition.has(SseStreamActor.class, Definition.NoParameters), SseStream.class);
+    this.world = world;
   }
 
-  public static class SseStreamActor extends Actor implements SseStream {
-    private final ConsumerByteBuffer buffer;
-    private final StringBuilder builder;
-    private final Map<String,RequestResponseContext<?>> subscribers;
+  public void subscribeToStream(final String streamName, final Class<? extends Actor> feedClass, final int feedPayload, final int feedInterval, final String feedDefaultId) {
+    SsePublisher publisher = publishers.get(streamName);
+    if (publisher == null) {
+      publisher = world.actorFor(Definition.has(SsePublisherActor.class, Definition.parameters(streamName, feedClass, feedPayload, feedInterval, feedDefaultId)), SsePublisher.class);
+      final SsePublisher presentPublisher = publishers.putIfAbsent(streamName, publisher);
+      if (presentPublisher != null) {
+        publisher.stop();
+        publisher = presentPublisher;
+      }
+    }
 
-    public SseStreamActor() {
-      this.buffer = BasicConsumerByteBuffer.allocate(1, Configuration.instance.sizing().maxMessageSize);
-      this.builder = new StringBuilder();
+    final RequestResponseContext<?> clientContext = context().clientContext();
+
+    clientContext.whenClosing(unsubscribeRequest());
+
+    final Header lastEventId = context().request().headerOf(RequestHeader.LastEventID);
+
+    final SseSubscriber subscriber = lastEventId == null ?
+            new SseSubscriber(streamName, new SseClient(clientContext)) :
+            new SseSubscriber(streamName, new SseClient(clientContext), lastEventId.value);
+
+    publisher.subscribe(subscriber);
+  }
+
+  public void unsubscribeFromStream(final String streamName, final String id) {
+    final SsePublisher publisher = publishers.get(streamName);
+    if (publisher != null) {
+      publisher.unsubscribe(new SseSubscriber(streamName, new SseClient(context().clientContext())));
+    }    
+  }
+
+  private Request unsubscribeRequest() {
+    try {
+      final String unsubscribePath = context().request().uri.getPath() + "/" + context().clientContext().id();
+      return Request.has(Method.DELETE).and(new URI(unsubscribePath));
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+
+  //=====================================
+  // SsePublisherActor
+  //=====================================
+
+  public static class SsePublisherActor extends Actor implements SsePublisher, Scheduled, Stoppable {
+    private final Cancellable cancellable;
+    private final SseFeed feed;
+    private final String streamName;
+    private final Map<String,SseSubscriber> subscribers;
+
+    public SsePublisherActor(final String streamName, final Class<? extends Actor> feedClass, final int feedPayload, final int feedInterval, final String feedDefaultId) {
+      this.streamName = streamName;
+      this.feed = stage().actorFor(Definition.has(feedClass, Definition.parameters(streamName, feedPayload, feedDefaultId)), SseFeed.class);
       this.subscribers = new HashMap<>();
+
+      this.cancellable = stage().scheduler().schedule(selfAs(Scheduled.class), null, 10, feedInterval);
+
+      logger().log("SsePublisher started for: " + this.streamName);
     }
 
-    @Override
-    public void publish(final SseEvent event) {
-      for (final RequestResponseContext<?> context : subscribers.values()) {
-        sendTo(context, event);
-      }
-    }
 
-    @Override
-    public void publish(final Collection<SseEvent> events) {
-      for (final RequestResponseContext<?> context : subscribers.values()) {
-        sendTo(context, events);
-      }
-    }
+    //=====================================
+    // SsePublisher
+    //=====================================
 
-    @Override
-    public void sendTo(final SseSubscriber subscriber, final SseEvent event) {
-//      final RequestResponseContext<?> context = subscribers.get(name);
-//      if (context != null) {
-//        sendTo(context, event);
-//      }
-    }
-
-    @Override
-    public void sendTo(final SseSubscriber subscriber, final Collection<SseEvent> events) {
-//      final RequestResponseContext<?> context = subscribers.get(name);
-//      if (context != null) {
-//        sendTo(context, events);
-//      }
-    }
-
-    @Override
     public void subscribe(final SseSubscriber subscriber) {
-//      subscribers.put(name, context);
+      subscribers.put(subscriber.id(), subscriber);
     }
+
+    public void unsubscribe(final SseSubscriber subscriber) {
+      subscriber.close();
+      subscribers.remove(subscriber.id());
+    }
+
+
+    //=====================================
+    // Scheduled
+    //=====================================
 
     @Override
-    public void unsubscribe(final SseSubscriber subscriber) {
-//      final RequestResponseContext<?> context = subscribers.remove(name);
-//      context.abandon();
+    public void intervalSignal(final Scheduled scheduled, final Object data) {
+      feed.to(subscribers.values());
     }
 
-    private String flatten(final Collection<SseEvent> events) {
-      builder.delete(0, builder.length());
 
-      for (final SseEvent event : events) {
-        builder.append(event);
+    //=====================================
+    // Stoppable
+    //=====================================
+
+    @Override
+    public void stop() {
+      cancellable.cancel();
+
+      unsubscribeAll();
+
+      super.stop();
+    }
+
+    private void unsubscribeAll() {
+      final Collection<SseSubscriber> all = subscribers.values();
+      for (final SseSubscriber subscriber : all.toArray(new SseSubscriber[all.size()])) {
+        unsubscribe(subscriber);
       }
-
-      return builder.toString();
-    }
-
-    private void sendTo(final RequestResponseContext<?> context, final SseEvent event) {
-      final Response response = Response.of(Ok, headers, event.sendable());
-      context.respondWith(response.into(buffer));
-    }
-
-    private void sendTo(final RequestResponseContext<?> context, final Collection<SseEvent> events) {
-      final Response response = Response.of(Ok, headers, flatten(events));
-      context.respondWith(response.into(buffer));
     }
   }
 }

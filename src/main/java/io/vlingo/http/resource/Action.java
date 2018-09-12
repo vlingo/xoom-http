@@ -18,7 +18,8 @@ import io.vlingo.http.Request;
 
 public final class Action {
   static final MatchResults unmatchedResults = new MatchResults(null, null, Collections.emptyList(), "", false);
-  
+
+  public final List<MappedParameter> additionalParameters;
   public final boolean disallowPathParametersWithSlash;
   public final int id;
   public final Method method;
@@ -29,6 +30,10 @@ public final class Action {
   private final Matchable matchable;
 
   public Action(final int id, final String method, final String uri, final String to, final String mapper, final boolean disallowPathParametersWithSlash) {
+    this(id, method, uri, to, mapper, disallowPathParametersWithSlash, Collections.emptyList());
+  }
+
+  public Action(final int id, final String method, final String uri, final String to, final String mapper, final boolean disallowPathParametersWithSlash, final List<MappedParameter> additionalParameters) {
     this.id = id;
     this.method = Method.from(method);
     this.uri = uri;
@@ -36,6 +41,7 @@ public final class Action {
     this.originalTo = to;
     this.mapper = mapper == null ? DefaultMapper.instance : mapperFrom(mapper);
     this.disallowPathParametersWithSlash = disallowPathParametersWithSlash;
+    this.additionalParameters = additionalParameters;
     this.matchable = new Matchable(uri);
   }
 
@@ -50,6 +56,7 @@ public final class Action {
         mapped.add(new MappedParameter(typed.type, other));
       }
     }
+    mapped.addAll(additionalParameters);
     return new MappedParameters(this.id, this.method, to.methodName, mapped);
   }
 
@@ -568,10 +575,11 @@ public final class Action {
       }
       
       final String methodName = to.substring(0, openParen);
-      final String[] rawParameters = to.substring(openParen + 1, closeParen).split(",\\s?");
+      final String[] rawParameters = to.substring(openParen + 1, closeParen).split(",");
       final List<MethodParameter> parameters = new ArrayList<>(rawParameters.length);
       
-      for (final String rawParameter : rawParameters) {
+      for (String rawParameter : rawParameters) {
+        rawParameter = rawParameter.trim();
         if (!rawParameter.isEmpty()) {
           if (rawParameter.startsWith("body:")) {
             final String[] body = typeAndName(rawParameter.substring(5));
@@ -587,7 +595,7 @@ public final class Action {
     }
 
     private String[] typeAndName(final String rawParameter) {
-      final int space = rawParameter.indexOf(' ');
+      final int space = rawParameter.lastIndexOf(' ');
       if (space == -1) {
         throw new IllegalStateException("Parameter type and name must be separated by space: " + rawParameter);
       }

@@ -68,6 +68,29 @@ public class ResourcesTest {
     
     assertEquals(2, countProfileActions);
   }
+  
+  @Test
+  public void testLoadSseResources() {
+    final ConfigurationResource<?> allStream = (ConfigurationResource<?>) resources.resourceOf("all");
+    
+    assertNotNull(allStream);
+    assertEquals(allStream.name, "all");
+    assertNotNull(allStream.resourceHandlerClass);
+    assertEquals("io.vlingo.http.resource.sse.SseStreamResource", allStream.resourceHandlerClass.getName());
+    assertEquals(10, allStream.handlerPoolSize);
+    
+    assertEquals(2, allStream.actions.size());
+    assertTrue(allStream.actions.get(0).method.isGET());
+    assertNotNull(allStream.actions.get(0).uri);
+    assertEquals("/eventstreams/{streamName}", allStream.actions.get(0).uri);
+    assertNotNull(allStream.actions.get(0).to);
+    assertNotNull(allStream.actions.get(0).mapper);
+    assertTrue(allStream.actions.get(1).method.isDELETE());
+    assertNotNull(allStream.actions.get(1).uri);
+    assertEquals("/eventstreams/{streamName}/{id}", allStream.actions.get(1).uri);
+    assertNotNull(allStream.actions.get(1).to);
+    assertNotNull(allStream.actions.get(1).mapper);
+  }
 
   @Test
   public void testThatResourcesBuildFluently() {
