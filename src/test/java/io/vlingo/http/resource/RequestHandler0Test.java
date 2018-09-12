@@ -9,9 +9,9 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.actors.Completes;
 import io.vlingo.http.*;
 import io.vlingo.http.sample.user.NameData;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -26,13 +26,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class RequestHandler0Test {
-  private MockCompletesEventuallyResponse completes;
-
-  @Before()
-  public void setup() {
-    completes = new MockCompletesEventuallyResponse();
-  }
-
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
@@ -40,13 +33,12 @@ public class RequestHandler0Test {
   public void simpleHandler() {
     final Response response = Response.of(Created);
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      .handle((completes) -> completes.with(response));
+      .handle(() -> Completes.withSuccess(response));
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
     assertEquals("/helloworld", handler.path);
-    handler.execute(completes);
-    assertEquals(response, completes.response);
+    assertEquals(response, handler.execute().outcome());
   }
 
   @Test
@@ -55,13 +47,13 @@ public class RequestHandler0Test {
     thrown.expectMessage("No handle defined for GET /helloworld");
 
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld");
-    handler.execute(completes);
+    handler.execute();
   }
 
   @Test
   public void actionSignatureIsEmpty() {
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      .handle((completes) -> completes.with(Response.of(Created)));
+      .handle(() -> Completes.withSuccess(Response.of(Created)));
 
     assertEquals("", handler.actionSignature);
   }
@@ -75,13 +67,12 @@ public class RequestHandler0Test {
       new Action.MappedParameters(1, Method.GET, "ignored", Collections.emptyList());
     final Response response = Response.of(Created);
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      .handle((completes) -> completes.with(response));
+      .handle(() -> Completes.withSuccess(response));
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
     assertEquals("/helloworld", handler.path);
-    handler.execute(request, mappedParameters, completes);
-    assertEquals(response, completes.response);
+    assertEquals(response, handler.execute(request, mappedParameters).outcome());
   }
 
   @Test
@@ -95,8 +86,7 @@ public class RequestHandler0Test {
     final Response response = Response.of(Ok, serialized(new NameData("John", "Doe")));
     final RequestHandler1<NameData> handler = new RequestHandler0(Method.GET, "/user/admin/name")
       .body(NameData.class)
-      .handle((completes, nameData) -> completes.with(response));
-    handler.execute(request, mappedParameters, completes);
-    assertEquals(response, completes.response);
+      .handle((nameData) -> Completes.withSuccess(response));
+    assertEquals(response, handler.execute(request, mappedParameters).outcome());
   }
 }

@@ -9,7 +9,7 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.CompletesEventually;
+import io.vlingo.actors.Completes;
 import io.vlingo.http.Header;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
@@ -30,9 +30,9 @@ public class RequestHandler2<T, R> extends RequestHandler {
     this.resolverParam2 = resolverParam2;
   }
 
-  @FunctionalInterface
-  public interface Handler2<T, R> {
-    void execute(CompletesEventually completes, T param1, R param2);
+  Completes execute(final T param1, final R param2) {
+    if (handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
+    return handler.execute(param1, param2);
   }
 
   public RequestHandler2<T, R> handle(final Handler2<T, R> handler) {
@@ -40,18 +40,17 @@ public class RequestHandler2<T, R> extends RequestHandler {
     return this;
   }
 
-  void execute(final CompletesEventually completes, final T param1, final R param2) {
-    if (handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
-    handler.execute(completes, param1, param2);
-  }
-
   @Override
-  public void execute(final Request request,
-                          final Action.MappedParameters mappedParameters,
-                          final CompletesEventually completes) {
+  public Completes execute(final Request request,
+                           final Action.MappedParameters mappedParameters) {
     final T param1 = resolverParam1.apply(request, mappedParameters);
     final R param2 = resolverParam2.apply(request, mappedParameters);
-    execute(completes, param1, param2);
+    return execute(param1, param2);
+  }
+
+  @FunctionalInterface
+  public interface Handler2<T, R> {
+    Completes execute(T param1, R param2);
   }
 
   // region FluentAPI

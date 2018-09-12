@@ -9,6 +9,7 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.actors.Completes;
 import io.vlingo.http.Response;
 import io.vlingo.http.sample.user.UserData;
 import org.junit.Test;
@@ -24,11 +25,11 @@ public class ResourceBuilderTest {
   @Test
   public void simpleRoute() {
     final DynamicResource resource = (DynamicResource) resource("userResource",
-        get("/helloWorld").handle((completes) -> completes.with(Response.of(Ok, serialized("Hello World")))),
+        get("/helloWorld").handle(() -> Completes.withSuccess((Response.of(Ok, serialized("Hello World"))))),
         post("/post/{postId}")
           .param(String.class)
           .body(UserData.class)
-          .handle((completes, postId, userData) -> completes.with(Response.of(Ok, serialized(postId))))
+          .handle((postId, userData) -> Completes.withSuccess(Response.of(Ok, serialized(postId))))
       );
 
     assertNotNull(resource);

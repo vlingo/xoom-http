@@ -9,7 +9,7 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.CompletesEventually;
+import io.vlingo.actors.Completes;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 
@@ -30,9 +30,8 @@ public abstract class RequestHandler {
     this.actionSignature = generateActionSignature(parameterResolvers);
   }
 
-  abstract void execute(final Request request,
-                            final Action.MappedParameters mappedParameters,
-                            final CompletesEventually completes);
+  abstract Completes execute(final Request request,
+                             final Action.MappedParameters mappedParameters);
 
   private String generateActionSignature(final List<ParameterResolver<?>> parameterResolvers) {
     checkOrder(parameterResolvers);

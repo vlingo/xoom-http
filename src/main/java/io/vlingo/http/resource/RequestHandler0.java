@@ -9,7 +9,7 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.CompletesEventually;
+import io.vlingo.actors.Completes;
 import io.vlingo.http.Header;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
@@ -23,9 +23,9 @@ public class RequestHandler0 extends RequestHandler {
     super(method, path, Collections.emptyList());
   }
 
-  @FunctionalInterface
-  public interface Handler0 {
-    void execute(CompletesEventually completes);
+  Completes execute() {
+    if (handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
+    return handler.execute();
   }
 
   public RequestHandler0 handle(final Handler0 handler) {
@@ -33,16 +33,15 @@ public class RequestHandler0 extends RequestHandler {
     return this;
   }
 
-  void execute(final CompletesEventually completes) {
-    if (handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
-    handler.execute(completes);
+  @Override
+  Completes execute(final Request request,
+                   final Action.MappedParameters mappedParameters) {
+    return execute();
   }
 
-  @Override
-  void execute(final Request request,
-                   final Action.MappedParameters mappedParameters,
-                   final CompletesEventually completes) {
-    execute(completes);
+  @FunctionalInterface
+  public interface Handler0 {
+    Completes execute();
   }
 
   // region FluentAPI
