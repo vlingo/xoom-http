@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.vlingo</groupId>
   <artifactId>vlingo-http</artifactId>
-  <version>0.5.6</version>
+  <version>0.5.5</version>
   <name>vlingo-http</name>
   <description>Reactive, scalable, and resilient HTTP servers and RESTful services running on vlingo/cluster and vlingo/actors.</description>
   <url>https://github.com/vlingo/vlingo-http</url>
