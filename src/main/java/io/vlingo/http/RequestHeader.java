@@ -95,6 +95,10 @@ public class RequestHeader extends Header {
     return new RequestHeader(ContentType, type);
   }
 
+  public static RequestHeader correlationId(final String correlationId) {
+    return new RequestHeader(XCorrelationID, correlationId);
+  }
+
   public static RequestHeader host(final String value) {
     return new RequestHeader(Host, value);
   }
