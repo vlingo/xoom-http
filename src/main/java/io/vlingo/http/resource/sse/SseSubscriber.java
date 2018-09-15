@@ -9,17 +9,19 @@ package io.vlingo.http.resource.sse;
 
 public class SseSubscriber {
   private final SseClient client;
+  private final String correlationId;
   private String currentEventId;
   private final String streamName;
 
-  public SseSubscriber(final String streamName, final SseClient client, final String lastEventId) {
+  public SseSubscriber(final String streamName, final SseClient client, final String correlationId, final String lastEventId) {
     this.streamName = streamName;
     this.client = client;
+    this.correlationId = correlationId;
     this.currentEventId = lastEventId;
   }
 
   public SseSubscriber(final String streamName, final SseClient client) {
-    this(streamName, client, "");
+    this(streamName, client, "", "");
   }
 
   public SseClient client() {
@@ -34,12 +36,24 @@ public class SseSubscriber {
     return this.streamName.equals(streamName);
   }
 
+  public String correlationId() {
+    return correlationId;
+  }
+
+  public boolean hasCorrelationId() {
+    return correlationId != null && !correlationId.isEmpty();
+  }
+
   public String currentEventId() {
     return currentEventId;
   }
 
   public void currentEventId(final String currentEventId) {
     this.currentEventId = currentEventId;
+  }
+
+  public boolean hasCurrentEventId() {
+    return currentEventId != null && !currentEventId.isEmpty();
   }
 
   public String id() {

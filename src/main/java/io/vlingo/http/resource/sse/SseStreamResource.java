@@ -7,6 +7,10 @@
 
 package io.vlingo.http.resource.sse;
 
+import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.ResponseHeader.headers;
+import static io.vlingo.http.ResponseHeader.correlationId;
+
 import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
@@ -19,10 +23,10 @@ import io.vlingo.actors.Definition;
 import io.vlingo.actors.Scheduled;
 import io.vlingo.actors.Stoppable;
 import io.vlingo.actors.World;
-import io.vlingo.http.Header;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.RequestHeader;
+import io.vlingo.http.Response;
 import io.vlingo.http.resource.ResourceHandler;
 import io.vlingo.wire.channel.RequestResponseContext;
 
@@ -35,6 +39,34 @@ public class SseStreamResource extends ResourceHandler {
   }
 
   public void subscribeToStream(final String streamName, final Class<? extends Actor> feedClass, final int feedPayload, final int feedInterval, final String feedDefaultId) {
+    final RequestResponseContext<?> clientContext = context().clientContext();
+
+    clientContext.whenClosing(unsubscribeRequest());
+
+    final String correlationId = context().request().headerValueOr(RequestHeader.XCorrelationID, "");
+
+    final SseSubscriber subscriber =
+            new SseSubscriber(
+                    streamName,
+                    new SseClient(clientContext),
+                    correlationId,
+                    context().request().headerValueOr(RequestHeader.LastEventID, ""));
+
+    publisherFor(streamName, feedClass, feedPayload, feedInterval, feedDefaultId).subscribe(subscriber);
+
+    completes().with(Response.of(Ok, headers(correlationId(correlationId))));
+  }
+
+  public void unsubscribeFromStream(final String streamName, final String id) {
+    final SsePublisher publisher = publishers.get(streamName);
+    if (publisher != null) {
+      publisher.unsubscribe(new SseSubscriber(streamName, new SseClient(context().clientContext())));
+    }    
+
+    completes().with(Response.of(Ok));
+  }
+
+  private SsePublisher publisherFor(final String streamName, final Class<? extends Actor> feedClass, final int feedPayload, final int feedInterval, final String feedDefaultId) {
     SsePublisher publisher = publishers.get(streamName);
     if (publisher == null) {
       publisher = world.actorFor(Definition.has(SsePublisherActor.class, Definition.parameters(streamName, feedClass, feedPayload, feedInterval, feedDefaultId)), SsePublisher.class);
@@ -44,25 +76,7 @@ public class SseStreamResource extends ResourceHandler {
         publisher = presentPublisher;
       }
     }
-
-    final RequestResponseContext<?> clientContext = context().clientContext();
-
-    clientContext.whenClosing(unsubscribeRequest());
-
-    final Header lastEventId = context().request().headerOf(RequestHeader.LastEventID);
-
-    final SseSubscriber subscriber = lastEventId == null ?
-            new SseSubscriber(streamName, new SseClient(clientContext)) :
-            new SseSubscriber(streamName, new SseClient(clientContext), lastEventId.value);
-
-    publisher.subscribe(subscriber);
-  }
-
-  public void unsubscribeFromStream(final String streamName, final String id) {
-    final SsePublisher publisher = publishers.get(streamName);
-    if (publisher != null) {
-      publisher.unsubscribe(new SseSubscriber(streamName, new SseClient(context().clientContext())));
-    }    
+    return publisher;
   }
 
   private Request unsubscribeRequest() {
