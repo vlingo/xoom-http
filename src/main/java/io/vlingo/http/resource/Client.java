@@ -35,15 +35,15 @@ import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
 
 public class Client {
+  private final Configuration configuration;
   private final ClientConsumer consumer;
-  private final Stage stage;
 
   public static Client using(final Configuration configuration) throws Exception {
     return new Client(configuration);
   }
 
   public Client(final Configuration configuration) throws Exception {
-    this.stage = configuration.stage;
+    this.configuration = configuration;
     this.consumer = configuration.stage.actorFor(
             Definition.has(ClientRequesterConsumerActor.class, Definition.parameters(configuration)),
             ClientConsumer.class);
@@ -54,7 +54,10 @@ public class Client {
   }
 
   public Completes<Response> requestWith(final Request request) {
-    final Completes<Response> completes = Completes.using(stage.scheduler());
+    final Completes<Response> completes =
+            configuration.keepAlive ?
+                    Completes.repeatableUsing(configuration.stage.scheduler()) :
+                    Completes.using(configuration.stage.scheduler());
     consumer.requestWith(request, completes);
     return completes;
   }
