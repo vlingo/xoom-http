@@ -113,7 +113,7 @@ public class ServerTest extends ResourceTestFixtures {
 
     serverPort = baseServerPort.getAndIncrement();
     server = Server.startWith(world.stage(), resources, serverPort, new Sizing(1, 1, 100, 10240), new Timing(1, 100));
-    Thread.sleep(1000); // delay for server startup
+    Thread.sleep(100); // delay for server startup
 
     progress = new Progress();
     
@@ -126,9 +126,10 @@ public class ServerTest extends ResourceTestFixtures {
   public void tearDown() {
     client.close();
 
-    if (!server.shutDown().await(2000)) {
-      System.out.println("Server did not shut down properly.");
-    }
+    server.shutDown(); // TODO: wait
+//    if (!server.shutDown().await(2000)) {
+//      System.out.println("Server did not shut down properly.");
+//    }
 
     super.tearDown();
   }

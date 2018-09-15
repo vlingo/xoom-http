@@ -48,7 +48,7 @@ public class ClientTest extends ResourceTestFixtures {
             Request
               .has(POST)
               .and(URI.create("/users"))
-              .and(host("vlingo.io"))
+              .and(host("localhost"))
               .and(contentLength(user))
               .and(Body.from(user)))
           .after(response -> expectedResponse = response, 5000, Response.of(RequestTimeout))

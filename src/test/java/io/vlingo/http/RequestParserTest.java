@@ -30,7 +30,7 @@ public class RequestParserTest extends ResourceTestFixtures {
     assertTrue(parser.hasCompleted());
     assertTrue(parser.hasFullRequest());
     assertFalse(parser.isMissingContent());
-    assertFalse(parser.hasMissingContentTimeExpired(System.currentTimeMillis()));
+    assertFalse(parser.hasMissingContentTimeExpired(System.currentTimeMillis() + 100));
     
     final Request request = parser.fullRequest();
     
@@ -48,7 +48,7 @@ public class RequestParserTest extends ResourceTestFixtures {
     assertTrue(parser.hasCompleted());
     assertTrue(parser.hasFullRequest());
     assertFalse(parser.isMissingContent());
-    assertFalse(parser.hasMissingContentTimeExpired(System.currentTimeMillis()));
+    assertFalse(parser.hasMissingContentTimeExpired(System.currentTimeMillis() + 100));
 
     int count = 0;
     final Iterator<String> bodyIterator = uniqueBodies.iterator();
@@ -75,7 +75,7 @@ public class RequestParserTest extends ResourceTestFixtures {
     assertTrue(parser.hasCompleted());
     assertTrue(parser.hasFullRequest());
     assertFalse(parser.isMissingContent());
-    assertFalse(parser.hasMissingContentTimeExpired(System.currentTimeMillis()));
+    assertFalse(parser.hasMissingContentTimeExpired(System.currentTimeMillis() + 100));
 
     int count = 0;
     final Iterator<String> bodyIterator = uniqueBodies.iterator();
@@ -117,7 +117,7 @@ public class RequestParserTest extends ResourceTestFixtures {
     assertTrue(parser.hasCompleted());
     assertTrue(parser.hasFullRequest());
     assertFalse(parser.isMissingContent());
-    assertFalse(parser.hasMissingContentTimeExpired(System.currentTimeMillis()));
+    assertFalse(parser.hasMissingContentTimeExpired(System.currentTimeMillis() + 100));
 
     int count = 0;
     final Iterator<String> bodyIterator = uniqueBodies.iterator();

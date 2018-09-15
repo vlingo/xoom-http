@@ -23,11 +23,12 @@ public class SseSubscriberTest {
 
   @Test
   public void testSubscriberPropertiesBehavior() {
-    final SseSubscriber subscriber = new SseSubscriber("all", client, "42");
+    final SseSubscriber subscriber = new SseSubscriber("all", client, "123ABC", "42");
 
     assertNotNull(subscriber.client());
     assertEquals(context.id(), subscriber.id());
     assertEquals("all", subscriber.streamName());
+    assertEquals("123ABC", subscriber.correlationId());
     assertEquals("42", subscriber.currentEventId());
     subscriber.currentEventId("4242");
     assertEquals("4242", subscriber.currentEventId());
