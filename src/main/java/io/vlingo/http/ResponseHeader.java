@@ -103,6 +103,10 @@ public class ResponseHeader extends Header {
     return new ResponseHeader(ContentType, type);
   }
 
+  public static ResponseHeader correlationId(final String correlationId) {
+    return new ResponseHeader(XCorrelationID, correlationId);
+  }
+
   public static ResponseHeader of(final String name, final String value) {
     return new ResponseHeader(name, value);
   }
