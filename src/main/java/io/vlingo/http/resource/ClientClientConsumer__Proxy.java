@@ -34,9 +34,9 @@ public class ClientClientConsumer__Proxy implements ClientConsumer {
     this.mailbox = mailbox;
   }
 
-  public Completes<Response> requestWith(io.vlingo.http.Request arg0) {
+  public Completes<Response> requestWith(io.vlingo.http.Request arg0, io.vlingo.actors.Completes<Response> arg1) {
     if (!actor.isStopped()) {
-      final Consumer<ClientConsumer> consumer = (actor) -> actor.requestWith(arg0);
+      final Consumer<ClientConsumer> consumer = (actor) -> actor.requestWith(arg0, arg1);
       final Completes<Response> completes = new BasicCompletes<>(actor.scheduler());
       mailbox.send(new LocalMessage<ClientConsumer>(actor, ClientConsumer.class, consumer, completes, requestWithRepresentation1));
       return completes;
