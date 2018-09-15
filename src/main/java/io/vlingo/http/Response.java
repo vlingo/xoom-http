@@ -68,6 +68,11 @@ public class Response {
     return null;
   }
 
+  public String headerValueOr(final String headerName, final String defaultValue) {
+    final Header header = headerOf(headerName);
+    return header == null ? defaultValue : header.value;
+  }
+
   public Response include(final Header header) {
     if (header != null && headerOf(header.name) == null) {
       headers.and(ResponseHeader.of(header.name, header.value));
