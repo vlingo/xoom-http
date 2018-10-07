@@ -24,7 +24,7 @@ public class Header {
   }
 
   public boolean matchesName(final Header header) {
-    return name.equals(header.name);
+    return name.equalsIgnoreCase(header.name);
   }
 
   @Override
@@ -40,7 +40,7 @@ public class Header {
 
     final Header otherHeader = (Header) other;
 
-    return name.equals(otherHeader.name) && value.equals(otherHeader.value);
+    return name.equalsIgnoreCase(otherHeader.name) && value.equals(otherHeader.value);
   }
 
   @Override
@@ -71,7 +71,7 @@ public class Header {
       final Iterator<T> iter = this.iterator();
       while (iter.hasNext()) {
         final T header = iter.next();
-        if (header.name.equals(name)) {
+        if (header.name.equalsIgnoreCase(name)) {
           return header;
         }
       }

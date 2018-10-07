@@ -36,7 +36,22 @@ public class RequestHeaderTest {
     assertEquals(RequestHeader.Accept, header.name);
     assertEquals("text/plain", header.value);
   }
-  
+
+  @Test
+  public void testParseLowerCaseContentLength() {
+    final RequestHeader header = RequestHeader.from("content-length: 10");
+
+    assertEquals(10, header.ifContentLength());
+  }
+
+  @Test
+  public void testEqualsCaseInsensitive() {
+    final RequestHeader header1 = RequestHeader.from("Content-length: 10");
+    final RequestHeader header2 = RequestHeader.from("content-length: 10");
+
+    assertEquals(header1, header2);
+  }
+
   @Test
   public void testParseHeaderWithMultipleValueStrings() {
     final RequestHeader header = RequestHeader.from("Cookie: $Version=1; Skin=new;");
