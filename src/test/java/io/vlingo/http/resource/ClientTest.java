@@ -51,10 +51,10 @@ public class ClientTest extends ResourceTestFixtures {
               .and(host("localhost"))
               .and(contentLength(user))
               .and(Body.from(user)))
-          .after(response -> expectedResponse = response, 5000, Response.of(RequestTimeout))
-          .andThen(response -> expectedHeaderCount = response.headers.size())
-          .andThen(response -> location = response.headers.headerOf(Location))
-          .atLast(response -> until.completeNow());
+          .after(5000, Response.of(RequestTimeout), (Response response) -> expectedResponse = response)
+          .andThen((Response response) -> expectedHeaderCount = response.headers.size())
+          .andThen((Response response) -> location = response.headers.headerOf(Location))
+          .atLast((Response response) -> until.completeNow());
 
     until.completes();
 
