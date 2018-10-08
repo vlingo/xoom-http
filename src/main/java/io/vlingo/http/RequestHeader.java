@@ -108,7 +108,7 @@ public class RequestHeader extends Header {
   }
 
   int ifContentLength() {
-    if (name.equals(ContentLength)) {
+    if (name.equalsIgnoreCase(ContentLength)) {
       return Integer.parseInt(value);
     }
     return 0;
