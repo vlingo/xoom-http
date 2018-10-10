@@ -15,8 +15,8 @@ import io.vlingo.actors.Completes;
 import io.vlingo.actors.DeadLetter;
 import io.vlingo.actors.LocalMessage;
 import io.vlingo.actors.Mailbox;
-import io.vlingo.http.resource.Client.ClientConsumer;
 import io.vlingo.http.Response;
+import io.vlingo.http.resource.Client.ClientConsumer;
 
 public class ClientClientConsumer__Proxy implements ClientConsumer {
 
@@ -24,7 +24,6 @@ public class ClientClientConsumer__Proxy implements ClientConsumer {
   private static final String consumeRepresentation2 = "consume(io.vlingo.wire.message.ConsumerByteBuffer)";
   private static final String intervalSignalRepresentation3 = "intervalSignal(io.vlingo.actors.Scheduled, java.lang.Object)";
   private static final String stopRepresentation4 = "stop()";
-  private static final String isStoppedRepresentation5 = "isStopped()";
 
   private final Actor actor;
   private final Mailbox mailbox;
@@ -38,7 +37,8 @@ public class ClientClientConsumer__Proxy implements ClientConsumer {
     if (!actor.isStopped()) {
       final Consumer<ClientConsumer> consumer = (actor) -> actor.requestWith(arg0, arg1);
       final Completes<Response> completes = new BasicCompletes<>(actor.scheduler());
-      mailbox.send(new LocalMessage<ClientConsumer>(actor, ClientConsumer.class, consumer, completes, requestWithRepresentation1));
+      if (mailbox.isPreallocated()) { mailbox.send(actor, ClientConsumer.class, consumer, completes, requestWithRepresentation1); }
+      else { mailbox.send(new LocalMessage<ClientConsumer>(actor, ClientConsumer.class, consumer, completes, requestWithRepresentation1)); }
       return completes;
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, requestWithRepresentation1));
@@ -48,7 +48,8 @@ public class ClientClientConsumer__Proxy implements ClientConsumer {
   public void consume(io.vlingo.wire.message.ConsumerByteBuffer arg0) {
     if (!actor.isStopped()) {
       final Consumer<ClientConsumer> consumer = (actor) -> actor.consume(arg0);
-      mailbox.send(new LocalMessage<ClientConsumer>(actor, ClientConsumer.class, consumer, consumeRepresentation2));
+      if (mailbox.isPreallocated()) { mailbox.send(actor, ClientConsumer.class, consumer, null, consumeRepresentation2); }
+      else { mailbox.send(new LocalMessage<ClientConsumer>(actor, ClientConsumer.class, consumer, consumeRepresentation2)); }
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, consumeRepresentation2));
     }
@@ -56,7 +57,8 @@ public class ClientClientConsumer__Proxy implements ClientConsumer {
   public void intervalSignal(io.vlingo.actors.Scheduled arg0, java.lang.Object arg1) {
     if (!actor.isStopped()) {
       final Consumer<ClientConsumer> consumer = (actor) -> actor.intervalSignal(arg0, arg1);
-      mailbox.send(new LocalMessage<ClientConsumer>(actor, ClientConsumer.class, consumer, intervalSignalRepresentation3));
+      if (mailbox.isPreallocated()) { mailbox.send(actor, ClientConsumer.class, consumer, null, intervalSignalRepresentation3); }
+      else { mailbox.send(new LocalMessage<ClientConsumer>(actor, ClientConsumer.class, consumer, intervalSignalRepresentation3)); }
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, intervalSignalRepresentation3));
     }
@@ -64,18 +66,13 @@ public class ClientClientConsumer__Proxy implements ClientConsumer {
   public void stop() {
     if (!actor.isStopped()) {
       final Consumer<ClientConsumer> consumer = (actor) -> actor.stop();
-      mailbox.send(new LocalMessage<ClientConsumer>(actor, ClientConsumer.class, consumer, stopRepresentation4));
+      if (mailbox.isPreallocated()) { mailbox.send(actor, ClientConsumer.class, consumer, null, stopRepresentation4); }
+      else { mailbox.send(new LocalMessage<ClientConsumer>(actor, ClientConsumer.class, consumer, stopRepresentation4)); }
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, stopRepresentation4));
     }
   }
   public boolean isStopped() {
-    if (!actor.isStopped()) {
-      final Consumer<ClientConsumer> consumer = (actor) -> actor.isStopped();
-      mailbox.send(new LocalMessage<ClientConsumer>(actor, ClientConsumer.class, consumer, isStoppedRepresentation5));
-    } else {
-      actor.deadLetters().failedDelivery(new DeadLetter(actor, isStoppedRepresentation5));
-    }
-    return false;
+    return actor.isStopped();
   }
 }
