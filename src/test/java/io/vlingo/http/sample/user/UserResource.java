@@ -55,30 +55,36 @@ public class UserResource extends ResourceHandler {
   }
 
   public void changeContact(final String userId, final ContactData contactData) {
-    stage.actorOf(stage().world().addressFactory().from(userId), User.class).after(user -> {
-      if (user == null) {
+    stage.actorOf(stage().world().addressFactory().from(userId), User.class)
+      .after(user -> {
+        user.withContact(new Contact(contactData.emailAddress, contactData.telephoneNumber))
+          .after(userState -> {
+            Response.of(Ok, serialized(UserData.from(userState)));
+            return userState;
+          });
+        return user;
+      })
+      .otherwise(noUser -> {
         completes().with(Response.of(NotFound, userLocation(userId)));
-        return;
-      }
-
-      user.withContact(new Contact(contactData.emailAddress, contactData.telephoneNumber)).after(userState -> {
-        repository.save(userState);
-        completes().with(Response.of(Ok, serialized(UserData.from(userState))));
+        return noUser;
       });
-    });
   }
 
   public void changeName(final String userId, final NameData nameData) {
-    stage.actorOf(stage().world().addressFactory().from(userId), User.class).after(user -> {
-      if (user == null) {
+    stage.actorOf(stage().world().addressFactory().from(userId), User.class)
+      .after(user -> {
+        user.withName(new Name(nameData.given, nameData.family))
+          .after(userState -> {
+            repository.save(userState);
+            completes().with(Response.of(Ok, serialized(UserData.from(userState))));
+            return userState;
+          });
+        return user;
+      })
+      .otherwise(noUser -> {
         completes().with(Response.of(NotFound, userLocation(userId)));
-        return;
-      }
-      user.withName(new Name(nameData.given, nameData.family)).after(userState -> {
-        repository.save(userState);
-        completes().with(Response.of(Ok, serialized(UserData.from(userState))));
+        return noUser;
       });
-    });
   }
 
   public void queryUser(final String userId) {
