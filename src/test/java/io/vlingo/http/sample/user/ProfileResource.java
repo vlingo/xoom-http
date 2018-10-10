@@ -33,24 +33,26 @@ public class ProfileResource extends ResourceHandler {
   }
 
   public void define(final String userId, final ProfileData profileData) {
-    stage.actorOf(stage.world().addressFactory().findableBy(Integer.parseInt(userId)), Profile.class).after(profile -> {
-      if (profile == null) {
+    stage.actorOf(stage.world().addressFactory().findableBy(Integer.parseInt(userId)), Profile.class)
+      .after(profile -> {
+        final Profile.State profileState = repository.profileOf(userId);
+        completes().with(Response.of(Ok, headers(of(Location, profileLocation(userId))), serialized(ProfileData.from(profileState))));
+        return profile;
+      })
+      .otherwise(noProfile -> {
         final Profile.State profileState =
                 Profile.from(
                         userId,
                         profileData.twitterAccount,
                         profileData.linkedInAccount,
                         profileData.website);
-
+  
         stage().actorFor(Definition.has(ProfileActor.class, Definition.parameters(profileState)), Profile.class);
-
+  
         repository.save(profileState);
         completes().with(Response.of(Created, serialized(ProfileData.from(profileState))));
-      } else {
-        final Profile.State profileState = repository.profileOf(userId);
-        completes().with(Response.of(Ok, headers(of(Location, profileLocation(userId))), serialized(ProfileData.from(profileState))));
-      }
-    });
+        return noProfile;
+      });
   }
 
   public void query(final String userId) {
