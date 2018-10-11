@@ -13,6 +13,7 @@ import io.vlingo.actors.Completes;
 import io.vlingo.http.Header;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
+import io.vlingo.http.Response;
 
 import java.util.Collections;
 
@@ -25,7 +26,7 @@ public class RequestHandler1<T> extends RequestHandler {
     this.resolver = resolver;
   }
 
-  Completes execute(final T param1) {
+  Completes<Response> execute(final T param1) {
     if (handler == null)
       throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
     return handler.execute(param1);
@@ -37,14 +38,14 @@ public class RequestHandler1<T> extends RequestHandler {
   }
 
   @Override
-  Completes execute(final Request request,
+  Completes<Response> execute(final Request request,
                final Action.MappedParameters mappedParameters) {
     return execute(resolver.apply(request, mappedParameters));
   }
 
   @FunctionalInterface
   public interface Handler1<T> {
-    Completes execute(T param1);
+    Completes<Response> execute(T param1);
   }
 
   // region FluentAPI

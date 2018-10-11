@@ -12,6 +12,7 @@ package io.vlingo.http.resource;
 import io.vlingo.actors.Completes;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
+import io.vlingo.http.Response;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -30,8 +31,8 @@ public abstract class RequestHandler {
     this.actionSignature = generateActionSignature(parameterResolvers);
   }
 
-  abstract Completes execute(final Request request,
-                             final Action.MappedParameters mappedParameters);
+  abstract Completes<Response> execute(final Request request,
+                                       final Action.MappedParameters mappedParameters);
 
   private String generateActionSignature(final List<ParameterResolver<?>> parameterResolvers) {
     checkOrder(parameterResolvers);
