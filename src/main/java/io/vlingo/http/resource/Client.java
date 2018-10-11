@@ -35,6 +35,7 @@ import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
 
 public class Client {
+  private final Configuration configuration;
   private final ClientConsumer consumer;
 
   public static Client using(final Configuration configuration) throws Exception {
@@ -42,6 +43,7 @@ public class Client {
   }
 
   public Client(final Configuration configuration) throws Exception {
+    this.configuration = configuration;
     this.consumer = configuration.stage.actorFor(
             Definition.has(ClientRequesterConsumerActor.class, Definition.parameters(configuration)),
             ClientConsumer.class);
@@ -52,12 +54,18 @@ public class Client {
   }
 
   public Completes<Response> requestWith(final Request request) {
-    return consumer.requestWith(request);
+    final Completes<Response> completes =
+            configuration.keepAlive ?
+                    Completes.repeatableUsing(configuration.stage.scheduler()) :
+                    Completes.using(configuration.stage.scheduler());
+    consumer.requestWith(request, completes);
+    return completes;
   }
 
   public static class Configuration {
     public final Address addressOfHost;
     public final ResponseConsumer consumerOfUnknownResponses;
+    public final boolean keepAlive;
     public final long probeInterval;
     public final int readBufferSize;
     public final int readBufferPoolSize;
@@ -81,6 +89,22 @@ public class Client {
               stage,
               addressOfHost,
               consumerOfUnknownResponses,
+              false,
+              10,
+              10240,
+              10,
+              10240);
+    }
+
+    public static Configuration defaultedKeepAliveExceptFor(
+            final Stage stage,
+            final Address addressOfHost,
+            final ResponseConsumer consumerOfUnknownResponses) {
+      return has(
+              stage,
+              addressOfHost,
+              consumerOfUnknownResponses,
+              true,
               10,
               10240,
               10,
@@ -91,6 +115,7 @@ public class Client {
             final Stage stage,
             final Address addressOfHost,
             final ResponseConsumer consumerOfUnknownResponses,
+            final boolean keepAlive,
             final long probeInterval,
             final int writeBufferSize,
             final int readBufferPoolSize,
@@ -99,6 +124,7 @@ public class Client {
               stage,
               addressOfHost,
               consumerOfUnknownResponses,
+              keepAlive,
               probeInterval,
               writeBufferSize,
               readBufferPoolSize,
@@ -109,6 +135,7 @@ public class Client {
             final Stage stage,
             final Address addressOfHost,
             final ResponseConsumer consumerOfUnknownResponses,
+            final boolean keepAlive,
             final long probeInterval,
             final int writeBufferSize,
             final int readBufferPoolSize,
@@ -117,6 +144,7 @@ public class Client {
       this.stage = stage;
       this.addressOfHost = addressOfHost;
       this.consumerOfUnknownResponses = consumerOfUnknownResponses;
+      this.keepAlive = keepAlive;
       this.probeInterval = probeInterval;
       this.writeBufferSize = writeBufferSize;
       this.readBufferPoolSize = readBufferPoolSize;
@@ -125,7 +153,7 @@ public class Client {
   }
 
   public static interface ClientConsumer extends ResponseChannelConsumer, Scheduled, Stoppable {
-    Completes<Response> requestWith(final Request request);
+    Completes<Response> requestWith(final Request request, final Completes<Response> completes);
   }
 
   public static class ClientRequesterConsumerActor extends Actor implements ClientConsumer {
@@ -160,7 +188,9 @@ public class Client {
           logger().log("Client Consumer: Cannot complete response because no correlation id.");
           configuration.consumerOfUnknownResponses.consume(response);
         } else {
-          final CompletesEventually completes = completables.remove(correlationId.value);
+          final CompletesEventually completes = configuration.keepAlive ?
+                  completables.get(correlationId.value) :
+                  completables.remove(correlationId.value);
           if (completes == null) {
             configuration.stage.world().defaultLogger().log(
                     "Client Consumer: Cannot complete response because mismatched correlation id: " +
@@ -178,7 +208,8 @@ public class Client {
       channel.probeChannel();
     }
 
-    public Completes<Response> requestWith(final Request request) {
+    @Override
+    public Completes<Response> requestWith(final Request request, final Completes<Response> completes) {
       RequestHeader correlationId = request.headers.headerOf(RequestHeader.XCorrelationID);
       
       final Request readyRequest;
@@ -190,14 +221,14 @@ public class Client {
         readyRequest = request;
       }
 
-      completables.put(correlationId.value, completesEventually());
+      completables.put(correlationId.value, stage().world().completesFor(completes));
 
       buffer.clear();
       buffer.put(Converters.textToBytes(readyRequest.toString()));
       buffer.flip();
       channel.requestWith(buffer);
 
-      return completes();
+      return completes;
     }
 
     @Override

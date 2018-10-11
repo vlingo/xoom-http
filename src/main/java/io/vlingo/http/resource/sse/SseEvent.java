@@ -103,7 +103,7 @@ public class SseEvent {
     }
 
     public Builder data(final String data) {
-      this.data = data;
+      this.data = this.data == null ? data : this.data + "\n" + data;
       return this;
     }
 

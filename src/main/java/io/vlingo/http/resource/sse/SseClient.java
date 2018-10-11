@@ -66,10 +66,18 @@ public class SseClient {
   }
 
   public void send(final Collection<SseEvent> events) {
-    final ConsumerByteBuffer buffer = BasicConsumerByteBuffer.allocate(1, maxMessageSize);
     final String entity = flatten(events);
-    final Headers<ResponseHeader> withContentLength = headers.copy().and(ResponseHeader.contentLength(entity));
-    final Response response = Response.of(Ok, withContentLength, entity);
+    send(entity, headers.copy().and(ResponseHeader.contentLength(entity)));
+  }
+
+  public void send(final Collection<SseEvent> events, final String correlationId) {
+    final String entity = flatten(events);
+    send(entity, headers.copy().and(ResponseHeader.contentLength(entity)).and(ResponseHeader.correlationId(correlationId)));
+  }
+
+  private void send(final String entity, Headers<ResponseHeader> headers) {
+    final ConsumerByteBuffer buffer = BasicConsumerByteBuffer.allocate(1, maxMessageSize);
+    final Response response = Response.of(Ok, headers, entity);
     context.respondWith(response.into(buffer));
   }
 

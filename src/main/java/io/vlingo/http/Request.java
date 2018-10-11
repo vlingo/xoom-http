@@ -89,11 +89,16 @@ public class Request {
 
   public Header headerOf(final String name) {
     for (final Header header : headers) {
-      if (header.name.equals(name)) {
+      if (header.name.equalsIgnoreCase(name)) {
         return header;
       }
     }
     return null;
+  }
+
+  public String headerValueOr(final String headerName, final String defaultValue) {
+    final Header header = headerOf(headerName);
+    return header == null ? defaultValue : header.value;
   }
 
   public QueryParameters queryParameters() {

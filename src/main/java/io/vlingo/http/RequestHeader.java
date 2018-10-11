@@ -95,6 +95,10 @@ public class RequestHeader extends Header {
     return new RequestHeader(ContentType, type);
   }
 
+  public static RequestHeader correlationId(final String correlationId) {
+    return new RequestHeader(XCorrelationID, correlationId);
+  }
+
   public static RequestHeader host(final String value) {
     return new RequestHeader(Host, value);
   }
@@ -104,7 +108,7 @@ public class RequestHeader extends Header {
   }
 
   int ifContentLength() {
-    if (name.equals(ContentLength)) {
+    if (name.equalsIgnoreCase(ContentLength)) {
       return Integer.parseInt(value);
     }
     return 0;

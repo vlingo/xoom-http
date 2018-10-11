@@ -31,7 +31,7 @@ public class SseFeedTest {
   public void testThatFeedFeedsOneSubscriber() {
     feed = world.actorFor(Definition.has(AllSseFeedActor.class, Definition.parameters("all", 10, "1")), SseFeed.class);
 
-    final SseSubscriber subscriber = new SseSubscriber("all", client, "42");
+    final SseSubscriber subscriber = new SseSubscriber("all", client, "ABC123", "42");
 
     context.channel.untilRespondWith = TestUntil.happenings(1);
 
@@ -50,9 +50,9 @@ public class SseFeedTest {
   public void testThatFeedFeedsMultipleSubscribers() {
     feed = world.actorFor(Definition.has(AllSseFeedActor.class, Definition.parameters("all", 10, "1")), SseFeed.class);
 
-    final SseSubscriber subscriber1 = new SseSubscriber("all", client, "41");
-    final SseSubscriber subscriber2 = new SseSubscriber("all", client, "42");
-    final SseSubscriber subscriber3 = new SseSubscriber("all", client, "43");
+    final SseSubscriber subscriber1 = new SseSubscriber("all", client, "ABC123", "41");
+    final SseSubscriber subscriber2 = new SseSubscriber("all", client, "ABC456", "42");
+    final SseSubscriber subscriber3 = new SseSubscriber("all", client, "ABC789", "43");
 
     context.channel.untilRespondWith = TestUntil.happenings(3);
 

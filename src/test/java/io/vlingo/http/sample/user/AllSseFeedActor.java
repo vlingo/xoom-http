@@ -38,7 +38,7 @@ public class AllSseFeedActor extends Actor implements SseFeed {
   @Override
   public void to(final Collection<SseSubscriber> subscribers) {
     for (final SseSubscriber subscriber : subscribers) {
-      final boolean fresh = subscriber.currentEventId().isEmpty();
+      final boolean fresh = !subscriber.hasCurrentEventId();
       final int retry = fresh ? RetryThreshold : SseEvent.NoRetry;
       final int startId = fresh ? defaultId : Integer.parseInt(subscriber.currentEventId());
       final int endId = startId + feedPayload - 1;

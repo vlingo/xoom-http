@@ -52,7 +52,9 @@ public final class Action {
         final Object body = mapBodyFrom(request);
         mapped.add(new MappedParameter(typed.type, body));
       } else {
-        final Object other = mapOtherFrom(RawPathParameter.named(typed.name, parameters));
+        final RawPathParameter raw = RawPathParameter.named(typed.name, parameters);
+        if (raw == null) break;
+        final Object other = mapOtherFrom(raw);
         mapped.add(new MappedParameter(typed.type, other));
       }
     }
