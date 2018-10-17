@@ -51,10 +51,10 @@ public class ClientTest extends ResourceTestFixtures {
               .and(host("localhost"))
               .and(contentLength(user))
               .and(Body.from(user)))
-          .consumeAfter(5000, Response.of(RequestTimeout), response -> expectedResponse = response)
+          .andThenConsume(5000, Response.of(RequestTimeout), response -> expectedResponse = response)
           .andThenConsume(response -> expectedHeaderCount = response.headers.size())
           .andThenConsume(response -> location = response.headers.headerOf(Location))
-          .atLastConsume(response -> until.completeNow());
+          .andThenConsume(response -> until.completeNow());
 
     until.completes();
 
