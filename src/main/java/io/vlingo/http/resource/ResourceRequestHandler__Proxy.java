@@ -13,7 +13,6 @@ import io.vlingo.actors.Actor;
 import io.vlingo.actors.DeadLetter;
 import io.vlingo.actors.LocalMessage;
 import io.vlingo.actors.Mailbox;
-import io.vlingo.http.resource.Client.ClientConsumer;
 
 public class ResourceRequestHandler__Proxy implements ResourceRequestHandler {
 
