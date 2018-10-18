@@ -19,7 +19,7 @@ import io.vlingo.actors.Mailbox;
 public class Server__Proxy implements Server {
 
   private static final String shutDownRepresentation1 = "shutDown()";
-  private static final String startUpDownRepresentation2 = "startUp()";
+  private static final String startUpRepresentation2 = "startUp()";
   private static final String stopRepresentation3 = "stop()";
 
   private final Actor actor;
@@ -40,7 +40,8 @@ public class Server__Proxy implements Server {
     if (!actor.isStopped()) {
       final Consumer<Server> consumer = (actor) -> actor.shutDown();
       final Completes<Boolean> completes = new BasicCompletes<>(actor.scheduler());
-      mailbox.send(new LocalMessage<Server>(actor, Server.class, consumer, completes, shutDownRepresentation1));
+      if (mailbox.isPreallocated()) { mailbox.send(actor, Server.class, consumer, completes, shutDownRepresentation1); }
+      else { mailbox.send(new LocalMessage<Server>(actor, Server.class, consumer, completes, shutDownRepresentation1)); }
       return completes;
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, shutDownRepresentation1));
@@ -53,10 +54,11 @@ public class Server__Proxy implements Server {
     if (!actor.isStopped()) {
       final Consumer<Server> consumer = (actor) -> actor.startUp();
       final Completes<Boolean> completes = new BasicCompletes<>(actor.scheduler());
-      mailbox.send(new LocalMessage<Server>(actor, Server.class, consumer, completes, startUpDownRepresentation2));
+      if (mailbox.isPreallocated()) { mailbox.send(actor, Server.class, consumer, completes, startUpRepresentation2); }
+      else { mailbox.send(new LocalMessage<Server>(actor, Server.class, consumer, completes, startUpRepresentation2)); }
       return completes;
     } else {
-      actor.deadLetters().failedDelivery(new DeadLetter(actor, startUpDownRepresentation2));
+      actor.deadLetters().failedDelivery(new DeadLetter(actor, startUpRepresentation2));
     }
     return null;
   }
@@ -65,7 +67,8 @@ public class Server__Proxy implements Server {
   public void stop() {
     if (!actor.isStopped()) {
       final Consumer<Server> consumer = (actor) -> actor.stop();
-      mailbox.send(new LocalMessage<Server>(actor, Server.class, consumer, stopRepresentation3));
+      if (mailbox.isPreallocated()) { mailbox.send(actor, Server.class, consumer, null, stopRepresentation3); }
+      else { mailbox.send(new LocalMessage<Server>(actor, Server.class, consumer, stopRepresentation3)); }
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, stopRepresentation3));
     }

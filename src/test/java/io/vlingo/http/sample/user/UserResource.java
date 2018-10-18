@@ -55,30 +55,20 @@ public class UserResource extends ResourceHandler {
   }
 
   public void changeContact(final String userId, final ContactData contactData) {
-    stage.actorOf(stage().world().addressFactory().from(userId), User.class).after(user -> {
-      if (user == null) {
-        completes().with(Response.of(NotFound, userLocation(userId)));
-        return;
-      }
-
-      user.withContact(new Contact(contactData.emailAddress, contactData.telephoneNumber)).after(userState -> {
-        repository.save(userState);
-        completes().with(Response.of(Ok, serialized(UserData.from(userState))));
-      });
-    });
+    stage.actorOf(stage().world().addressFactory().from(userId), User.class)
+      .andThenInto(user -> user.withContact(new Contact(contactData.emailAddress, contactData.telephoneNumber)))
+      .otherwiseConsume(noUser -> completes().with(Response.of(NotFound, userLocation(userId))))
+      .andThenConsume(userState -> Response.of(Ok, serialized(UserData.from(userState))));
   }
 
   public void changeName(final String userId, final NameData nameData) {
-    stage.actorOf(stage().world().addressFactory().from(userId), User.class).after(user -> {
-      if (user == null) {
-        completes().with(Response.of(NotFound, userLocation(userId)));
-        return;
-      }
-      user.withName(new Name(nameData.given, nameData.family)).after(userState -> {
-        repository.save(userState);
-        completes().with(Response.of(Ok, serialized(UserData.from(userState))));
+    stage.actorOf(stage().world().addressFactory().from(userId), User.class)
+      .andThenInto(user -> user.withName(new Name(nameData.given, nameData.family)))
+      .otherwiseConsume(noUser -> completes().with(Response.of(NotFound, userLocation(userId))))
+      .andThenConsume(userState -> {
+            repository.save(userState);
+            completes().with(Response.of(Ok, serialized(UserData.from(userState))));
       });
-    });
   }
 
   public void queryUser(final String userId) {

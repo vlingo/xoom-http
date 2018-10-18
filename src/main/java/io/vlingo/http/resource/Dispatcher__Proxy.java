@@ -30,7 +30,8 @@ public class Dispatcher__Proxy implements Dispatcher {
   public void dispatchFor(io.vlingo.http.Context arg0) {
     if (!actor.isStopped()) {
       final Consumer<Dispatcher> consumer = (actor) -> actor.dispatchFor(arg0);
-      mailbox.send(new LocalMessage<Dispatcher>(actor, Dispatcher.class, consumer, dispatchForRepresentation1));
+      if (mailbox.isPreallocated()) { mailbox.send(actor, Dispatcher.class, consumer, null, dispatchForRepresentation1); }
+      else { mailbox.send(new LocalMessage<Dispatcher>(actor, Dispatcher.class, consumer, dispatchForRepresentation1)); }
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, dispatchForRepresentation1));
     }
@@ -38,7 +39,8 @@ public class Dispatcher__Proxy implements Dispatcher {
   public void stop() {
     if (!actor.isStopped()) {
       final Consumer<Dispatcher> consumer = (actor) -> actor.stop();
-      mailbox.send(new LocalMessage<Dispatcher>(actor, Dispatcher.class, consumer, stopRepresentation2));
+      if (mailbox.isPreallocated()) { mailbox.send(actor, Dispatcher.class, consumer, null, stopRepresentation2); }
+      else { mailbox.send(new LocalMessage<Dispatcher>(actor, Dispatcher.class, consumer, stopRepresentation2)); }
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, stopRepresentation2));
     }

@@ -32,7 +32,7 @@ import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
 
 public class ServerTest extends ResourceTestFixtures {
-  private static final int TOTAL_REQUESTS_RESPONSES = 10_000;
+  private static final int TOTAL_REQUESTS_RESPONSES = 1_000;
   
   private static final AtomicInteger baseServerPort = new AtomicInteger(18080);
 

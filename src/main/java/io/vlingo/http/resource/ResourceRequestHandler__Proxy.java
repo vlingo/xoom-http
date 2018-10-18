@@ -30,7 +30,8 @@ public class ResourceRequestHandler__Proxy implements ResourceRequestHandler {
   public void handleFor(io.vlingo.http.Context arg0, java.util.function.Consumer arg1) {
     if (!actor.isStopped()) {
       final Consumer<ResourceRequestHandler> consumer = (actor) -> actor.handleFor(arg0, arg1);
-      mailbox.send(new LocalMessage<ResourceRequestHandler>(actor, ResourceRequestHandler.class, consumer, handleForRepresentation1));
+      if (mailbox.isPreallocated()) { mailbox.send(actor, ResourceRequestHandler.class, consumer, null, handleForRepresentation1); }
+      else { mailbox.send(new LocalMessage<ResourceRequestHandler>(actor, ResourceRequestHandler.class, consumer, handleForRepresentation1)); }
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, handleForRepresentation1));
     }
