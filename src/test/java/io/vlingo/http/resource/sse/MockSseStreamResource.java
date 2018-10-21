@@ -7,12 +7,11 @@
 
 package io.vlingo.http.resource.sse;
 
-import io.vlingo.actors.BasicCompletes;
 import io.vlingo.actors.CompletesEventually;
 import io.vlingo.actors.World;
+import io.vlingo.common.BasicCompletes;
 import io.vlingo.http.Context;
 import io.vlingo.http.Request;
-import io.vlingo.http.resource.sse.SseStreamResource;
 
 public class MockSseStreamResource extends SseStreamResource {
   private final CompletesEventually completes;

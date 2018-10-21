@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import io.vlingo.common.fn.Tuple2;
+import io.vlingo.common.Tuple2;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 

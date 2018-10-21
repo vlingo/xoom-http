@@ -10,11 +10,11 @@ package io.vlingo.http.resource;
 import java.util.function.Consumer;
 
 import io.vlingo.actors.Actor;
-import io.vlingo.actors.BasicCompletes;
-import io.vlingo.actors.Completes;
 import io.vlingo.actors.DeadLetter;
 import io.vlingo.actors.LocalMessage;
 import io.vlingo.actors.Mailbox;
+import io.vlingo.common.BasicCompletes;
+import io.vlingo.common.Completes;
 import io.vlingo.http.Response;
 import io.vlingo.http.resource.Client.ClientConsumer;
 
@@ -33,7 +33,7 @@ public class ClientClientConsumer__Proxy implements ClientConsumer {
     this.mailbox = mailbox;
   }
 
-  public Completes<Response> requestWith(io.vlingo.http.Request arg0, io.vlingo.actors.Completes<Response> arg1) {
+  public Completes<Response> requestWith(io.vlingo.http.Request arg0, io.vlingo.common.Completes<Response> arg1) {
     if (!actor.isStopped()) {
       final Consumer<ClientConsumer> consumer = (actor) -> actor.requestWith(arg0, arg1);
       final Completes<Response> completes = new BasicCompletes<>(actor.scheduler());
@@ -54,7 +54,7 @@ public class ClientClientConsumer__Proxy implements ClientConsumer {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, consumeRepresentation2));
     }
   }
-  public void intervalSignal(io.vlingo.actors.Scheduled arg0, java.lang.Object arg1) {
+  public void intervalSignal(io.vlingo.common.Scheduled arg0, java.lang.Object arg1) {
     if (!actor.isStopped()) {
       final Consumer<ClientConsumer> consumer = (actor) -> actor.intervalSignal(arg0, arg1);
       if (mailbox.isPreallocated()) { mailbox.send(actor, ClientConsumer.class, consumer, null, intervalSignalRepresentation3); }

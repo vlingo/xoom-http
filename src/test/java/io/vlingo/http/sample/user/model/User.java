@@ -9,7 +9,7 @@ package io.vlingo.http.sample.user.model;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import io.vlingo.actors.Completes;
+import io.vlingo.common.Completes;
 
 public interface User {
   Completes<User.State> withContact(final Contact contact);

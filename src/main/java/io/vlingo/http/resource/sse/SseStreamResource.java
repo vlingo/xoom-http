@@ -8,8 +8,8 @@
 package io.vlingo.http.resource.sse;
 
 import static io.vlingo.http.Response.Status.Ok;
-import static io.vlingo.http.ResponseHeader.headers;
 import static io.vlingo.http.ResponseHeader.correlationId;
+import static io.vlingo.http.ResponseHeader.headers;
 
 import java.net.URI;
 import java.util.Collection;
@@ -18,11 +18,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.vlingo.actors.Actor;
-import io.vlingo.actors.Cancellable;
 import io.vlingo.actors.Definition;
-import io.vlingo.actors.Scheduled;
 import io.vlingo.actors.Stoppable;
 import io.vlingo.actors.World;
+import io.vlingo.common.Cancellable;
+import io.vlingo.common.Scheduled;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.RequestHeader;

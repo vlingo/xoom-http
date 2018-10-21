@@ -10,11 +10,11 @@ package io.vlingo.http.resource;
 import java.util.function.Consumer;
 
 import io.vlingo.actors.Actor;
-import io.vlingo.actors.BasicCompletes;
-import io.vlingo.actors.Completes;
 import io.vlingo.actors.DeadLetter;
 import io.vlingo.actors.LocalMessage;
 import io.vlingo.actors.Mailbox;
+import io.vlingo.common.BasicCompletes;
+import io.vlingo.common.Completes;
 
 public class Server__Proxy implements Server {
 

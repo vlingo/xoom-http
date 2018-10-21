@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.List;
 
 import io.vlingo.actors.Actor;
-import io.vlingo.common.fn.Tuple2;
+import io.vlingo.common.Tuple2;
 import io.vlingo.http.resource.sse.SseEvent;
 import io.vlingo.http.resource.sse.SseFeed;
 import io.vlingo.http.resource.sse.SseSubscriber;
