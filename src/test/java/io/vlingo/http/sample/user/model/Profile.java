@@ -7,7 +7,7 @@
 
 package io.vlingo.http.sample.user.model;
 
-import io.vlingo.actors.Completes;
+import io.vlingo.common.Completes;
 
 public interface Profile {
   Completes<Profile.State> withTwitterAccount(final String twitterAccount);

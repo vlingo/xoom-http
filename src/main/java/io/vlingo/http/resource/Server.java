@@ -7,10 +7,10 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.Completes;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.Stage;
 import io.vlingo.actors.Stoppable;
+import io.vlingo.common.Completes;
 import io.vlingo.http.resource.Configuration.Sizing;
 import io.vlingo.http.resource.Configuration.Timing;
 

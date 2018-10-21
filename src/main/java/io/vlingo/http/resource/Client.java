@@ -13,13 +13,13 @@ import java.util.Map;
 import java.util.UUID;
 
 import io.vlingo.actors.Actor;
-import io.vlingo.actors.Cancellable;
-import io.vlingo.actors.Completes;
 import io.vlingo.actors.CompletesEventually;
 import io.vlingo.actors.Definition;
-import io.vlingo.actors.Scheduled;
 import io.vlingo.actors.Stage;
 import io.vlingo.actors.Stoppable;
+import io.vlingo.common.Cancellable;
+import io.vlingo.common.Completes;
+import io.vlingo.common.Scheduled;
 import io.vlingo.http.Request;
 import io.vlingo.http.RequestHeader;
 import io.vlingo.http.Response;

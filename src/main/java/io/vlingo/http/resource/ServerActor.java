@@ -13,10 +13,10 @@ import java.util.List;
 import java.util.Map;
 
 import io.vlingo.actors.Actor;
-import io.vlingo.actors.BasicCompletes;
-import io.vlingo.actors.Completes;
-import io.vlingo.actors.Scheduled;
 import io.vlingo.actors.World;
+import io.vlingo.common.BasicCompletes;
+import io.vlingo.common.Completes;
+import io.vlingo.common.Scheduled;
 import io.vlingo.http.Context;
 import io.vlingo.http.Header;
 import io.vlingo.http.Request;

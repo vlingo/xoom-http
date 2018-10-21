@@ -9,8 +9,8 @@ package io.vlingo.http.resource;
 
 import io.vlingo.actors.CompletesEventually;
 import io.vlingo.actors.Logger;
-import io.vlingo.actors.Scheduler;
 import io.vlingo.actors.Stage;
+import io.vlingo.common.Scheduler;
 import io.vlingo.http.Context;
 
 public abstract class ResourceHandler {
