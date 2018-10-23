@@ -9,7 +9,7 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.Completes;
+import io.vlingo.common.Completes;
 import io.vlingo.http.*;
 import io.vlingo.http.sample.user.NameData;
 import org.junit.Rule;

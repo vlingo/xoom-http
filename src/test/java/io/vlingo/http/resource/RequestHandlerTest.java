@@ -1,6 +1,6 @@
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.Completes;
+import io.vlingo.common.Completes;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.sample.user.NameData;
