@@ -63,7 +63,11 @@ public class RequestHandler1<T> extends RequestHandler {
   }
 
   public <R> RequestHandler2<T, R> query(final String name, final Class<R> queryClass) {
-    return new RequestHandler2<>(method, path, resolver, ParameterResolver.query(name, queryClass));
+    return query(name, queryClass, null);
+  }
+
+  public <R> RequestHandler2<T, R> query(final String name, final Class<R> queryClass, final R defaultValue) {
+    return new RequestHandler2<>(method, path, resolver, ParameterResolver.query(name, queryClass, defaultValue));
   }
 
   public RequestHandler2<T, Header> header(final String name) {

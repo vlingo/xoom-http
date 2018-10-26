@@ -58,8 +58,12 @@ public class RequestHandler0 extends RequestHandler {
     return query(name, String.class);
   }
 
-  public <T> RequestHandler1<T> query(final String name, final Class<T> queryClass) {
-    return new RequestHandler1<>(method, path, ParameterResolver.query(name, queryClass));
+  public <T> RequestHandler1<T> query(final String name, final Class<T> type) {
+    return query(name, type, null);
+  }
+
+  public <T> RequestHandler1<T> query(final String name, final Class<T> type, final T defaultValue) {
+    return new RequestHandler1<>(method, path, ParameterResolver.query(name, type, defaultValue));
   }
 
   public RequestHandler1<Header> header(final String name) {
