@@ -102,8 +102,9 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
       );
     final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", path(0, String.class))
       .handle((postId) -> withSuccess(of(Ok, serialized("it is " + postId))));
+    final Response response = handler.execute(request, mappedParameters).outcome();
 
-    assertResponsesAreEquals(of(Ok, serialized("it is my-post")), handler.execute(request, mappedParameters).outcome());
+    assertResponsesAreEquals(of(Ok, serialized("it is my-post")), response);
   }
 
   @Test
