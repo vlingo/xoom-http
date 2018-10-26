@@ -54,7 +54,7 @@ class ParameterResolver<T> {
       String value;
       try {
         value = request.queryParameters().valuesOf(name).get(0);
-      } catch (NullPointerException e) {
+      } catch (IllegalArgumentException | NullPointerException e) {
         return  defaultValue;
       }
       if (type == Integer.class) {

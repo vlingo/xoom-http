@@ -9,10 +9,10 @@ import io.vlingo.http.Response;
 import java.util.Arrays;
 
 public class RequestHandler4<T, R, U, I> extends RequestHandler {
-  final private ParameterResolver<T> resolverParam1;
-  final private ParameterResolver<R> resolverParam2;
-  final private ParameterResolver<U> resolverParam3;
-  final private ParameterResolver<I> resolverParam4;
+  final ParameterResolver<T> resolverParam1;
+  final ParameterResolver<R> resolverParam2;
+  final ParameterResolver<U> resolverParam3;
+  final ParameterResolver<I> resolverParam4;
   private Handler4<T, R, U, I> handler;
 
   RequestHandler4(final Method method,
