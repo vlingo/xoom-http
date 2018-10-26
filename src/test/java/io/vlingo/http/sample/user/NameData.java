@@ -9,6 +9,8 @@ package io.vlingo.http.sample.user;
 
 import io.vlingo.http.sample.user.model.Name;
 
+import java.util.Objects;
+
 public class NameData {
   public final String given;
   public final String family;
@@ -29,5 +31,19 @@ public class NameData {
   @Override
   public String toString() {
     return "NameData[given=" + given + ", family=" + family + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof NameData)) return false;
+    NameData nameData = (NameData) o;
+    return Objects.equals(given, nameData.given) &&
+      Objects.equals(family, nameData.family);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(given, family);
   }
 }

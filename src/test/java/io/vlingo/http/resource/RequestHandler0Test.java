@@ -22,6 +22,7 @@ import static io.vlingo.common.Completes.withSuccess;
 import static io.vlingo.http.Response.Status.Created;
 import static io.vlingo.http.Response.Status.Ok;
 import static io.vlingo.http.Response.of;
+import static io.vlingo.http.resource.ParameterResolver.*;
 import static io.vlingo.http.resource.serialization.JsonSerialization.serialized;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -78,46 +79,47 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
     assertResponsesAreEquals(of(Created), response);
   }
 
+  //region adding handlers to RequestHandler0
+
   @Test
-  public void executeWithParam() {
+  public void addingHandlerParam() {
     final Request request = Request.has(Method.GET)
       .and(URI.create("/user/admin"))
       .and(Version.Http1_1);
     final Action.MappedParameters mappedParameters =
-      new Action.MappedParameters(1,
-                                  Method.GET,
-                      "ignored()",
-                                  Collections.singletonList(new Action.MappedParameter("String", "admin")));
+      new Action.MappedParameters(1, Method.GET, "ignored", Collections.singletonList(
+        new Action.MappedParameter("String", "admin"))
+      );
 
     final RequestHandler1<String> handler = new RequestHandler0(Method.GET, "/user/{userId}")
-      .param(String.class)
-      .handle((userId) -> withSuccess(of(Ok, serialized(userId))));
-    final Response response = handler.execute(request, mappedParameters).outcome();
+      .param(String.class);
 
-    assertResponsesAreEquals(of(Ok, serialized("admin")), response);
+    assertResolvesAreEquals(path(0, String.class), handler.resolver);
+    assertEquals("admin", handler.resolver.apply(request, mappedParameters));
   }
 
   @Test
-  public void executeWithBody() {
+  public void addingHandlerBody() {
     final Request request = Request.has(Method.POST)
       .and(URI.create("/user/admin/name"))
-      .and(Version.Http1_1)
-      .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"));
+      .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"))
+      .and(Version.Http1_1);
     final Action.MappedParameters mappedParameters =
-      new Action.MappedParameters(1, Method.POST, "ignored", Collections.emptyList());
+      new Action.MappedParameters(1, Method.GET, "ignored", Collections.singletonList(
+        new Action.MappedParameter("String", "admin"))
+      );
 
     final RequestHandler1<NameData> handler = new RequestHandler0(Method.GET, "/user/admin/name")
-      .body(NameData.class)
-      .handle((nameData) -> withSuccess(of(Ok, serialized(nameData))));
-    final Response response = handler.execute(request, mappedParameters).outcome();
+      .body(NameData.class);
 
-    assertResponsesAreEquals(of(Ok, serialized(new NameData("John", "Doe"))), response);
+    assertResolvesAreEquals(body(NameData.class), handler.resolver);
+    assertEquals(new NameData("John", "Doe"), handler.resolver.apply(request, mappedParameters));
   }
 
   @Test
-  public void executeWithQuery() {
-    final Request request = Request.has(Method.POST)
-      .and(URI.create("/user?filter=name"))
+  public void addingHandlerQuery() {
+    final Request request = Request.has(Method.GET)
+      .and(URI.create("/user?filter=abc"))
       .and(Version.Http1_1);
     final Action.MappedParameters mappedParameters =
       new Action.MappedParameters(1, Method.GET, "ignored", Collections.emptyList());
@@ -125,27 +127,28 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
     final RequestHandler1<String> handler = new RequestHandler0(Method.GET, "/user")
       .query("filter")
       .handle((filter) -> withSuccess(of(Ok, serialized(filter))));
-    final Response response = handler.execute(request, mappedParameters).outcome();
 
-    assertResponsesAreEquals( of(Ok, serialized("name")), response);
+    assertResolvesAreEquals(query("filter", String.class), handler.resolver);
+    assertEquals("abc", handler.resolver.apply(request, mappedParameters));
   }
 
 
   @Test
-  public void executeWitHeader() {
+  public void addingHandlerHeader() {
     final RequestHeader hostHeader = RequestHeader.of("Host", "www.vlingo.io");
     final Request request = Request.has(Method.GET)
-      .and(URI.create("/user"))
+      .and(URI.create("/user?filter=abc"))
       .and(Header.Headers.of(hostHeader))
       .and(Version.Http1_1);
     final Action.MappedParameters mappedParameters =
       new Action.MappedParameters(1, Method.GET, "ignored", Collections.emptyList());
 
     final RequestHandler1<Header> handler = new RequestHandler0(Method.GET, "/user")
-      .header("Host")
-      .handle((host) -> withSuccess(of(Ok, serialized(host))));
-    final Response response = handler.execute(request, mappedParameters).outcome();
+      .header("Host");
 
-    assertResponsesAreEquals(of(Ok, serialized(hostHeader)), response);
+    assertResolvesAreEquals(header("Host"), handler.resolver);
+    assertEquals(hostHeader, handler.resolver.apply(request, mappedParameters));
   }
+
+  //endregion
 }
