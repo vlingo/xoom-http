@@ -78,4 +78,14 @@ public class ParameterResolverTest {
     assertEquals(10, (int) result);
     assertEquals(ParameterResolver.Type.QUERY, resolver.type);
   }
+
+  @Test
+  public void queryShouldReturnDefaultWhenItIsNotPresent() {
+    final ParameterResolver<Integer> resolver = ParameterResolver.query("pageSize", Integer.class, 50);
+
+    final Integer result = resolver.apply(request, mappedParameters);
+
+    assertEquals(50, (int) result);
+    assertEquals(ParameterResolver.Type.QUERY, resolver.type);
+  }
 }
