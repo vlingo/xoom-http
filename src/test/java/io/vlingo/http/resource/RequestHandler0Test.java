@@ -9,7 +9,6 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.common.Completes;
 import io.vlingo.http.*;
 import io.vlingo.http.sample.user.NameData;
 import org.junit.Rule;
@@ -19,6 +18,7 @@ import org.junit.rules.ExpectedException;
 import java.net.URI;
 import java.util.Collections;
 
+import static io.vlingo.common.Completes.withSuccess;
 import static io.vlingo.http.Response.Status.Created;
 import static io.vlingo.http.Response.Status.Ok;
 import static io.vlingo.http.Response.of;
@@ -26,14 +26,14 @@ import static io.vlingo.http.resource.serialization.JsonSerialization.serialized
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class RequestHandler0Test {
+public class RequestHandler0Test extends RequestHandlerTestBase {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void simpleHandler() {
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      .handle(() -> Completes.withSuccess(of(Created)));
+      .handle(() -> withSuccess(of(Created)));
     final Response response = handler.execute().outcome();
 
     assertNotNull(handler);
@@ -55,7 +55,7 @@ public class RequestHandler0Test {
   @Test
   public void actionSignatureIsEmpty() {
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      .handle(() -> Completes.withSuccess(of(Created)));
+      .handle(() -> withSuccess(of(Created)));
 
     assertEquals("", handler.actionSignature);
   }
@@ -69,7 +69,7 @@ public class RequestHandler0Test {
       new Action.MappedParameters(1, Method.GET, "ignored", Collections.emptyList());
 
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      .handle(() -> Completes.withSuccess(of(Created)));
+      .handle(() -> withSuccess(of(Created)));
     final Response response = handler.execute(request, mappedParameters).outcome();
 
     assertNotNull(handler);
@@ -91,7 +91,7 @@ public class RequestHandler0Test {
 
     final RequestHandler1<String> handler = new RequestHandler0(Method.GET, "/user/{userId}")
       .param(String.class)
-      .handle((userId) -> Completes.withSuccess(of(Ok, serialized(userId))));
+      .handle((userId) -> withSuccess(of(Ok, serialized(userId))));
     final Response response = handler.execute(request, mappedParameters).outcome();
 
     assertResponsesAreEquals(of(Ok, serialized("admin")), response);
@@ -108,7 +108,7 @@ public class RequestHandler0Test {
 
     final RequestHandler1<NameData> handler = new RequestHandler0(Method.GET, "/user/admin/name")
       .body(NameData.class)
-      .handle((nameData) -> Completes.withSuccess(of(Ok, serialized(nameData))));
+      .handle((nameData) -> withSuccess(of(Ok, serialized(nameData))));
     final Response response = handler.execute(request, mappedParameters).outcome();
 
     assertResponsesAreEquals(of(Ok, serialized(new NameData("John", "Doe"))), response);
@@ -124,7 +124,7 @@ public class RequestHandler0Test {
 
     final RequestHandler1<String> handler = new RequestHandler0(Method.GET, "/user")
       .query("filter")
-      .handle((filter) -> Completes.withSuccess(of(Ok, serialized(filter))));
+      .handle((filter) -> withSuccess(of(Ok, serialized(filter))));
     final Response response = handler.execute(request, mappedParameters).outcome();
 
     assertResponsesAreEquals( of(Ok, serialized("name")), response);
@@ -143,13 +143,9 @@ public class RequestHandler0Test {
 
     final RequestHandler1<Header> handler = new RequestHandler0(Method.GET, "/user")
       .header("Host")
-      .handle((host) -> Completes.withSuccess(of(Ok, serialized(host))));
+      .handle((host) -> withSuccess(of(Ok, serialized(host))));
     final Response response = handler.execute(request, mappedParameters).outcome();
 
     assertResponsesAreEquals(of(Ok, serialized(hostHeader)), response);
-  }
-
-  private void assertResponsesAreEquals(final Response expected, final Response actual) {
-    assertEquals(expected.toString(), actual.toString());
   }
 }
