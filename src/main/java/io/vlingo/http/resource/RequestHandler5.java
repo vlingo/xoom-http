@@ -8,11 +8,11 @@ import io.vlingo.http.Response;
 import java.util.Arrays;
 
 public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
-  final private ParameterResolver<T> resolverParam1;
-  final private ParameterResolver<R> resolverParam2;
-  final private ParameterResolver<U> resolverParam3;
-  final private ParameterResolver<I> resolverParam4;
-  final private ParameterResolver<J> resolverParam5;
+  final ParameterResolver<T> resolverParam1;
+  final ParameterResolver<R> resolverParam2;
+  final ParameterResolver<U> resolverParam3;
+  final ParameterResolver<I> resolverParam4;
+  final ParameterResolver<J> resolverParam5;
   private Handler5<T, R, U, I, J> handler;
 
   RequestHandler5(final Method method,
