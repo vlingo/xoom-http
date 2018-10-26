@@ -49,6 +49,7 @@ public class RequestHandler1<T> extends RequestHandler {
   }
 
   // region FluentAPI
+
   public <R> RequestHandler2<T, R> param(final Class<R> paramClass) {
     return new RequestHandler2<>(method, path, resolver, ParameterResolver.path(1, paramClass));
   }
@@ -68,5 +69,6 @@ public class RequestHandler1<T> extends RequestHandler {
   public RequestHandler2<T, Header> header(final String name) {
     return new RequestHandler2<>(method, path, resolver, ParameterResolver.header(name));
   }
+
   // endregion
 }

@@ -18,8 +18,8 @@ import io.vlingo.http.Response;
 import java.util.Arrays;
 
 public class RequestHandler2<T, R> extends RequestHandler {
-  final private ParameterResolver<T> resolverParam1;
-  final private ParameterResolver<R> resolverParam2;
+  final ParameterResolver<T> resolverParam1;
+  final ParameterResolver<R> resolverParam2;
   private Handler2<T, R> handler;
 
   RequestHandler2(final Method method,

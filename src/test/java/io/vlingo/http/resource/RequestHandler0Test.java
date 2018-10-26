@@ -20,10 +20,8 @@ import java.util.Collections;
 
 import static io.vlingo.common.Completes.withSuccess;
 import static io.vlingo.http.Response.Status.Created;
-import static io.vlingo.http.Response.Status.Ok;
 import static io.vlingo.http.Response.of;
 import static io.vlingo.http.resource.ParameterResolver.*;
-import static io.vlingo.http.resource.serialization.JsonSerialization.serialized;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -105,7 +103,7 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
       .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"))
       .and(Version.Http1_1);
     final Action.MappedParameters mappedParameters =
-      new Action.MappedParameters(1, Method.GET, "ignored", Collections.singletonList(
+      new Action.MappedParameters(1, Method.POST, "ignored", Collections.singletonList(
         new Action.MappedParameter("String", "admin"))
       );
 
@@ -125,8 +123,7 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
       new Action.MappedParameters(1, Method.GET, "ignored", Collections.emptyList());
 
     final RequestHandler1<String> handler = new RequestHandler0(Method.GET, "/user")
-      .query("filter")
-      .handle((filter) -> withSuccess(of(Ok, serialized(filter))));
+      .query("filter");
 
     assertResolvesAreEquals(query("filter", String.class), handler.resolver);
     assertEquals("abc", handler.resolver.apply(request, mappedParameters));
