@@ -9,26 +9,27 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.common.Completes;
 import io.vlingo.http.Response;
 import io.vlingo.http.sample.user.UserData;
 import org.junit.Test;
 
 import static io.vlingo.http.Response.Status.Ok;
-import static io.vlingo.http.resource.serialization.JsonSerialization.serialized;
-import static org.junit.Assert.*;
-
 import static io.vlingo.http.resource.ResourceBuilder.*;
+import static io.vlingo.http.resource.serialization.JsonSerialization.serialized;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class ResourceBuilderTest {
 
   @Test
   public void simpleRoute() {
     final DynamicResource resource = (DynamicResource) resource("userResource",
-        get("/helloWorld").handle(() -> Response.of(Ok, serialized("Hello World"))),
+        get("/helloWorld").handle(() -> Completes.withSuccess((Response.of(Ok, serialized("Hello World"))))),
         post("/post/{postId}")
           .param(String.class)
           .body(UserData.class)
-          .handle((postId, userData) -> Response.of(Ok, serialized(postId)))
+          .handle((postId, userData) -> Completes.withSuccess(Response.of(Ok, serialized(postId))))
       );
 
     assertNotNull(resource);

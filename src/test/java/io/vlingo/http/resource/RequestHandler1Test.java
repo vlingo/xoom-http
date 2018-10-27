@@ -9,24 +9,25 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.http.Method;
-import io.vlingo.http.Request;
-import io.vlingo.http.Response;
-import io.vlingo.http.Version;
+import io.vlingo.http.*;
+import io.vlingo.http.sample.user.NameData;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
 
+import static io.vlingo.common.Completes.withSuccess;
 import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.Response.of;
+import static io.vlingo.http.resource.ParameterResolver.*;
 import static io.vlingo.http.resource.serialization.JsonSerialization.serialized;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class RequestHandler1Test {
-
+public class RequestHandler1Test extends RequestHandlerTestBase {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
@@ -35,14 +36,16 @@ public class RequestHandler1Test {
     final RequestHandler1<String> handler = new RequestHandler1<>(
       Method.GET,
       "/posts/{postId}",
-      ParameterResolver.path(0, String.class)
-    ).handle(postId -> Response.of(Ok, serialized(postId)));
+      path(0, String.class)
+    ).handle((postId) -> withSuccess(of(Ok, serialized(postId))));
+
+    final Response response = handler.execute("my-post").outcome();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
     assertEquals("/posts/{postId}", handler.path);
     assertEquals(String.class, handler.resolver.paramClass);
-    assertEquals(handler.execute("my-post").toString(), Response.of(Ok, serialized("my-post")).toString());
+    assertResponsesAreEquals(of(Ok, serialized("my-post")), response);
   }
 
   @Test()
@@ -50,27 +53,14 @@ public class RequestHandler1Test {
     thrown.expect(HandlerMissingException.class);
     thrown.expectMessage("No handle defined for GET /posts/{postId}");
 
-    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", ParameterResolver.path(0, String.class));
+    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", path(0, String.class));
     handler.execute("my-post");
   }
 
   @Test
-  public void convertingRequestHandler0ToRequestHandler1() {
-    final RequestHandler1<String> handler = new RequestHandler0(Method.GET, "/posts/{postId}")
-      .param(String.class)
-      .handle(postId -> Response.of(Ok, serialized(postId)));
-
-    assertNotNull(handler);
-    assertEquals(Method.GET, handler.method);
-    assertEquals("/posts/{postId}", handler.path);
-    assertEquals(String.class, handler.resolver.paramClass);
-    assertEquals(handler.execute("my-post").toString(), Response.of(Ok, serialized("my-post")).toString());
-  }
-
-  @Test
   public void actionSignature() {
-    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", ParameterResolver.path(0, String.class))
-      .handle(postId -> Response.of(Ok, serialized(postId)));
+    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", path(0, String.class))
+      .handle((postId) -> withSuccess(of(Ok, serialized(postId))));
 
     assertEquals("String postId", handler.actionSignature);
   }
@@ -80,8 +70,8 @@ public class RequestHandler1Test {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("Empty path parameter name for GET /posts/{}");
 
-    new RequestHandler1<>(Method.GET, "/posts/{}", ParameterResolver.path(0, String.class))
-      .handle(postId -> Response.of(Ok, serialized(postId)));
+    new RequestHandler1<>(Method.GET, "/posts/{}", path(0, String.class))
+      .handle((postId) -> withSuccess(of(Ok, serialized(postId))));
   }
 
   @Test
@@ -89,14 +79,14 @@ public class RequestHandler1Test {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("Empty path parameter name for GET /posts/{ }");
 
-    new RequestHandler1<>(Method.GET, "/posts/{ }", ParameterResolver.path(0, String.class))
-      .handle(postId -> Response.of(Ok, serialized(postId)));
+    new RequestHandler1<>(Method.GET, "/posts/{ }", path(0, String.class))
+      .handle((postId) -> withSuccess(of(Ok, serialized(postId))));
   }
 
   @Test
   public void actionWithoutParamNameShouldNotThrowException() {
     final RequestHandler1<String> handler = new RequestHandler1<>(Method.POST, "/posts", ParameterResolver.body(String.class))
-      .handle(postId -> Response.of(Ok, serialized(postId)));
+      .handle((postId) -> withSuccess(of(Ok, serialized(postId))));
 
     assertEquals("", handler.actionSignature);
   }
@@ -110,11 +100,11 @@ public class RequestHandler1Test {
       new Action.MappedParameters(1, Method.GET, "ignored", Collections.singletonList(
         new Action.MappedParameter("String", "my-post"))
       );
-    final Response response = Response.of(Ok, serialized("it is my-post"));
-    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", ParameterResolver.path(0, String.class))
-      .handle((postId) -> response);
+    final RequestHandler1<String> handler = new RequestHandler1<>(Method.GET, "/posts/{postId}", path(0, String.class))
+      .handle((postId) -> withSuccess(of(Ok, serialized("it is " + postId))));
+    final Response response = handler.execute(request, mappedParameters).outcome();
 
-    assertEquals(response, handler.execute(request, mappedParameters));
+    assertResponsesAreEquals(of(Ok, serialized("it is my-post")), response);
   }
 
   @Test
@@ -129,12 +119,88 @@ public class RequestHandler1Test {
       new Action.MappedParameters(1, Method.GET, "ignored", Collections.singletonList(
         new Action.MappedParameter("String", "my-post"))
       );
-    final RequestHandler1<Integer> handler = new RequestHandler1<>(
-      Method.GET,
-      "/posts/{postId}",
-      ParameterResolver.path(0, Integer.class)
-      ).handle((postId) -> Response.of(Ok, serialized("it is my-post")));
+    final RequestHandler1<Integer> handler =
+      new RequestHandler1<>(Method.GET, "/posts/{postId}", path(0, Integer.class))
+        .handle((postId) -> withSuccess(of(Ok, serialized("it is my-post"))));
 
     handler.execute(request, mappedParameters);
   }
+
+
+  //region adding handlers to RequestHandler0
+
+  @Test
+  public void addingHandlerParam() {
+    final Request request = Request.has(Method.GET)
+      .and(URI.create("/user/admin/picture/2"))
+      .and(Version.Http1_1);
+    final Action.MappedParameters mappedParameters =
+      new Action.MappedParameters(1, Method.GET, "ignored", Arrays.asList(
+        new Action.MappedParameter("String", "admin"),
+        new Action.MappedParameter("Integer", 1))
+      );
+
+    final RequestHandler2<String, Integer> handler =
+      new RequestHandler1<>(Method.GET, "/user/{userId}/picture/{pictureId}", path(0, String.class))
+        .param(Integer.class);
+
+    assertResolvesAreEquals(path(1, Integer.class), handler.resolverParam2);
+    assertEquals((Integer) 1, handler.resolverParam2.apply(request, mappedParameters));
+  }
+
+  @Test
+  public void addingHandlerBody() {
+    final Request request = Request.has(Method.POST)
+      .and(URI.create("/user/admin/name"))
+      .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"))
+      .and(Version.Http1_1);
+    final Action.MappedParameters mappedParameters =
+      new Action.MappedParameters(1, Method.GET, "ignored", Collections.singletonList(
+        new Action.MappedParameter("String", "admin"))
+      );
+
+    final RequestHandler2<String, NameData> handler =
+      new RequestHandler1<>(Method.GET, "/user/{userId}/picture/{pictureId}", path(0, String.class))
+        .body(NameData.class);
+
+    assertResolvesAreEquals(body(NameData.class), handler.resolverParam2);
+    assertEquals(new NameData("John", "Doe"), handler.resolverParam2.apply(request, mappedParameters));
+  }
+
+  @Test
+  public void addingHandlerQuery() {
+    final Request request = Request.has(Method.GET)
+      .and(URI.create("/user/admin?filter=abc"))
+      .and(Version.Http1_1);
+    final Action.MappedParameters mappedParameters =
+      new Action.MappedParameters(1, Method.GET, "ignored", Collections.emptyList());
+
+    final RequestHandler2<String, String> handler =
+      new RequestHandler1<>(Method.GET, "/user/{userId}", path(0, String.class))
+        .query("filter");
+
+    assertResolvesAreEquals(query("filter", String.class), handler.resolverParam2);
+    assertEquals("abc", handler.resolverParam2.apply(request, mappedParameters));
+  }
+
+
+  @Test
+  public void addingHandlerHeader() {
+    final RequestHeader hostHeader = RequestHeader.of("Host", "www.vlingo.io");
+    final Request request = Request.has(Method.GET)
+      .and(URI.create("/user/admin"))
+      .and(Header.Headers.of(hostHeader))
+      .and(Version.Http1_1);
+    final Action.MappedParameters mappedParameters =
+      new Action.MappedParameters(1, Method.GET, "ignored", Collections.emptyList());
+
+    final RequestHandler2<String, Header> handler =
+      new RequestHandler1<>(Method.GET, "/user/{userId}", path(0, String.class))
+      .header("Host");
+
+    assertResolvesAreEquals(header("Host"), handler.resolverParam2);
+    assertEquals(hostHeader, handler.resolverParam2.apply(request, mappedParameters));
+  }
+
+  //endregion
 }

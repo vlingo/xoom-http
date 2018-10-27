@@ -9,6 +9,7 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.common.Completes;
 import io.vlingo.http.Header;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
@@ -23,9 +24,9 @@ public class RequestHandler0 extends RequestHandler {
     super(method, path, Collections.emptyList());
   }
 
-  @FunctionalInterface
-  public interface Handler0 {
-    Response execute();
+  Completes<Response> execute() {
+    if (handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
+    return handler.execute();
   }
 
   public RequestHandler0 handle(final Handler0 handler) {
@@ -33,14 +34,15 @@ public class RequestHandler0 extends RequestHandler {
     return this;
   }
 
-  Response execute() {
-    if (handler == null) throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
-    return handler.execute();
+  @Override
+  Completes<Response> execute(final Request request,
+                              final Action.MappedParameters mappedParameters) {
+    return execute();
   }
 
-  @Override
-  Response execute(Request request, Action.MappedParameters mappedParameters) {
-    return execute();
+  @FunctionalInterface
+  public interface Handler0 {
+    Completes<Response> execute();
   }
 
   // region FluentAPI
@@ -56,8 +58,12 @@ public class RequestHandler0 extends RequestHandler {
     return query(name, String.class);
   }
 
-  public <T> RequestHandler1<T> query(final String name, final Class<T> queryClass) {
-    return new RequestHandler1<>(method, path, ParameterResolver.query(name, queryClass));
+  public <T> RequestHandler1<T> query(final String name, final Class<T> type) {
+    return query(name, type, null);
+  }
+
+  public <T> RequestHandler1<T> query(final String name, final Class<T> type, final T defaultValue) {
+    return new RequestHandler1<>(method, path, ParameterResolver.query(name, type, defaultValue));
   }
 
   public RequestHandler1<Header> header(final String name) {
