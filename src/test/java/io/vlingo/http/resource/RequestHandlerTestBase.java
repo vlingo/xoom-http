@@ -19,7 +19,7 @@ public class RequestHandlerTestBase {
     assertEquals(expected.toString(), actual.toString());
   }
 
-  void assertResolvesAreEquals(final ParameterResolver expected, final ParameterResolver actual) {
+  <T> void assertResolvesAreEquals(final ParameterResolver<T> expected, final ParameterResolver<T> actual) {
     assertEquals(expected.type, actual.type);
     assertEquals(expected.paramClass, actual.paramClass);
   }
