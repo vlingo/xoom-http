@@ -3,6 +3,7 @@ package io.vlingo.http.resource;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
+import io.vlingo.http.Response;
 import io.vlingo.http.sample.user.NameData;
 import org.junit.Test;
 
@@ -70,7 +71,7 @@ class RequestHandlerFake extends RequestHandler {
   }
 
   @Override
-  Completes execute(final Request request, final Action.MappedParameters mappedParameters) {
+  Completes<Response> execute(final Request request, final Action.MappedParameters mappedParameters) {
     throw new UnsupportedOperationException();
   }
 }
