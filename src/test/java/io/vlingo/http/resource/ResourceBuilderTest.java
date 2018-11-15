@@ -10,9 +10,13 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.common.Completes;
+import io.vlingo.http.Method;
 import io.vlingo.http.Response;
 import io.vlingo.http.sample.user.UserData;
 import org.junit.Test;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import static io.vlingo.http.Response.Status.Ok;
 import static io.vlingo.http.resource.ResourceBuilder.*;
@@ -20,7 +24,7 @@ import static io.vlingo.http.resource.serialization.JsonSerialization.serialized
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class ResourceBuilderTest {
+public class ResourceBuilderTest extends ResourceTestFixtures {
 
   @Test
   public void simpleRoute() {
@@ -36,6 +40,30 @@ public class ResourceBuilderTest {
     assertEquals("userResource", resource.name);
     assertEquals(10, resource.handlerPoolSize);
     assertEquals(2, resource.handlers.size());
+  }
+
+  @Test
+  public void shouldRespondToCorrectResourceHandler() throws URISyntaxException {
+    final DynamicResource resource = (DynamicResource) resource("userResource",
+      get("/customers/{customerId}/accounts/{accountId}")
+        .param(String.class)
+        .param(String.class)
+        .handle((customerId, accountID) -> Completes.withSuccess((Response.of(Ok, serialized("users"))))),
+      get("/customers/{customerId}/accounts/{accountId}/withdraw")
+        .param(String.class)
+        .param(String.class)
+        .handle((customerId, accountID) -> Completes.withSuccess((Response.of(Ok, serialized("user admin")))))
+    );
+
+    final Action.MatchResults matchWithdrawResource = resource.matchWith(
+      Method.GET,
+      new URI("/customers/cd1234/accounts/ac1234/withdraw"));
+    final Action.MatchResults matchAccountResource = resource.matchWith(
+      Method.GET,
+      new URI("/customers/cd1234/accounts/ac1234"));
+
+    assertEquals("/customers/{customerId}/accounts/{accountId}/withdraw", matchWithdrawResource.action.uri);
+    assertEquals("/customers/{customerId}/accounts/{accountId}", matchAccountResource.action.uri);
   }
 
 }

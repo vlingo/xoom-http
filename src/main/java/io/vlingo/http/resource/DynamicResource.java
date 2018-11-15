@@ -17,16 +17,17 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class DynamicResource extends Resource<ResourceHandler> {
   final List<RequestHandler> handlers;
   private final List<Action> actions = new ArrayList<>();
 
-  protected DynamicResource(final String name, final int handlerPoolSize, final List<RequestHandler> handlers) {
+  protected DynamicResource(final String name, final int handlerPoolSize, final List<RequestHandler> unsortedHandlers) {
     super(name, handlerPoolSize);
-    this.handlers = handlers;
+    this.handlers = sortHandlersBySlashes(unsortedHandlers);
     int currentId = 0;
-    for(RequestHandler predicate: handlers) {
+    for(RequestHandler predicate: this.handlers) {
       actions.add(new Action(currentId++,
         predicate.method.toString(),
         predicate.path,
@@ -64,5 +65,19 @@ public class DynamicResource extends Resource<ResourceHandler> {
     SpecificResourceHandler(final Stage stage) {
       this.stage = stage;
     }
+  }
+
+
+  private List<RequestHandler> sortHandlersBySlashes(List<RequestHandler> unsortedHandlers) {
+    return unsortedHandlers
+      .stream()
+      .sorted((handler1, handler2) -> {
+        final Long handler1Slashes = handler1.path.chars().filter(ch -> ch == '/').count();
+        final Long handler2Slashes = handler2.path.chars().filter(ch -> ch == '/').count();
+        if (handler1Slashes.equals(handler2Slashes))
+          return 0;
+        return handler1Slashes < handler2Slashes ? 1 : -1;
+      })
+      .collect(Collectors.toList());
   }
 }
