@@ -55,11 +55,15 @@ public class ResourceBuilderTest extends ResourceTestFixtures {
         .handle((customerId, accountID) -> Completes.withSuccess((Response.of(Ok, serialized("user admin")))))
     );
 
-    final Action.MatchResults matchResults = resource.matchWith(
+    final Action.MatchResults matchWithdrawResource = resource.matchWith(
       Method.GET,
       new URI("/customers/cd1234/accounts/ac1234/withdraw"));
+    final Action.MatchResults matchAccountResource = resource.matchWith(
+      Method.GET,
+      new URI("/customers/cd1234/accounts/ac1234"));
 
-    assertEquals("/customers/{customerId}/accounts/{accountId}/withdraw", matchResults.action.uri);
+    assertEquals("/customers/{customerId}/accounts/{accountId}/withdraw", matchWithdrawResource.action.uri);
+    assertEquals("/customers/{customerId}/accounts/{accountId}", matchAccountResource.action.uri);
   }
 
 }
