@@ -114,8 +114,13 @@ public class Request {
     this.method = method;
     this.uri = uri;
     this.version = version;
-    this.headers = headers;
     this.body = body;
+
+    if (body != null && body.hasContent() && headers.headerOf("Content-Length") == null) {
+      this.headers = headers.and("Content-Length", body.content.length() + "");
+    } else {
+      this.headers = headers;
+    }
   }
 
   private Request(final Method method) {
