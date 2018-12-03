@@ -116,7 +116,7 @@ public class Request {
     this.version = version;
     this.body = body;
 
-    if (body != null && body.hasContent()) {
+    if (body != null && body.hasContent() && headers.headerOf("Content-Length") == null) {
       this.headers = headers.and("Content-Length", body.content.length() + "");
     } else {
       this.headers = headers;
