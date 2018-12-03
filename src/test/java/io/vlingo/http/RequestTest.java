@@ -16,6 +16,7 @@ import static io.vlingo.http.Method.*;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -67,6 +68,14 @@ public class RequestTest {
     assertTrue(request.version.isHttp1_1());
     assertEquals(3, request.headers.size());
     assertFalse(request.body.hasContent());
+  }
+
+  @Test
+  public void testThatAddingABodyAddsContentLengthHeader() throws Exception {
+    final String exampleContent = UUID.randomUUID().toString();
+    final Request request = Request.has(PUT).and(Body.from(exampleContent));
+
+    assertEquals(exampleContent.length() + "", request.headerOf("Content-Length").value);
   }
   
   @Test
