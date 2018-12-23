@@ -585,15 +585,50 @@ public final class Action {
         if (!rawParameter.isEmpty()) {
           if (rawParameter.startsWith("body:")) {
             final String[] body = typeAndName(rawParameter.substring(5));
-            parameters.add(new MethodParameter(body[0], body[1], load(body[0])));
+            final String qualifiedType = qualifiedType(body[0]);
+            parameters.add(new MethodParameter(qualifiedType, body[1], load(qualifiedType)));
           } else {
             final String[] other = typeAndName(rawParameter);
-            parameters.add(new MethodParameter(other[0], other[1]));
+            final String qualifiedType = qualifiedType(other[0]);
+            parameters.add(new MethodParameter(qualifiedType, other[1]));
           }
         }
       }
       
       return Tuple2.from(methodName, parameters);
+    }
+
+    private String qualifiedType(String possiblyUnqualifiedType) {
+      switch (possiblyUnqualifiedType) {
+        case "String":
+          return "java.lang.String";
+        case "int":
+        case "Integer":
+          return "java.lang.Integer";
+        case "long":
+        case "Long":
+          return "java.lang.Long";
+        case "boolean":
+        case "Boolean":
+          return "java.lang.Boolean";
+        case "double":
+        case "Double":
+          return "java.lang.Double";
+        case "short":
+        case "Short":
+          return "java.lang.Short";
+        case "float":
+        case "Float":
+          return "java.lang.Float";
+        case "char":
+        case "Character":
+          return "java.lang.Character";
+        case "byte":
+        case "Byte":
+          return "java.lang.Byte";
+        default:
+          return possiblyUnqualifiedType;
+      }
     }
 
     private String[] typeAndName(final String rawParameter) {
