@@ -585,12 +585,10 @@ public final class Action {
         if (!rawParameter.isEmpty()) {
           if (rawParameter.startsWith("body:")) {
             final String[] body = typeAndName(rawParameter.substring(5));
-            final String qualifiedType = qualifiedType(body[0]);
-            parameters.add(new MethodParameter(qualifiedType, body[1], load(qualifiedType)));
+            parameters.add(new MethodParameter(body[0], body[1], load(qualifiedType(body[0]))));
           } else {
             final String[] other = typeAndName(rawParameter);
-            final String qualifiedType = qualifiedType(other[0]);
-            parameters.add(new MethodParameter(qualifiedType, other[1]));
+            parameters.add(new MethodParameter(other[0], other[1]));
           }
         }
       }

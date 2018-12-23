@@ -55,7 +55,7 @@ public class ToSpecParserTest {
   
   @Test
   public void testComplexQualifiedBodyParameterMapping() {
-    new Action(0, "PATCH", "/airports/{airportId}/geocode", "name(body:io.vlingo.http.RequestParameterMappingTest$Geocode geocode)", null, true);
+    new Action(0, "PATCH", "/airports/{airportId}/geocode", "name(body:io.vlingo.http.ToSpecParserTest$Geocode geocode)", null, true);
   }
 
   class Geocode {
