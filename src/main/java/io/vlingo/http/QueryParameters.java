@@ -8,12 +8,7 @@
 package io.vlingo.http;
 
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class QueryParameters {
   private final Map<String,List<String>> allParameters;
@@ -31,25 +26,36 @@ public class QueryParameters {
   }
 
   private Map<String, List<String>> parseQuery(final String query) {
-    try {
-      final String[] parameters = query.split("&");
-      final Map<String, List<String>> queryParameters = new HashMap<>(parameters.length);
-      for (final String parameter : parameters) {
-        final int equalSign = parameter.indexOf("=");
-        final String name = equalSign > 0 ?
-                URLDecoder.decode(parameter.substring(0, equalSign), "UTF-8") :
-                parameter;
-        final String value = equalSign > 0 && parameter.length() > equalSign + 1 ?
-                URLDecoder.decode(parameter.substring(equalSign + 1), "UTF-8") :
-                null;
-        if (!queryParameters.containsKey(name)) {
-          queryParameters.put(name, new ArrayList<String>(2));
-        }
-        queryParameters.get(name).add(value);
-      }
-      return queryParameters;
-    } catch (Exception e) {
-      throw new IllegalArgumentException("Query parameters invalid: " + query, e);
+    final Map<String, List<String>> queryParameters;
+    if (query == null || query.isEmpty()) {
+      queryParameters = new HashMap<>();
     }
+    else {
+      try {
+        final String[] parameters = query.split("&");
+        queryParameters = new HashMap<>(parameters.length);
+        for (final String parameter : parameters) {
+          if (parameter.isEmpty()) continue;
+          final int equalSign = parameter.indexOf("=");
+          final String name = equalSign > 0 ?
+                  URLDecoder.decode(parameter.substring(0, equalSign), "UTF-8") :
+                  parameter;
+          final String value = equalSign > 0 && parameter.length() > equalSign + 1 ?
+                  URLDecoder.decode(parameter.substring(equalSign + 1), "UTF-8") :
+                  null;
+          if (!queryParameters.containsKey(name)) {
+            queryParameters.put(name, new ArrayList<String>(2));
+          }
+          queryParameters.get(name).add(value);
+        }
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Query parameters invalid: " + query, e);
+      }
+    }
+    return queryParameters;
+  }
+
+  public boolean containsKey(final String key) {
+    return allParameters.containsKey(key);
   }
 }
