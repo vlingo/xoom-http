@@ -8,12 +8,7 @@
 package io.vlingo.http;
 
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class QueryParameters {
   private final Map<String,List<String>> allParameters;
@@ -40,6 +35,7 @@ public class QueryParameters {
         final String[] parameters = query.split("&");
         queryParameters = new HashMap<>(parameters.length);
         for (final String parameter : parameters) {
+          if (parameter.isEmpty()) continue;
           final int equalSign = parameter.indexOf("=");
           final String name = equalSign > 0 ?
                   URLDecoder.decode(parameter.substring(0, equalSign), "UTF-8") :
@@ -57,5 +53,9 @@ public class QueryParameters {
       }
     }
     return queryParameters;
+  }
+
+  public boolean containsKey(final String key) {
+    return allParameters.containsKey(key);
   }
 }
