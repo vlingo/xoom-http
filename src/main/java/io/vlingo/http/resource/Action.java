@@ -62,6 +62,14 @@ public final class Action {
     return new MappedParameters(this.id, this.method, to.methodName, mapped);
   }
 
+  int indexOfNextSegmentStart(int currentIndex, String path) {
+    int nextSegmentStart = path.indexOf("/", currentIndex+1);
+    if (nextSegmentStart < currentIndex) {
+      return path.length();
+    }
+    return nextSegmentStart;
+  }
+
   MatchResults matchWith(final Method method, final URI uri) {
     if (this.method.equals(method)) {
       final String path = uri.getPath();
@@ -72,7 +80,7 @@ public final class Action {
         final PathSegment segment = matchable.pathSegment(idx);
         if (segment.isPathParameter()) {
           running.keepParameterSegment(pathCurrentIndex);
-          ++pathCurrentIndex;
+          pathCurrentIndex = indexOfNextSegmentStart(pathCurrentIndex, path);
         } else {
           final int indexOfSegment = path.indexOf(segment.value, pathCurrentIndex);
           if (indexOfSegment == -1 || (pathCurrentIndex == 0 && indexOfSegment != 0)) {
@@ -82,6 +90,9 @@ public final class Action {
           running.keepPathSegment(indexOfSegment, lastIndex);
           pathCurrentIndex = lastIndex;
         }
+      }
+      if (indexOfNextSegmentStart(pathCurrentIndex, path) != path.length()) {
+        return unmatchedResults;
       }
       final MatchResults matchResults = new MatchResults(this, running, parameterNames(), path, disallowPathParametersWithSlash);
       return matchResults;

@@ -22,6 +22,7 @@ import static io.vlingo.http.Response.Status.Ok;
 import static io.vlingo.http.resource.ResourceBuilder.*;
 import static io.vlingo.http.resource.serialization.JsonSerialization.serialized;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 public class ResourceBuilderTest extends ResourceTestFixtures {
@@ -64,6 +65,22 @@ public class ResourceBuilderTest extends ResourceTestFixtures {
 
     assertEquals("/customers/{customerId}/accounts/{accountId}/withdraw", matchWithdrawResource.action.uri);
     assertEquals("/customers/{customerId}/accounts/{accountId}", matchAccountResource.action.uri);
+  }
+
+
+  @Test
+  public void shouldNotRespondToResourceHandler_whenPathDoesNotMatch() throws URISyntaxException {
+    final DynamicResource resource = (DynamicResource) resource("userResource",
+      post("/customers/{customerId}")
+        .param(String.class)
+        .handle((customerId) -> Completes.withSuccess((Response.of(Ok, serialized("users")))))
+      );
+
+    final Action.MatchResults matchWithdrawResource = resource.matchWith(
+      Method.POST,
+      new URI("/customers/cd1234/accounts/ac1234/withdraw"));
+
+    assertFalse(matchWithdrawResource.matched);
   }
 
 }
