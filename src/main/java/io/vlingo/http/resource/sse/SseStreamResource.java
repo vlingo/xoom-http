@@ -69,7 +69,7 @@ public class SseStreamResource extends ResourceHandler {
   private SsePublisher publisherFor(final String streamName, final Class<? extends Actor> feedClass, final int feedPayload, final int feedInterval, final String feedDefaultId) {
     SsePublisher publisher = publishers.get(streamName);
     if (publisher == null) {
-      publisher = world.actorFor(Definition.has(SsePublisherActor.class, Definition.parameters(streamName, feedClass, feedPayload, feedInterval, feedDefaultId)), SsePublisher.class);
+      publisher = world.actorFor(SsePublisher.class, Definition.has(SsePublisherActor.class, Definition.parameters(streamName, feedClass, feedPayload, feedInterval, feedDefaultId)));
       final SsePublisher presentPublisher = publishers.putIfAbsent(streamName, publisher);
       if (presentPublisher != null) {
         publisher.stop();
@@ -101,7 +101,7 @@ public class SseStreamResource extends ResourceHandler {
 
     public SsePublisherActor(final String streamName, final Class<? extends Actor> feedClass, final int feedPayload, final int feedInterval, final String feedDefaultId) {
       this.streamName = streamName;
-      this.feed = stage().actorFor(Definition.has(feedClass, Definition.parameters(streamName, feedPayload, feedDefaultId)), SseFeed.class);
+      this.feed = stage().actorFor(SseFeed.class, Definition.has(feedClass, Definition.parameters(streamName, feedPayload, feedDefaultId)));
       this.subscribers = new HashMap<>();
 
       this.cancellable = stage().scheduler().schedule(selfAs(Scheduled.class), null, 10, feedInterval);

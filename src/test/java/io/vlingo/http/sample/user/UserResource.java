@@ -47,7 +47,7 @@ public class UserResource extends ResourceHandler {
                     Name.from(userData.nameData.given, userData.nameData.family),
                     Contact.from(userData.contactData.emailAddress, userData.contactData.telephoneNumber));
 
-    stage.actorFor(Definition.has(UserActor.class, Definition.parameters(userState)), User.class, userAddress);
+    stage.actorFor(User.class, Definition.has(UserActor.class, Definition.parameters(userState)), userAddress);
 
     repository.save(userState);
 
@@ -55,14 +55,14 @@ public class UserResource extends ResourceHandler {
   }
 
   public void changeContact(final String userId, final ContactData contactData) {
-    stage.actorOf(stage().world().addressFactory().from(userId), User.class)
+    stage.actorOf(User.class, stage().world().addressFactory().from(userId))
       .andThenTo(user -> user.withContact(new Contact(contactData.emailAddress, contactData.telephoneNumber)))
       .otherwiseConsume(noUser -> completes().with(Response.of(NotFound, userLocation(userId))))
       .andThenConsume(userState -> Response.of(Ok, serialized(UserData.from(userState))));
   }
 
   public void changeName(final String userId, final NameData nameData) {
-    stage.actorOf(stage().world().addressFactory().from(userId), User.class)
+    stage.actorOf(User.class, stage().world().addressFactory().from(userId))
       .andThenTo(user -> user.withName(new Name(nameData.given, nameData.family)))
       .otherwiseConsume(noUser -> completes().with(Response.of(NotFound, userLocation(userId))))
       .andThenConsume(userState -> {

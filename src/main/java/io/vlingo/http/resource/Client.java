@@ -45,8 +45,8 @@ public class Client {
   public Client(final Configuration configuration) throws Exception {
     this.configuration = configuration;
     this.consumer = configuration.stage.actorFor(
-            Definition.has(ClientRequesterConsumerActor.class, Definition.parameters(configuration)),
-            ClientConsumer.class);
+            ClientConsumer.class,
+            Definition.has(ClientRequesterConsumerActor.class, Definition.parameters(configuration)));
   }
 
   public void close() {

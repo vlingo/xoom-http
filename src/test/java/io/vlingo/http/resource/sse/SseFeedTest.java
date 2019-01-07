@@ -29,7 +29,7 @@ public class SseFeedTest {
 
   @Test
   public void testThatFeedFeedsOneSubscriber() {
-    feed = world.actorFor(Definition.has(AllSseFeedActor.class, Definition.parameters("all", 10, "1")), SseFeed.class);
+    feed = world.actorFor(SseFeed.class, Definition.has(AllSseFeedActor.class, Definition.parameters("all", 10, "1")));
 
     final SseSubscriber subscriber = new SseSubscriber("all", client, "ABC123", "42");
 
@@ -48,7 +48,7 @@ public class SseFeedTest {
 
   @Test
   public void testThatFeedFeedsMultipleSubscribers() {
-    feed = world.actorFor(Definition.has(AllSseFeedActor.class, Definition.parameters("all", 10, "1")), SseFeed.class);
+    feed = world.actorFor(SseFeed.class, Definition.has(AllSseFeedActor.class, Definition.parameters("all", 10, "1")));
 
     final SseSubscriber subscriber1 = new SseSubscriber("all", client, "ABC123", "41");
     final SseSubscriber subscriber2 = new SseSubscriber("all", client, "ABC456", "42");

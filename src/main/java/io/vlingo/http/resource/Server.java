@@ -41,12 +41,12 @@ public interface Server extends Stoppable {
           final Timing timing) {
     
     final Server server = stage.actorFor(
+            Server.class,
             Definition.has(
                     ServerActor.class,
                     Definition.parameters(resources, port, sizing, timing),
                     "ringMailbox",
                     ServerActor.ServerName),
-            Server.class,
             stage.world().addressFactory().withHighId(),
             stage.world().defaultLogger());
 

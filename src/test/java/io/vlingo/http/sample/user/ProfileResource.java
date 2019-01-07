@@ -33,7 +33,7 @@ public class ProfileResource extends ResourceHandler {
   }
 
   public void define(final String userId, final ProfileData profileData) {
-    stage.actorOf(stage.world().addressFactory().findableBy(Integer.parseInt(userId)), Profile.class)
+    stage.actorOf(Profile.class, stage.world().addressFactory().findableBy(Integer.parseInt(userId)))
       .andThenConsume(profile -> {
         final Profile.State profileState = repository.profileOf(userId);
         completes().with(Response.of(Ok, headers(of(Location, profileLocation(userId))), serialized(ProfileData.from(profileState))));
@@ -46,7 +46,7 @@ public class ProfileResource extends ResourceHandler {
                         profileData.linkedInAccount,
                         profileData.website);
   
-        stage().actorFor(Definition.has(ProfileActor.class, Definition.parameters(profileState)), Profile.class);
+        stage().actorFor(Profile.class, Definition.has(ProfileActor.class, Definition.parameters(profileState)));
   
         repository.save(profileState);
         completes().with(Response.of(Created, serialized(ProfileData.from(profileState))));

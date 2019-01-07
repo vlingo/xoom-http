@@ -34,10 +34,10 @@ public abstract class Resource<T> {
     for (int idx = 0; idx < handlerPoolSize; ++idx) {
       handlerPool[idx] =
         stage.actorFor(
+          ResourceRequestHandler.class,
           Definition.has(
             ResourceRequestHandlerActor.class,
-            Definition.parameters(resourceHandlerInstance(stage))),
-          ResourceRequestHandler.class);
+            Definition.parameters(resourceHandlerInstance(stage))));
     }
   }
 

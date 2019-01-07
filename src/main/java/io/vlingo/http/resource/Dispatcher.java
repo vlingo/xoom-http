@@ -16,8 +16,8 @@ public interface Dispatcher extends Stoppable {
   public static Dispatcher startWith(final Stage stage, final Resources resources) {
     final Dispatcher dispatcher =
             stage.actorFor(
-                    Definition.has(DispatcherActor.class, Definition.parameters(resources)),
-                    Dispatcher.class);
+                    Dispatcher.class,
+                    Definition.has(DispatcherActor.class, Definition.parameters(resources)));
 
     return dispatcher;
   }
