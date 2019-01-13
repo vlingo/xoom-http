@@ -99,7 +99,7 @@ public class ActionTest {
   }
 
   @Test
-  public void testMatchesMutipleParametersWithEndSlash() throws Exception {
+  public void testMatchesMultipleParametersWithEndSlash() throws Exception {
     final Action action =
             new Action(
                     0,
@@ -141,6 +141,40 @@ public class ActionTest {
     assertNull(matchResults.action);
     assertEquals(0, matchResults.parameterCount());
   }
+
+  @Test
+  public void testNoMatchGivenAdditionalElements() throws Exception {
+    final Action action = new Action(0, "GET", "/users/{id}", "queryUsers(String userId)", null, false);
+
+    final MatchResults matchResults = action.matchWith(Method.GET, new URI("/users/1234/extra"));
+
+    assertFalse(matchResults.isMatched());
+    assertNull(matchResults.action);
+    assertEquals(0, matchResults.parameterCount());
+  }
+
+  @Test
+  public void testNoMatchEmptyParam() throws Exception {
+    final Action action = new Action(0, "GET", "/users/{id}/data", "queryUserData(String userId)", null, true);
+
+    final MatchResults matchResults = action.matchWith(Method.GET, new URI("/users//data"));
+
+    assertFalse(matchResults.isMatched());
+    assertSame(action, matchResults.action);
+    assertEquals(0, matchResults.parameterCount());
+  }
+
+  @Test
+  public void testMatchEmptyParamGivenAllowsTrailingSlash() throws Exception {
+    final Action action = new Action(0, "GET", "/users/{id}", "queryUsers(String userId)", null, false);
+
+    final MatchResults matchResults = action.matchWith(Method.GET, new URI("/users//"));
+
+    assertTrue(matchResults.isMatched());
+    assertSame(action, matchResults.action);
+    assertEquals(1, matchResults.parameterCount());
+  }
+
 
   @Test
   public void testNoMatchMultipleParametersMissingSlash() throws Exception {
