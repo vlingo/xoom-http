@@ -16,7 +16,6 @@ import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
 import java.util.Arrays;
-import java.util.Map;
 
 public class RequestHandler2<T, R> extends RequestHandler {
   final ParameterResolver<T> resolverParam1;
