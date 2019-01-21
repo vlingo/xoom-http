@@ -168,6 +168,25 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
   }
 
   @Test
+  public void addingHandlerBodyWithMapper() {
+    final Request request = Request.has(Method.POST)
+                                   .and(URI.create("/user/admin/name"))
+                                   .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"))
+                                   .and(Version.Http1_1);
+    final Action.MappedParameters mappedParameters =
+      new Action.MappedParameters(1, Method.GET, "ignored", Collections.singletonList(
+        new Action.MappedParameter("String", "admin"))
+      );
+
+    final RequestHandler2<String, NameData> handler =
+      new RequestHandler1<>(Method.GET, "/user/{userId}/picture/{pictureId}", path(0, String.class))
+        .body(NameData.class, TestMapper.class);
+
+    assertResolvesAreEquals(body(NameData.class), handler.resolverParam2);
+    assertEquals(new NameData("John", "Doe"), handler.resolverParam2.apply(request, mappedParameters));
+  }
+
+  @Test
   public void addingHandlerQuery() {
     final Request request = Request.has(Method.GET)
       .and(URI.create("/user/admin?filter=abc"))

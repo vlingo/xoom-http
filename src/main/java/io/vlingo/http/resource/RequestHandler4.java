@@ -61,6 +61,15 @@ public class RequestHandler4<T, R, U, I> extends RequestHandler {
     return new RequestHandler5<>(method, path, resolverParam1, resolverParam2, resolverParam3, resolverParam4, ParameterResolver.body(bodyClass));
   }
 
+  public <J> RequestHandler5<T, R, U, I, J> body(final Class<J> bodyClass, final Class<? extends Mapper> mapperClass) {
+    return body(bodyClass, mapperFrom(mapperClass));
+  }
+
+  public <J> RequestHandler5<T, R, U, I, J> body(final Class<J> bodyClass, final Mapper mapper) {
+    return new RequestHandler5<>(method, path, resolverParam1, resolverParam2, resolverParam3, resolverParam4,
+      ParameterResolver.body(bodyClass, mapper));
+  }
+
   public RequestHandler5<T, R, U, I, String> query(final String name) {
     return query(name, String.class);
   }

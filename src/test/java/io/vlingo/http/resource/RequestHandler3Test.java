@@ -157,6 +157,34 @@ public class RequestHandler3Test extends RequestHandlerTestBase {
     assertEquals(new NameData("John", "Doe"), handler.resolverParam4.apply(request, mappedParameters));
   }
 
+
+  @Test
+  public void addingHandlerBodyWithMapper() {
+    final Request request = Request.has(Method.POST)
+                                   .and(URI.create("/posts/my-post/comment/my-comment"))
+                                   .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"))
+                                   .and(Version.Http1_1);
+    final Action.MappedParameters mappedParameters =
+      new Action.MappedParameters(1, Method.POST, "ignored", Arrays.asList(
+        new Action.MappedParameter("String", "my-post"),
+        new Action.MappedParameter("String", "my-comment"))
+      );
+
+    final RequestHandler4<String, String, Integer, NameData> handler =
+      new RequestHandler3<>(
+        Method.POST,
+        "/posts/{postId}/comment/{commentId}",
+        path(0, String.class),
+        path(1, String.class),
+        query("page", Integer.class, 10)
+      )
+        .body(NameData.class, TestMapper.class);
+
+    assertResolvesAreEquals(body(NameData.class), handler.resolverParam4);
+    assertEquals(new NameData("John", "Doe"), handler.resolverParam4.apply(request, mappedParameters));
+  }
+
+
   @Test
   public void addingHandlerQuery() {
     final Request request = Request.has(Method.POST)
