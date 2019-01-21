@@ -58,6 +58,14 @@ public class RequestHandler1<T> extends RequestHandler {
     return new RequestHandler2<>(method, path, resolver, ParameterResolver.body(bodyClass));
   }
 
+  public <R> RequestHandler2<T, R> body(final Class<R> bodyClass, final Class<? extends Mapper> mapperClass) {
+    return body(bodyClass, mapperFrom(mapperClass));
+  }
+
+  public <R> RequestHandler2<T, R> body(final Class<R> bodyClass, final Mapper mapper) {
+    return new RequestHandler2<>(method, path, resolver, ParameterResolver.body(bodyClass, mapper));
+  }
+
   public RequestHandler2<T, String> query(final String name) {
     return query(name, String.class);
   }

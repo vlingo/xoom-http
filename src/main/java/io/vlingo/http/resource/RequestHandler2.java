@@ -16,6 +16,7 @@ import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
 import java.util.Arrays;
+import java.util.Map;
 
 public class RequestHandler2<T, R> extends RequestHandler {
   final ParameterResolver<T> resolverParam1;
@@ -61,6 +62,15 @@ public class RequestHandler2<T, R> extends RequestHandler {
 
   public <U> RequestHandler3<T, R, U> body(final Class<U> bodyClass) {
     return new RequestHandler3<>(method, path, resolverParam1, resolverParam2, ParameterResolver.body(bodyClass));
+  }
+
+  public <U> RequestHandler3<T, R, U> body(final Class<U> bodyClass, final Class<? extends Mapper> mapperClass) {
+    return body(bodyClass, mapperFrom(mapperClass));
+  }
+
+  public <U> RequestHandler3<T, R, U> body(final Class<U> bodyClass, final Mapper mapper) {
+    return new RequestHandler3<>(method, path, resolverParam1, resolverParam2,
+      ParameterResolver.body(bodyClass, mapper));
   }
 
   public RequestHandler3<T, R, String> query(final String name) {

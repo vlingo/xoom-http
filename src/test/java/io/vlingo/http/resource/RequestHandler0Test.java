@@ -9,6 +9,7 @@
 
 package io.vlingo.http.resource;
 
+import com.google.gson.Gson;
 import io.vlingo.http.*;
 import io.vlingo.http.sample.user.NameData;
 import org.junit.Rule;
@@ -112,6 +113,24 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
 
     assertResolvesAreEquals(body(NameData.class), handler.resolver);
     assertEquals(new NameData("John", "Doe"), handler.resolver.apply(request, mappedParameters));
+  }
+
+  @Test
+  public void addingHandlerBodyWithMapper() {
+    final Request request = Request.has(Method.POST)
+                                   .and(URI.create("/user/admin/name"))
+                                   .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"))
+                                   .and(Version.Http1_1);
+    final Action.MappedParameters mappedParameters =
+      new Action.MappedParameters(1, Method.POST, "ignored", Collections.singletonList(
+        new Action.MappedParameter("String", "admin"))
+      );
+
+    final RequestHandler1<NameData> handler1 = new RequestHandler0(Method.GET, "/user/admin/name")
+      .body(NameData.class, TestMapper.class);
+
+    assertResolvesAreEquals(body(NameData.class, new TestMapper()), handler1.resolver);
+    assertEquals(new NameData("John", "Doe"), handler1.resolver.apply(request, mappedParameters));
   }
 
   @Test
