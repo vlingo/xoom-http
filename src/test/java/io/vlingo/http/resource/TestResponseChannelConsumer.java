@@ -38,8 +38,10 @@ public class TestResponseChannelConsumer extends Actor implements ResponseChanne
     while (parser.hasFullResponse()) {
       final Response response = parser.fullResponse();
       progress.responses.add(response);
-      if (progress.untilConsumed != null) progress.untilConsumed.happened();
       progress.consumeCount.incrementAndGet();
+      if (progress.untilConsumed != null) {
+        progress.untilConsumed.happened();
+      }
     }
   }
   
@@ -47,9 +49,5 @@ public class TestResponseChannelConsumer extends Actor implements ResponseChanne
     public TestUntil untilConsumed;
     public Queue<Response> responses = new ConcurrentLinkedQueue<>();
     public AtomicInteger consumeCount = new AtomicInteger(0);
-    
-    public boolean expectedConsumeCount(final int expected) {
-      return consumeCount.get() >= expected;
-    }
   }
 }
