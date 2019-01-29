@@ -70,7 +70,6 @@ public abstract class RequestHandler {
     }
   }
 
-  @SuppressWarnings("unchecked")
   protected Mapper mapperFrom(final Class<? extends Mapper> mapperClass) {
     try {
       return mapperClass.newInstance();
