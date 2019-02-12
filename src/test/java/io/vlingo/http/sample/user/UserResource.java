@@ -40,7 +40,6 @@ public class UserResource extends ResourceHandler {
 
   public void register(final UserData userData) {
     final Address userAddress = stage().world().addressFactory().uniquePrefixedWith("u-");
-
     final User.State userState =
             User.from(
                     userAddress.idString(),
@@ -78,6 +77,10 @@ public class UserResource extends ResourceHandler {
     } else {
       completes().with(Response.of(Ok, serialized(UserData.from(userState))));
     }
+  }
+
+  public void queryUserError(String userId) {
+    throw new Error("Test exception");
   }
 
   public void queryUsers() {

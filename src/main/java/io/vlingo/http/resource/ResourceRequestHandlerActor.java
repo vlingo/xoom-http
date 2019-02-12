@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import io.vlingo.actors.Actor;
 import io.vlingo.http.Context;
+import io.vlingo.http.Response;
 
 public class ResourceRequestHandlerActor extends Actor implements ResourceRequestHandler {
   private final ResourceHandler resourceHandler;
@@ -21,8 +22,13 @@ public class ResourceRequestHandlerActor extends Actor implements ResourceReques
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public void handleFor(final Context context, final Consumer consumer) {
-    resourceHandler.context = context;
-    resourceHandler.stage = stage();
-    consumer.accept(resourceHandler);
+    try {
+      resourceHandler.context = context;
+      resourceHandler.stage = stage();
+      consumer.accept(resourceHandler);
+    }catch (Throwable throwable) {
+      logger().log("Exception raised from resource dispatcher", throwable);
+      context.completes.with(Response.of(Response.Status.InternalServerError));
+    }
   }
 }

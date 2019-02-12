@@ -21,7 +21,7 @@ import io.vlingo.http.resource.Action.MatchResults;
 import io.vlingo.http.resource.ResourceDispatcherGenerator.Result;
 
 public abstract class ConfigurationResource<T> extends Resource<T> {
-  static final String DispatcherPostixName = "Dispatcher";
+  static final String DispatcherSuffix = "Dispatcher";
 
   private static DynaClassLoader classLoader = new DynaClassLoader(ConfigurationResource.class.getClassLoader());
   private static final DynaCompiler dynaCompiler = new DynaCompiler();
@@ -47,7 +47,7 @@ public abstract class ConfigurationResource<T> extends Resource<T> {
     assertSaneActions(actions);
 
     try {
-      final String targetClassname = resourceHandlerClass.getName() + DispatcherPostixName;
+      final String targetClassname = resourceHandlerClass.getName() + DispatcherSuffix;
 
       Class<ConfigurationResource<?>> resourceClass = null;
       try {
@@ -60,8 +60,8 @@ public abstract class ConfigurationResource<T> extends Resource<T> {
       final Object[] ctorParams = new Object[] { resourceName, resourceHandlerClass, handlerPoolSize, actions };
       for (final Constructor<?> ctor : resourceClass.getConstructors()) {
         if (ctor.getParameterCount() == ctorParams.length) {
-          final ConfigurationResource<?> resourecDispatcher = (ConfigurationResource<?>) ctor.newInstance(ctorParams);
-          return resourecDispatcher;
+          final ConfigurationResource<?> resourceDispatcher = (ConfigurationResource<?>) ctor.newInstance(ctorParams);
+          return resourceDispatcher;
         }
       }
       return resourceClass.newInstance();

@@ -9,6 +9,7 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.common.Completes;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
@@ -21,7 +22,7 @@ import java.net.URI;
 import java.util.Arrays;
 
 import static io.vlingo.common.Completes.withSuccess;
-import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.Response.Status.*;
 import static io.vlingo.http.Response.of;
 import static io.vlingo.http.resource.ParameterResolver.path;
 import static io.vlingo.http.resource.ParameterResolver.query;
@@ -33,9 +34,27 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
+  private <T, R, U, I, J> RequestHandler5<T, R, U, I, J> createRequestHandler(Method method,
+                                                                              String path,
+                                                                              ParameterResolver<T> parameterResolver1,
+                                                                              ParameterResolver<R> parameterResolver2,
+                                                                              ParameterResolver<U> parameterResolver3,
+                                                                              ParameterResolver<I> parameterResolver4,
+                                                                              ParameterResolver<J> parameterResolver5) {
+    return new RequestHandler5<>(
+      method,
+      path,
+      parameterResolver1,
+      parameterResolver2,
+      parameterResolver3,
+      parameterResolver4,
+      parameterResolver5,
+      ErrorHandler.handleAllWith(InternalServerError));
+  }
+
   @Test
   public void handlerWithOneParam() {
-    final RequestHandler5<String, String, String, Integer, Integer> handler = new RequestHandler5<>(
+    final RequestHandler5<String, String, String, Integer, Integer> handler = createRequestHandler(
       Method.GET,
       "/posts/{postId}/comment/{commentId}/user/{userId}",
       path(0, String.class),
@@ -60,7 +79,7 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
     thrown.expect(HandlerMissingException.class);
     thrown.expectMessage("No handle defined for GET /posts/{postId}");
 
-    final RequestHandler5<String, String, String, Integer, Integer> handler = new RequestHandler5<>(
+    final RequestHandler5<String, String, String, Integer, Integer> handler = createRequestHandler(
       Method.GET,
       "/posts/{postId}/comment/{commentId}/user/{userId}",
       path(0, String.class),
@@ -73,8 +92,26 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
   }
 
   @Test
+  public void errorHandlerInvoked() {
+    final RequestHandler5<String, String, String, Integer, Integer> handler = createRequestHandler(
+      Method.GET,
+      "/posts/{postId}/comment/{commentId}/user/{userId}",
+      path(0, String.class),
+      path(1, String.class),
+      path(2, String.class),
+      query("page", Integer.class, 10),
+      query("pageSize", Integer.class, 10))
+      .handle((param1, param2, param3, param4, param5) -> { throw new RuntimeException("Test Handler exception"); })
+      .onError(
+        error -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
+      );
+    Completes<Response> responseCompletes = handler.execute("idVal1", "idVal2", "idVal3", 1, 2);
+    assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
+  }
+
+  @Test
   public void actionSignature() {
-    final RequestHandler5<String, String, String, Integer, Integer> handler = new RequestHandler5<>(
+    final RequestHandler5<String, String, String, Integer, Integer> handler = createRequestHandler(
       Method.GET,
       "/posts/{postId}/comment/{commentId}/user/{userId}",
       path(0, String.class),
@@ -98,7 +135,7 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
         new Action.MappedParameter("String", "my-comment"),
         new Action.MappedParameter("String", "my-user"))
       );
-    final RequestHandler5<String, String, String, Integer, Integer> handler = new RequestHandler5<>(
+    final RequestHandler5<String, String, String, Integer, Integer> handler = createRequestHandler(
       Method.GET,
       "/posts/{postId}/comment/{commentId}/user/{userId}",
       path(0, String.class),

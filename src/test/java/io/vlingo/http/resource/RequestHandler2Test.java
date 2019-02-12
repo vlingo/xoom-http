@@ -9,6 +9,7 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.common.Completes;
 import io.vlingo.http.*;
 import io.vlingo.http.sample.user.NameData;
 import org.junit.Rule;
@@ -20,7 +21,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static io.vlingo.common.Completes.withSuccess;
-import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.Response.Status.*;
 import static io.vlingo.http.Response.of;
 import static io.vlingo.http.resource.ParameterResolver.*;
 import static io.vlingo.http.resource.serialization.JsonSerialization.serialized;
@@ -31,14 +32,25 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
+  private <T, U> RequestHandler2<T, U> createRequestHandler(Method method, String path,
+                                                            ParameterResolver<T> parameterResolver1,
+                                                            ParameterResolver<U> parameterResolver2) {
+    return new RequestHandler2<>(
+      method,
+      path,
+      parameterResolver1,
+      parameterResolver2,
+      ErrorHandler.handleAllWith(InternalServerError));
+  }
+
   @Test
   public void handlerWithOneParam() {
-    final RequestHandler2<String, String> handler = new RequestHandler2<>(
+    final RequestHandler2<String, String> handler = createRequestHandler(
       Method.GET,
       "/posts/{postId}/comment/{commentId}",
       path(0, String.class),
       path(1, String.class)
-    ).handle((postId,commentId) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
+    ).handle((postId, commentId) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
 
     final Response response = handler.execute("my-post", "my-comment").outcome();
 
@@ -55,18 +67,33 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
     thrown.expect(HandlerMissingException.class);
     thrown.expectMessage("No handle defined for GET /posts/{postId}");
 
-    final RequestHandler2<String, String> handler = new RequestHandler2<>(
-        Method.GET,
-        "/posts/{postId}/comment/{commentId}",
-        path(0, String.class),
-        path(1, String.class)
-      );
+    final RequestHandler2<String, String> handler = createRequestHandler(
+      Method.GET,
+      "/posts/{postId}/comment/{commentId}",
+      path(0, String.class),
+      path(1, String.class)
+    );
     handler.execute("my-post", "my-comment");
   }
 
   @Test
+  public void errorHandlerInvoked() {
+    final RequestHandler2<String, String> handler = createRequestHandler(
+      Method.GET,
+      "/posts/{postId}/comment/{commentId}",
+      path(0, String.class),
+      path(1, String.class))
+      .handle((param1, param2) -> { throw new RuntimeException("Test Handler exception"); })
+      .onError(
+        error -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
+    );
+    Completes<Response> responseCompletes = handler.execute("idVal1", "idVal2");
+    assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
+  }
+
+  @Test
   public void actionSignature() {
-    final RequestHandler2<String, String> handler = new RequestHandler2<>(
+    final RequestHandler2<String, String> handler = createRequestHandler(
       Method.GET,
       "/posts/{postId}/comment/{commentId}",
       path(0, String.class),
@@ -86,7 +113,7 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
         new Action.MappedParameter("String", "my-post"),
         new Action.MappedParameter("String", "my-comment"))
       );
-    final RequestHandler2<String, String> handler = new RequestHandler2<>(
+    final RequestHandler2<String, String> handler = createRequestHandler(
       Method.GET,
       "/posts/{postId}/comment/{commentId}",
       path(0, String.class),
@@ -113,13 +140,13 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
       );
 
     final RequestHandler3<String, String, Integer> handler =
-      new RequestHandler2<>(
+      createRequestHandler(
         Method.GET,
         "/posts/{postId}/comment/{commentId}/votes/{votesNumber}",
         path(0, String.class),
         path(1, String.class)
       )
-      .param(Integer.class);
+        .param(Integer.class);
 
     assertResolvesAreEquals(path(2, Integer.class), handler.resolverParam3);
     assertEquals((Integer) 10, handler.resolverParam3.apply(request, mappedParameters));
@@ -138,7 +165,7 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
       );
 
     final RequestHandler3<String, String, NameData> handler =
-      new RequestHandler2<>(
+      createRequestHandler(
         Method.POST,
         "/posts/{postId}/comment/{commentId}",
         path(0, String.class),
@@ -153,9 +180,9 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
   @Test
   public void addingHandlerBodyWithMapper() {
     final Request request = Request.has(Method.POST)
-                                   .and(URI.create("/posts/my-post/comment/my-comment"))
-                                   .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"))
-                                   .and(Version.Http1_1);
+      .and(URI.create("/posts/my-post/comment/my-comment"))
+      .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"))
+      .and(Version.Http1_1);
     final Action.MappedParameters mappedParameters =
       new Action.MappedParameters(1, Method.POST, "ignored", Arrays.asList(
         new Action.MappedParameter("String", "my-post"),
@@ -163,7 +190,7 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
       );
 
     final RequestHandler3<String, String, NameData> handler =
-      new RequestHandler2<>(
+      createRequestHandler(
         Method.POST,
         "/posts/{postId}/comment/{commentId}",
         path(0, String.class),
@@ -184,7 +211,7 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
       new Action.MappedParameters(1, Method.GET, "ignored", Collections.emptyList());
 
     final RequestHandler3<String, String, String> handler =
-      new RequestHandler2<>(
+      createRequestHandler(
         Method.GET,
         "/posts/{postId}/comment/{commentId}",
         path(0, String.class),
@@ -207,14 +234,13 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
     final Action.MappedParameters mappedParameters =
       new Action.MappedParameters(1, Method.GET, "ignored", Collections.emptyList());
 
-    final RequestHandler3<String, String, Header> handler =
-      new RequestHandler2<>(
+    final RequestHandler3<String, String, Header> handler = createRequestHandler(
         Method.GET,
         "/posts/{postId}/comment/{commentId}",
         path(0, String.class),
         path(1, String.class)
       )
-      .header("Host");
+        .header("Host");
 
     assertResolvesAreEquals(header("Host"), handler.resolverParam3);
     assertEquals(hostHeader, handler.resolverParam3.apply(request, mappedParameters));
