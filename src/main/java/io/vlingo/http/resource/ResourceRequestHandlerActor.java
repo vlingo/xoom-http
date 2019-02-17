@@ -26,8 +26,11 @@ public class ResourceRequestHandlerActor extends Actor implements ResourceReques
       resourceHandler.context = context;
       resourceHandler.stage = stage();
       consumer.accept(resourceHandler);
-    }catch (Throwable throwable) {
-      logger().log("Exception raised from resource dispatcher", throwable);
+    }catch (Error throwable) {
+      logger().log("Error thrown by resource dispatcher", throwable);
+      context.completes.with(Response.of(Response.Status.InternalServerError));
+    }catch (RuntimeException exception) {
+      logger().log("Runtime thrown by resource dispatcher", exception);
       context.completes.with(Response.of(Response.Status.InternalServerError));
     }
   }
