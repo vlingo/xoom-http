@@ -152,7 +152,7 @@ public class Client {
     }
   }
 
-  public static interface ClientConsumer extends ResponseChannelConsumer, Scheduled, Stoppable {
+  public static interface ClientConsumer extends ResponseChannelConsumer, Scheduled<Object>, Stoppable {
     Completes<Response> requestWith(final Request request, final Completes<Response> completes);
   }
 
@@ -164,6 +164,7 @@ public class Client {
     private ResponseParser parser;
     private final Cancellable probe;
 
+    @SuppressWarnings("unchecked")
     public ClientRequesterConsumerActor(final Configuration configuration) throws Exception {
       this.configuration = configuration;
       this.buffer = ByteBufferAllocator.allocate(configuration.writeBufferSize);
@@ -204,7 +205,7 @@ public class Client {
     }
 
     @Override
-    public void intervalSignal(final Scheduled scheduled, final Object data) {
+    public void intervalSignal(final Scheduled<Object> scheduled, final Object data) {
       channel.probeChannel();
     }
 

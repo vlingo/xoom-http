@@ -93,12 +93,13 @@ public class SseStreamResource extends ResourceHandler {
   // SsePublisherActor
   //=====================================
 
-  public static class SsePublisherActor extends Actor implements SsePublisher, Scheduled, Stoppable {
+  public static class SsePublisherActor extends Actor implements SsePublisher, Scheduled<Object>, Stoppable {
     private final Cancellable cancellable;
     private final SseFeed feed;
     private final String streamName;
     private final Map<String,SseSubscriber> subscribers;
 
+    @SuppressWarnings("unchecked")
     public SsePublisherActor(final String streamName, final Class<? extends Actor> feedClass, final int feedPayload, final int feedInterval, final String feedDefaultId) {
       this.streamName = streamName;
       this.feed = stage().actorFor(SseFeed.class, Definition.has(feedClass, Definition.parameters(streamName, feedPayload, feedDefaultId)));
@@ -129,7 +130,7 @@ public class SseStreamResource extends ResourceHandler {
     //=====================================
 
     @Override
-    public void intervalSignal(final Scheduled scheduled, final Object data) {
+    public void intervalSignal(final Scheduled<Object> scheduled, final Object data) {
       feed.to(subscribers.values());
     }
 

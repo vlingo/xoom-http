@@ -32,7 +32,7 @@ import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
 import io.vlingo.wire.message.BasicConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 
-public class ServerActor extends Actor implements Server, RequestChannelConsumerProvider, Scheduled {
+public class ServerActor extends Actor implements Server, RequestChannelConsumerProvider, Scheduled<Object> {
   static final String ChannelName = "server-request-response-channel";
   static final String ServerName = "vlingo-http-server";
 
@@ -101,6 +101,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Completes<Boolean> startUp() {
     stage().scheduler().schedule(selfAs(Scheduled.class), null, 1000L, requestMissingContentTimeout);
 
@@ -123,7 +124,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   //=========================================
 
   @Override
-  public void intervalSignal(final Scheduled scheduled, final Object data) {
+  public void intervalSignal(final Scheduled<Object> scheduled, final Object data) {
     failTimedOutMissingContentRequests();
   }
 

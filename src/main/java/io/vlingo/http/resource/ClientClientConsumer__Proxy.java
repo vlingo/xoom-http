@@ -54,7 +54,7 @@ public class ClientClientConsumer__Proxy implements ClientConsumer {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, consumeRepresentation2));
     }
   }
-  public void intervalSignal(io.vlingo.common.Scheduled arg0, java.lang.Object arg1) {
+  public void intervalSignal(io.vlingo.common.Scheduled<Object> arg0, java.lang.Object arg1) {
     if (!actor.isStopped()) {
       final Consumer<ClientConsumer> consumer = (actor) -> actor.intervalSignal(arg0, arg1);
       if (mailbox.isPreallocated()) { mailbox.send(actor, ClientConsumer.class, consumer, null, intervalSignalRepresentation3); }
