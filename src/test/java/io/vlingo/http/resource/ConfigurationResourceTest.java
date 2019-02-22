@@ -238,7 +238,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     // a better ordering of actions and one that does not use the
     // disallowPathParametersWithSlash option.
     // See also: vlingo-http.properties
-    //   resource.NAME.disallowPathParametersWithSlash = true/false
+    //   userResource.NAME.disallowPathParametersWithSlash = true/false
     //=============================================================
     
     final List<Action> actions =

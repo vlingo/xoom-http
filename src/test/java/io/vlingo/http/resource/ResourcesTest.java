@@ -44,7 +44,7 @@ public class ResourcesTest {
       assertNotNull(action.mapper);
     }
     
-    assertEquals(5, countUserActions);
+    assertEquals(6, countUserActions);
     
     final ConfigurationResource<?> profile = (ConfigurationResource<?>) resources.resourceOf("profile");
     

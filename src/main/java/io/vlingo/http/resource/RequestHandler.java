@@ -15,6 +15,7 @@ import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,8 +32,39 @@ public abstract class RequestHandler {
     this.actionSignature = generateActionSignature(parameterResolvers);
   }
 
+  Completes<Response> defaultErrorResponse() {
+    return Completes.withSuccess(Response.of(Response.Status.InternalServerError));
+  }
+
+  protected void checkHandlerOrThrowException(Object handler) {
+    if (handler == null)
+      throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
+  }
+
   abstract Completes<Response> execute(final Request request,
                                        final Action.MappedParameters mappedParameters);
+
+
+  Completes<Response> executeRequest(Supplier<Completes<Response>> executeAction, ErrorHandler errorHandler) {
+    Completes<Response> responseCompletes;
+    try {
+      responseCompletes = executeAction.get();
+    } catch(Exception exception) {
+      // Log failure at DEBUG level (missing logger)
+      if (errorHandler != null) {
+        try {
+          responseCompletes = errorHandler.handle(exception);
+        } catch (Exception errorHandlerException) {
+          // Log failure at ERROR level (missing logger)
+          responseCompletes = defaultErrorResponse();
+        }
+      } else {
+        responseCompletes = defaultErrorResponse();
+      }
+    }
+    return responseCompletes;
+  }
+
 
   private String generateActionSignature(final List<ParameterResolver<?>> parameterResolvers) {
     checkOrder(parameterResolvers);
@@ -74,7 +106,7 @@ public abstract class RequestHandler {
     try {
       return mapperClass.newInstance();
     } catch (Exception e) {
-      throw new IllegalStateException("Cannot instantiate mapper class: " + mapperClass.getName());
+      throw new IllegalArgumentException("Cannot instantiate mapper class: " + mapperClass.getName());
     }
   }
 }

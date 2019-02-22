@@ -5,15 +5,70 @@ import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 import io.vlingo.http.sample.user.NameData;
+import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
+import static io.vlingo.http.Response.Status.BadRequest;
+import static io.vlingo.http.Response.Status.InternalServerError;
 import static org.junit.Assert.assertEquals;
 
-public class RequestHandlerTest {
+public class RequestHandlerTest extends RequestHandlerTestBase {
+
+  @Test
+  public void executionErrorUsesErrorHandlerWhenExceptionThrown() {
+    Response.Status testStatus = Response.Status.BadRequest;
+
+    final RequestHandlerFake handler = new RequestHandlerFake(Method.GET,
+      "/hello",
+      new ArrayList<>(),
+      () -> { throw new RuntimeException("Handler failed"); }
+    );
+
+    ErrorHandler validHandler = (ex) -> {
+      Assert.assertTrue( ex instanceof RuntimeException);
+      return Completes.withSuccess(Response.of(testStatus));
+    };
+
+    Response response = handler.execute(validHandler).await();
+    assertResponsesAreEquals(Response.of(testStatus), response);
+  }
+
+  @Test
+  public void internalErrorReturnedWhenErrorHandlerThrowsException() {
+    final RequestHandlerFake handler = new RequestHandlerFake(Method.GET,
+      "/hello",
+      new ArrayList<>(),
+      () -> { throw new RuntimeException("Handler failed"); }
+    );
+
+    ErrorHandler badHandler = (ex) -> {
+      throw new IllegalArgumentException("foo");
+    };
+
+    Response response = handler.execute(badHandler).await();
+    assertResponsesAreEquals(Response.of(InternalServerError), response);
+  }
+
+  @Test
+  public void internalErrorReturnedWhenNoErrorHandlerDefined() {
+    final RequestHandlerFake handler = new RequestHandlerFake(Method.GET,
+      "/hello",
+      new ArrayList<>(),
+      () -> { throw new RuntimeException("Handler failed"); }
+    );
+
+    Response response = handler.execute(null).await();
+    assertResponsesAreEquals(Response.of(InternalServerError), response);
+  }
+
+
 
   @Test
   public void generateActionSignatureWhenNoPathIsSpecifiedIsEmptyString() {
@@ -66,12 +121,27 @@ public class RequestHandlerTest {
 
 class RequestHandlerFake extends RequestHandler {
 
+  Supplier<Completes<Response>> handler;
+
   RequestHandlerFake(Method method, String path, List<ParameterResolver<?>> parameterResolvers) {
     super(method, path, parameterResolvers);
+    handler = () -> Completes.withSuccess(Response.of(Response.Status.Ok));
+  }
+
+  RequestHandlerFake(Method method, String path,
+                     List<ParameterResolver<?>> parameterResolvers,
+                     Supplier<Completes<Response>> handler) {
+    super(method, path, parameterResolvers);
+    this.handler = handler;
   }
 
   @Override
   Completes<Response> execute(final Request request, final Action.MappedParameters mappedParameters) {
     throw new UnsupportedOperationException();
   }
+
+  Completes<Response> execute(ErrorHandler errorHandler) {
+    return executeRequest(handler, errorHandler);
+  }
+
 }

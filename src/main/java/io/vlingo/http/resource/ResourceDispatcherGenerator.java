@@ -78,10 +78,10 @@ public class ResourceDispatcherGenerator implements AutoCloseable {
       try {
         final Class<?> handlerInterface = readHandlerInterface(handlerProtocol);
         final String dispatcherClassSource = dispatcherClassSource(handlerInterface);
-        final String fullyQualifiedClassname = fullyQualifiedClassnameFor(handlerInterface, ConfigurationResource.DispatcherPostixName);
+        final String fullyQualifiedClassname = fullyQualifiedClassnameFor(handlerInterface, ConfigurationResource.DispatcherSuffix);
         final String relativeTargetFile = toFullPath(fullyQualifiedClassname);
         final File sourceFile = persist ? persistDispatcherClassSource(handlerProtocol, relativeTargetFile, dispatcherClassSource) : new File(relativeTargetFile);
-        return new Result(fullyQualifiedClassname, classnameFor(handlerInterface, ConfigurationResource.DispatcherPostixName), dispatcherClassSource, sourceFile);
+        return new Result(fullyQualifiedClassname, classnameFor(handlerInterface, ConfigurationResource.DispatcherSuffix), dispatcherClassSource, sourceFile);
       } catch (Exception e) {
         throw new IllegalArgumentException("Cannot generate resource dispatcher class for: " + handlerProtocol, e);
       }
@@ -139,13 +139,13 @@ public class ResourceDispatcherGenerator implements AutoCloseable {
   }
 
   private String classStatement(final Class<?> handlerInterface) {
-    return MessageFormat.format("public class {0} extends ConfigurationResource<{1}> '{'\n", classnameFor(handlerInterface, ConfigurationResource.DispatcherPostixName), handlerInterface.getSimpleName());
+    return MessageFormat.format("public class {0} extends ConfigurationResource<{1}> '{'\n", classnameFor(handlerInterface, ConfigurationResource.DispatcherSuffix), handlerInterface.getSimpleName());
   }
 
   private String constructor(final Class<?> protocolInterface) {
     final StringBuilder builder = new StringBuilder();
 
-    final String signature0 = MessageFormat.format("  public {0}(\n", classnameFor(protocolInterface, ConfigurationResource.DispatcherPostixName));
+    final String signature0 = MessageFormat.format("  public {0}(\n", classnameFor(protocolInterface, ConfigurationResource.DispatcherSuffix));
     final String signature1 = "          final String name,\n";
     final String signature2 = "          final Class<? extends ResourceHandler> resourceHandlerClass,\n";
     final String signature3 = "          final int handlerPoolSize,\n";

@@ -7,10 +7,6 @@
 
 package io.vlingo.http.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
@@ -31,6 +27,8 @@ import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
 
+import static org.junit.Assert.*;
+
 public class ServerTest extends ResourceTestFixtures {
   private static final int TOTAL_REQUESTS_RESPONSES = 1_000;
   
@@ -41,7 +39,25 @@ public class ServerTest extends ResourceTestFixtures {
   private int serverPort;
   private Progress progress;
   private Server server;
-  
+
+
+  @Test
+  public void testThatServerHandlesThrowables() {
+    final String request = getExceptionRequest("1");
+    client.requestWith(toByteBuffer(request));
+
+    progress.untilConsumed = TestUntil.happenings(1);
+    while (progress.untilConsumed.remaining() > 0) {
+      client.probeChannel();
+    }
+    progress.untilConsumed.completes();
+
+    final Response createdResponse = progress.responses.poll();
+
+    assertEquals(1, progress.consumeCount.get());
+    assertEquals(Response.Status.InternalServerError, createdResponse.status);
+  }
+
   @Test
   public void testThatServerDispatchesRequests() throws Exception {
     final String request = postRequest(uniqueJohnDoe());
@@ -113,7 +129,7 @@ public class ServerTest extends ResourceTestFixtures {
 
     serverPort = baseServerPort.getAndIncrement();
     server = Server.startWith(world.stage(), resources, serverPort, new Sizing(1, 1, 100, 10240), new Timing(1, 100));
-    Thread.sleep(100); // delay for server startup
+    assertTrue(server.startUp().await(500L));
 
     progress = new Progress();
     

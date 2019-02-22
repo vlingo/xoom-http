@@ -86,7 +86,7 @@ public class SseStreamResourceTest {
 
   @Before
   public void setUp() {
-    world = World.startWithDefaults("test-stream-resource");
+    world = World.startWithDefaults("test-stream-userResource");
     Configuration.define();
     resource = new MockSseStreamResource(world);
   }

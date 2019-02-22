@@ -25,15 +25,16 @@ public class ResourceDispatcherGeneratorTest {
   private Action actionPatchUserName;
   private Action actionGetUser;
   private Action actionGetUsers;
+  private Action actionQueryUserError;
   private List<Action> actions;
   private ConfigurationResource<?> resource;
 
   @Test
   public void testSourceCodeGeneration() throws Exception {
     final ResourceDispatcherGenerator generator = ResourceDispatcherGenerator.forTest(actions, false);
-    
+
     final Result result = generator.generateFor(resource.resourceHandlerClass.getName());
-    
+
     assertNotNull(result);
     assertNotNull(result.sourceFile);
     assertFalse(result.sourceFile.exists());
@@ -45,11 +46,11 @@ public class ResourceDispatcherGeneratorTest {
   @Test
   public void testSourceCodeGenerationWithPersistence() throws Exception {
     final ResourceDispatcherGenerator generator = ResourceDispatcherGenerator.forTest(actions, true);
-    
+
     final Result result = generator.generateFor(resource.resourceHandlerClass.getName());
-    
+
     assertNotNull(result);
-    
+
     assertNotNull(result);
     assertNotNull(result.sourceFile);
     assertTrue(result.sourceFile.exists());
@@ -66,6 +67,7 @@ public class ResourceDispatcherGeneratorTest {
     actionPatchUserName = new Action(2, "PATCH", "/users/{userId}/name", "changeName(String userId, body:io.vlingo.http.sample.user.NameData nameData)", null, true);
     actionGetUser = new Action(3, "GET", "/users/{userId}", "queryUser(String userId)", null, true);
     actionGetUsers = new Action(4, "GET", "/users", "queryUsers()", null, true);
+    actionQueryUserError = new Action(5, "GET", "/users/{userId}/error", "queryUserError(String userId)", null, true);
 
     actions =
             Arrays.asList(
@@ -73,7 +75,8 @@ public class ResourceDispatcherGeneratorTest {
                     actionPatchUserContact,
                     actionPatchUserName,
                     actionGetUser,
-                    actionGetUsers);
+                    actionGetUsers,
+                    actionQueryUserError);
 
     Class<? extends ResourceHandler> resourceHandlerClass = null;
 
@@ -82,7 +85,7 @@ public class ResourceDispatcherGeneratorTest {
     } catch (Exception e) {
       resourceHandlerClass = ConfigurationResource.newResourceHandlerClassFor("io.vlingo.http.sample.user.UserResource");
     }
-    
+
     resource = ConfigurationResource.newResourceFor("user", resourceHandlerClass, 5, actions);
   }
 }
