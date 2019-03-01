@@ -108,11 +108,9 @@ public class Response {
 
   private void addMissingContentLengthHeader() {
     final int contentLength = entity.content.length();
-    if (contentLength > 0) {
-      final Header header = headers.headerOf(ResponseHeader.ContentLength);
-      if (header == null) {
-        headers.add(ResponseHeader.of(ResponseHeader.ContentLength, Integer.toString(contentLength)));
-      }
+    final Header header = headers.headerOf(ResponseHeader.ContentLength);
+    if (header == null) {
+      headers.add(ResponseHeader.of(ResponseHeader.ContentLength, Integer.toString(contentLength)));
     }
   }
 
