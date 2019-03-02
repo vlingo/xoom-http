@@ -38,11 +38,15 @@ public class SseClient {
   private final StringBuilder builder;
   private final RequestResponseContext<?> context;
   private final int maxMessageSize;
+  private final ConsumerByteBuffer buffer;
 
   public SseClient(final RequestResponseContext<?> context) {
     this.context = context;
-    this.builder = new StringBuilder();
+    this.builder = new StringBuilder(256);
     this.maxMessageSize = Configuration.instance.sizing().maxMessageSize;
+    this.buffer = BasicConsumerByteBuffer.allocate(1, maxMessageSize);
+
+    setUpConnection();
   }
 
   public void close() {
@@ -54,11 +58,11 @@ public class SseClient {
   }
 
   public void send(final SseEvent event) {
-    final ConsumerByteBuffer buffer = BasicConsumerByteBuffer.allocate(1, maxMessageSize);
     final String entity = event.sendable();
     final Headers<ResponseHeader> withContentLength = headers.copy().and(ResponseHeader.contentLength(entity));
     final Response response = Response.of(Ok, withContentLength, entity);
     context.respondWith(response.into(buffer));
+    buffer.flip().clear();
   }
 
   public void send(final SseEvent... events) {
@@ -79,15 +83,22 @@ public class SseClient {
     final ConsumerByteBuffer buffer = BasicConsumerByteBuffer.allocate(1, maxMessageSize);
     final Response response = Response.of(Ok, headers, entity);
     context.respondWith(response.into(buffer));
+    buffer.flip().clear();
   }
 
   private String flatten(final Collection<SseEvent> events) {
-    builder.delete(0, builder.length());
+    builder.setLength(0);
 
     for (final SseEvent event : events) {
       builder.append(event.sendable());
     }
 
     return builder.toString();
+  }
+
+  private void setUpConnection() {
+    final Response response = Response.of(Ok, headers, "xxxxxxxxxx");
+    context.respondWith(response.into(buffer));
+    buffer.flip().clear();
   }
 }

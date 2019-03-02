@@ -32,6 +32,17 @@ public class SseClientTest {
   }
 
   @Test
+  public void testThatConnectingSetsUpTheChannel() {
+    assertEquals(1, context.channel.respondWithCount.get());
+
+    final Response response = context.channel.response.get();
+    assertNotNull(response);
+    assertNotNull(response.headerOf(ResponseHeader.Connection));
+    assertNotNull(response.headerOf(ResponseHeader.ContentType));
+    assertNotNull(response.headerOf(ResponseHeader.TransferEncoding));
+  }
+
+  @Test
   public void testThatClientHasId() {
     assertEquals(context.id(), client.id());
   }
@@ -49,7 +60,7 @@ public class SseClientTest {
 
     client.send(event);
 
-    assertEquals(1, context.channel.respondWithCount.get());
+    assertEquals(2, context.channel.respondWithCount.get());
 
     final Response response = context.channel.response.get();
     assertNotNull(response);
@@ -99,7 +110,7 @@ public class SseClientTest {
 
     client.send(event1, event2, event3);
 
-    assertEquals(1, context.channel.respondWithCount.get());
+    assertEquals(2, context.channel.respondWithCount.get());
 
     final Response response = context.channel.response.get();
     assertNotNull(response);
@@ -139,7 +150,7 @@ public class SseClientTest {
 
     client.send(event);
 
-    assertEquals(1, context.channel.respondWithCount.get());
+    assertEquals(2, context.channel.respondWithCount.get());
 
     final Response response = context.channel.response.get();
     assertNotNull(response);

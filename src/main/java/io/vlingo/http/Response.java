@@ -108,9 +108,13 @@ public class Response {
 
   private void addMissingContentLengthHeader() {
     final int contentLength = entity.content.length();
-    final Header header = headers.headerOf(ResponseHeader.ContentLength);
-    if (header == null) {
-      headers.add(ResponseHeader.of(ResponseHeader.ContentLength, Integer.toString(contentLength)));
+    final Header contentLengthHeader = headers.headerOf(ResponseHeader.ContentLength);
+    final Header contentTypeHeader = headers.headerOf(ResponseHeader.ContentType);
+
+    if (contentLengthHeader == null) {
+      if (contentTypeHeader == null || !contentTypeHeader.value.equals("text/event-stream")) {
+        headers.add(ResponseHeader.of(ResponseHeader.ContentLength, Integer.toString(contentLength)));
+      }
     }
   }
 
