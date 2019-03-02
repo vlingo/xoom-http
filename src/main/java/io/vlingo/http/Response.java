@@ -97,7 +97,7 @@ public class Response {
     return builder.toString();
   }
   
-  Response(final Version version, final Status status, final Headers<ResponseHeader> headers, final Body entity) {
+  protected Response(final Version version, final Status status, final Headers<ResponseHeader> headers, final Body entity) {
     this.version = version;
     this.status = status;
     this.statusCode = status.value.substring(0, status.value.indexOf(' '));
