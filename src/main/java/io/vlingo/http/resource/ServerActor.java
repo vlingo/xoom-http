@@ -17,7 +17,6 @@ import io.vlingo.actors.World;
 import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
 import io.vlingo.common.Scheduled;
-import io.vlingo.common.completes.Sink;
 import io.vlingo.http.Context;
 import io.vlingo.http.Header;
 import io.vlingo.http.Request;
@@ -275,31 +274,26 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   // ResponseCompletes
   //=========================================
 
-  private class HttpSink extends Sink<Response, Response> {
+  private class ResponseCompletes extends BasicCompletes<Response> {
     final Header correlationId;
     final RequestResponseContext<?> requestResponseContext;
 
-    private HttpSink(Header correlationId, RequestResponseContext<?> requestResponseContext) {
-      this.correlationId = correlationId;
-      this.requestResponseContext = requestResponseContext;
-    }
-
-    @Override
-    public void onOutcome(Response response) {
-      super.onOutcome(response);
-
-      final ConsumerByteBuffer buffer = BasicConsumerByteBuffer.allocate(0, maxMessageSize);
-      requestResponseContext.respondWith(response.include(correlationId).into(buffer));
-    }
-  }
-
-  private class ResponseCompletes extends BasicCompletes<Response> {
     ResponseCompletes(final RequestResponseContext<?> requestResponseContext, final Header correlationId) {
-      super(stage().scheduler(), null, true, new HttpSink(correlationId, requestResponseContext));
+      super(stage().scheduler());
+      this.requestResponseContext = requestResponseContext;
+      this.correlationId = correlationId;
     }
 
     ResponseCompletes(final RequestResponseContext<?> requestResponseContext) {
       this(requestResponseContext, null);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <O> Completes<O> with(final O response) {
+      final ConsumerByteBuffer buffer = BasicConsumerByteBuffer.allocate(0, maxMessageSize);
+      requestResponseContext.respondWith(((Response) response).include(correlationId).into(buffer));
+      return (Completes<O>) this;
     }
   }
 }
