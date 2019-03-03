@@ -12,10 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
-import static io.vlingo.http.Response.Status.BadRequest;
 import static io.vlingo.http.Response.Status.InternalServerError;
 import static org.junit.Assert.assertEquals;
 
