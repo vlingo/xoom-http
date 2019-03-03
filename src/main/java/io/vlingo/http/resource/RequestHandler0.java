@@ -16,7 +16,6 @@ import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
 import java.util.Collections;
-import java.util.function.Consumer;
 
 public class RequestHandler0 extends RequestHandler {
   private Handler0 handler;
