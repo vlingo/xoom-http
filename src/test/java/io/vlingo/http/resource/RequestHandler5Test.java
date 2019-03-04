@@ -10,10 +10,12 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.common.Completes;
+import io.vlingo.common.Outcome;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 import io.vlingo.http.Version;
+import io.vlingo.http.ResponseError;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -64,7 +66,7 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
       query("pageSize", Integer.class, 10)
     ).handle((postId, commentId, userId, page, pageSize) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
 
-    final Response response = handler.execute("my-post", "my-comment", "admin", 10, 10).outcome();
+    final Response response = handler.execute("my-post", "my-comment", "admin", 10, 10).outcome().get();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
@@ -105,8 +107,8 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
       .onError(
         error -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
       );
-    Completes<Response> responseCompletes = handler.execute("idVal1", "idVal2", "idVal3", 1, 2);
-    assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
+    Completes<Outcome<ResponseError, Response>> responseCompletes = handler.execute("idVal1", "idVal2", "idVal3", 1, 2);
+    assertResponsesAreEquals(Response.of(Imateapot), ResponseError.unwrap(responseCompletes.await()));
   }
 
   @Test
@@ -145,7 +147,7 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
       query("pageSize", Integer.class, 10)
     )
       .handle((postId, commentId, userId, page, pageSize) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
-    final Response response = handler.execute(request, mappedParameters).outcome();
+    final Response response = handler.execute(request, mappedParameters).outcome().get();
 
     assertResponsesAreEquals(of(Ok, serialized("my-post my-comment")), response);
   }

@@ -11,7 +11,14 @@ package io.vlingo.http.resource;
 
 import io.vlingo.common.Completes;
 import io.vlingo.common.Outcome;
-import io.vlingo.http.*;
+import io.vlingo.http.Header;
+import io.vlingo.http.Method;
+import io.vlingo.http.Request;
+import io.vlingo.http.Version;
+import io.vlingo.http.Body;
+import io.vlingo.http.Response;
+import io.vlingo.http.ResponseError;
+import io.vlingo.http.RequestHeader;
 import io.vlingo.http.sample.user.NameData;
 import org.junit.Rule;
 import org.junit.Test;
@@ -23,46 +30,50 @@ import java.util.Collections;
 import static io.vlingo.common.Completes.withSuccess;
 import static io.vlingo.http.Response.Status.Created;
 import static io.vlingo.http.Response.Status.Imateapot;
-import static io.vlingo.http.Response.of;
 import static io.vlingo.http.resource.ParameterResolver.*;
+import static io.vlingo.http.resource.RequestHandler0SubTypes.MyResponse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class RequestHandler0Test extends RequestHandlerTestBase {
+public class RequestHandler0SubTypesTest extends RequestHandlerTestBase {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void simpleHandler() {
-    final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      .handle(() -> withSuccess(of(Created)));
-    final Response response = handler.execute().outcome().get();
+    final RequestHandler0SubTypes handler = new RequestHandler0SubTypes(Method.GET, "/helloworld")
+      .handle(() -> withSuccess(of(Created, "someExtraData")));
+    final MyResponse response = handler.execute().outcome().get();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
     assertEquals("/helloworld", handler.path);
-    assertResponsesAreEquals(of(Created), response);
+    assertEquals("someExtraData", response.extraData);
   }
 
   @Test
   public void errorHandlerInvoked() {
-    final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
+    final RequestHandler0SubTypes handler = new RequestHandler0SubTypes(Method.GET, "/helloworld")
       .handle(() -> {
         throw new RuntimeException("Test Handler exception");
       })
       .onError(
       error -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
     );
-    Completes<Outcome<ResponseError, Response>> responseCompletes = handler.execute();
+    Completes<Outcome<ResponseError, MyResponse>> responseCompletes = handler.execute();
     assertResponsesAreEquals(Response.of(Imateapot), ResponseError.unwrap(responseCompletes.await()));
   }
 
   @Test
   public void actionSignatureIsEmpty() {
-    final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      .handle(() -> withSuccess(of(Created)));
+    final RequestHandler0SubTypes handler = new RequestHandler0SubTypes(Method.GET, "/helloworld")
+      .handle(() -> withSuccess(of(Created, "")));
 
     assertEquals("", handler.actionSignature);
+  }
+
+  MyResponse of(Response.Status statusCode, String extraData) {
+    return new MyResponse(Version.Http1_1, statusCode, Header.Headers.empty(), Body.from(""), extraData);
   }
 
   @Test
@@ -73,17 +84,18 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
     final Action.MappedParameters mappedParameters =
       new Action.MappedParameters(1, Method.GET, "ignored", Collections.emptyList());
 
-    final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      .handle(() -> withSuccess(of(Created)));
-    final Outcome<ResponseError, Response> response = handler.execute(request, mappedParameters).outcome();
+    final RequestHandler0SubTypes handler = new RequestHandler0SubTypes(Method.GET, "/helloworld")
+      .handle(() -> withSuccess(of(Created, "someExtraData")));
+
+    final Outcome<ResponseError, MyResponse> response = handler.execute(request, mappedParameters).outcome();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
     assertEquals("/helloworld", handler.path);
-    assertResponsesAreEquals(of(Created), response.get());
+    assertEquals("someExtraData", response.get().extraData);
   }
 
-  //region adding handlers to RequestHandler0
+  //region adding handlers to RequestHandler0SubTypes
 
   @Test
   public void addingHandlerParam() {
@@ -95,7 +107,7 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
         new Action.MappedParameter("String", "admin"))
       );
 
-    final RequestHandler1<String> handler = new RequestHandler0(Method.GET, "/user/{userId}")
+    final RequestHandler1<String> handler = new RequestHandler0SubTypes(Method.GET, "/user/{userId}")
       .param(String.class);
 
     assertResolvesAreEquals(path(0, String.class), handler.resolver);
@@ -113,7 +125,7 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
         new Action.MappedParameter("String", "admin"))
       );
 
-    final RequestHandler1<NameData> handler = new RequestHandler0(Method.GET, "/user/admin/name")
+    final RequestHandler1<NameData> handler = new RequestHandler0SubTypes(Method.GET, "/user/admin/name")
       .body(NameData.class);
 
     assertResolvesAreEquals(body(NameData.class), handler.resolver);
@@ -131,7 +143,7 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
         new Action.MappedParameter("String", "admin"))
       );
 
-    final RequestHandler1<NameData> handler1 = new RequestHandler0(Method.GET, "/user/admin/name")
+    final RequestHandler1<NameData> handler1 = new RequestHandler0SubTypes(Method.GET, "/user/admin/name")
       .body(NameData.class, TestMapper.class);
 
     assertResolvesAreEquals(body(NameData.class, new TestMapper()), handler1.resolver);
@@ -146,7 +158,7 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
     final Action.MappedParameters mappedParameters =
       new Action.MappedParameters(1, Method.GET, "ignored", Collections.emptyList());
 
-    final RequestHandler1<String> handler = new RequestHandler0(Method.GET, "/user")
+    final RequestHandler1<String> handler = new RequestHandler0SubTypes(Method.GET, "/user")
       .query("filter");
 
     assertResolvesAreEquals(query("filter", String.class), handler.resolver);
@@ -164,7 +176,7 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
     final Action.MappedParameters mappedParameters =
       new Action.MappedParameters(1, Method.GET, "ignored", Collections.emptyList());
 
-    final RequestHandler1<Header> handler = new RequestHandler0(Method.GET, "/user")
+    final RequestHandler1<Header> handler = new RequestHandler0SubTypes(Method.GET, "/user")
       .header("Host");
 
     assertResolvesAreEquals(header("Host"), handler.resolver);

@@ -1,9 +1,11 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.common.Completes;
+import io.vlingo.common.Outcome;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
+import io.vlingo.http.ResponseError;
 import io.vlingo.http.sample.user.NameData;
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,8 +36,8 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
       return Completes.withSuccess(Response.of(testStatus));
     };
 
-    Response response = handler.execute(validHandler).await();
-    assertResponsesAreEquals(Response.of(testStatus), response);
+    Completes<Outcome<ResponseError, Response>> responseCompletes = handler.execute(validHandler);
+    assertResponsesAreEquals(Response.of(testStatus), ResponseError.unwrap(responseCompletes.await()));
   }
 
   @Test
@@ -50,8 +52,8 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
       throw new IllegalArgumentException("foo");
     };
 
-    Response response = handler.execute(badHandler).await();
-    assertResponsesAreEquals(Response.of(InternalServerError), response);
+    Completes<Outcome<ResponseError, Response>> responseCompletes = handler.execute(badHandler);
+    assertResponsesAreEquals(Response.of(InternalServerError), ResponseError.unwrap(responseCompletes.await()));
   }
 
   @Test
@@ -62,8 +64,8 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
       () -> { throw new RuntimeException("Handler failed"); }
     );
 
-    Response response = handler.execute(null).await();
-    assertResponsesAreEquals(Response.of(InternalServerError), response);
+    Completes<Outcome<ResponseError, Response>> responseCompletes = handler.execute(null);
+    assertResponsesAreEquals(Response.of(InternalServerError), ResponseError.unwrap(responseCompletes.await()));
   }
 
 
@@ -117,7 +119,7 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
   }
 }
 
-class RequestHandlerFake extends RequestHandler {
+class RequestHandlerFake extends RequestHandler<Response> {
 
   Supplier<Completes<Response>> handler;
 
@@ -134,11 +136,11 @@ class RequestHandlerFake extends RequestHandler {
   }
 
   @Override
-  Completes<Response> execute(final Request request, final Action.MappedParameters mappedParameters) {
+  Completes<Outcome<ResponseError, Response>> execute(final Request request, final Action.MappedParameters mappedParameters) {
     throw new UnsupportedOperationException();
   }
 
-  Completes<Response> execute(ErrorHandler errorHandler) {
+  Completes<Outcome<ResponseError, Response>> execute(ErrorHandler errorHandler) {
     return executeRequest(handler, errorHandler);
   }
 

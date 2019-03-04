@@ -10,6 +10,7 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.common.Completes;
+import io.vlingo.common.Outcome;
 import io.vlingo.http.*;
 import io.vlingo.http.sample.user.NameData;
 import org.junit.Rule;
@@ -47,7 +48,7 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
       path(0, String.class)
     ).handle((postId) -> withSuccess(of(Ok, serialized(postId))));
 
-    final Response response = handler.execute("my-post").outcome();
+    final Response response = handler.execute("my-post").outcome().get();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
@@ -78,8 +79,8 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
       .onError(
         error -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
       );
-    Completes<Response> responseCompletes = handler.execute("idVal1");
-    assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
+    Completes<Outcome<ResponseError, Response>> responseCompletes = handler.execute("idVal1");
+    assertResponsesAreEquals(Response.of(Imateapot), ResponseError.unwrap(responseCompletes.await()));
   }
 
   @Test
@@ -127,7 +128,7 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
       );
     final RequestHandler1<String> handler = createRequestHandler(Method.GET, "/posts/{postId}", path(0, String.class))
       .handle((postId) -> withSuccess(of(Ok, serialized("it is " + postId))));
-    final Response response = handler.execute(request, mappedParameters).outcome();
+    final Response response = handler.execute(request, mappedParameters).outcome().get();
 
     assertResponsesAreEquals(of(Ok, serialized("it is my-post")), response);
   }

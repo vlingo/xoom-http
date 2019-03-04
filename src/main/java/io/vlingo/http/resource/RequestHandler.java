@@ -10,16 +10,19 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.common.Completes;
+import io.vlingo.common.Outcome;
+import io.vlingo.common.Success;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
+import io.vlingo.http.ResponseError;
 
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class RequestHandler {
+public abstract class RequestHandler<T extends Response> {
   final private Pattern pattern = Pattern.compile("\\{(.*?)\\}");
 
   public final Method method;
@@ -41,28 +44,26 @@ public abstract class RequestHandler {
       throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
   }
 
-  abstract Completes<Response> execute(final Request request,
-                                       final Action.MappedParameters mappedParameters);
+  abstract Completes<Outcome<ResponseError, T>> execute(final Request request,
+                                                       final Action.MappedParameters mappedParameters);
 
-
-  Completes<Response> executeRequest(Supplier<Completes<Response>> executeAction, ErrorHandler errorHandler) {
-    Completes<Response> responseCompletes;
+  Completes<Outcome<ResponseError, T>> executeRequest(Supplier<Completes<T>> executeAction, ErrorHandler errorHandler) {
     try {
-      responseCompletes = executeAction.get();
+      return executeAction.get()
+        .andThen(Success::of); //TODO: wrap failure to ResponseError?
     } catch(Exception exception) {
       // Log failure at DEBUG level (missing logger)
       if (errorHandler != null) {
         try {
-          responseCompletes = errorHandler.handle(exception);
+          return errorHandler.handle(exception).andThen(ResponseError::asFailure);
         } catch (Exception errorHandlerException) {
           // Log failure at ERROR level (missing logger)
-          responseCompletes = defaultErrorResponse();
+          return defaultErrorResponse().andThen(ResponseError::asFailure);
         }
       } else {
-        responseCompletes = defaultErrorResponse();
+        return defaultErrorResponse().andThen(ResponseError::asFailure);
       }
     }
-    return responseCompletes;
   }
 
 

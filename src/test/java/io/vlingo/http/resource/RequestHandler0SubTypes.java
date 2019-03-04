@@ -14,16 +14,43 @@ import io.vlingo.common.Outcome;
 import io.vlingo.http.Header;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
+import io.vlingo.http.Version;
+import io.vlingo.http.Body;
 import io.vlingo.http.Response;
 import io.vlingo.http.ResponseError;
+import io.vlingo.http.ResponseHeader;
 
 import java.util.Collections;
+import java.util.Objects;
 
-public class RequestHandler0 extends RequestHandler<Response> {
+import static io.vlingo.http.resource.RequestHandler0SubTypes.*;
+
+public class RequestHandler0SubTypes extends RequestHandler<MyResponse> {
   private Handler0 handler;
   private ErrorHandler errorHandler;
 
-  RequestHandler0(final Method method, final String path) {
+  static class MyResponse extends Response {
+    final String extraData;
+    protected MyResponse(Version version, Status status, Header.Headers<ResponseHeader> headers, Body entity, String extraData) {
+      super(version, status, headers, entity);
+      this.extraData = extraData;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      MyResponse that = (MyResponse) o;
+      return extraData.equals(that.extraData);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(extraData);
+    }
+  }
+
+  RequestHandler0SubTypes(final Method method, final String path) {
     super(method, path, Collections.emptyList());
   }
 
@@ -31,22 +58,22 @@ public class RequestHandler0 extends RequestHandler<Response> {
     return Completes.withSuccess(Response.of(Response.Status.InternalServerError));
   }
 
-  public RequestHandler0 handle(final Handler0 handler) {
+  public RequestHandler0SubTypes handle(final Handler0 handler) {
     this.handler = handler;
     return this;
   }
 
-  public RequestHandler0 onError(final ErrorHandler errorHandler) {
+  public RequestHandler0SubTypes onError(final ErrorHandler errorHandler) {
     this.errorHandler = errorHandler;
     return this;
   }
 
-  Completes<Outcome<ResponseError, Response>> execute() {
+  Completes<Outcome<ResponseError, MyResponse>> execute() {
     return executeRequest(() -> handler.execute(), errorHandler);
   }
 
   @Override
-  Completes<Outcome<ResponseError, Response>> execute(final Request request,
+  Completes<Outcome<ResponseError, MyResponse>> execute(final Request request,
                                                       final Action.MappedParameters mappedParameters) {
     checkHandlerOrThrowException(handler);
     return executeRequest( () -> handler.execute(), errorHandler);
@@ -54,7 +81,7 @@ public class RequestHandler0 extends RequestHandler<Response> {
 
   @FunctionalInterface
   public interface Handler0 {
-    Completes<Response> execute();
+    Completes<MyResponse> execute();
   }
 
   // region FluentAPI

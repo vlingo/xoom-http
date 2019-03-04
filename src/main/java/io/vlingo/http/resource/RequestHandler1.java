@@ -10,14 +10,16 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.common.Completes;
+import io.vlingo.common.Outcome;
 import io.vlingo.http.Header;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
+import io.vlingo.http.ResponseError;
 
 import java.util.Collections;
 
-public class RequestHandler1<T> extends RequestHandler {
+public class RequestHandler1<T> extends RequestHandler<Response> {
   final ParameterResolver<T> resolver;
   private Handler1<T> handler;
   private ErrorHandler errorHandler;
@@ -28,7 +30,7 @@ public class RequestHandler1<T> extends RequestHandler {
     this.errorHandler = errorHandler;
   }
 
-  Completes<Response> execute(final T param1) {
+  Completes<Outcome<ResponseError, Response>> execute(final T param1) {
     checkHandlerOrThrowException(handler);
     return executeRequest(() -> handler.execute(param1), errorHandler);
   }
@@ -44,7 +46,7 @@ public class RequestHandler1<T> extends RequestHandler {
   }
 
   @Override
-  Completes<Response> execute(final Request request,
+  Completes<Outcome<ResponseError, Response>> execute(final Request request,
                final Action.MappedParameters mappedParameters) {
     return execute(resolver.apply(request, mappedParameters));
   }
