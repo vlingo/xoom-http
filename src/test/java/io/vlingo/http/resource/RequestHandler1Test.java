@@ -29,6 +29,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class RequestHandler1Test extends RequestHandlerTestBase {
+
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
@@ -47,7 +48,7 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
       path(0, String.class)
     ).handle((postId) -> withSuccess(of(Ok, serialized(postId))));
 
-    final Response response = handler.execute("my-post").outcome();
+    final Response response = handler.execute("my-post", logger).outcome();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
@@ -66,7 +67,7 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
       "/posts/{postId}",
       path(0, String.class)
     ).handle(null);
-    handler.execute("my-post");
+    handler.execute("my-post", logger);
   }
 
   @Test
@@ -76,9 +77,9 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
         throw new RuntimeException("Test Handler exception");
       })
       .onError(
-        error -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
+        (error, logger) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
       );
-    Completes<Response> responseCompletes = handler.execute("idVal1");
+    Completes<Response> responseCompletes = handler.execute("idVal1", logger);
     assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
   }
 
@@ -127,7 +128,7 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
       );
     final RequestHandler1<String> handler = createRequestHandler(Method.GET, "/posts/{postId}", path(0, String.class))
       .handle((postId) -> withSuccess(of(Ok, serialized("it is " + postId))));
-    final Response response = handler.execute(request, mappedParameters).outcome();
+    final Response response = handler.execute(request, mappedParameters, logger).outcome();
 
     assertResponsesAreEquals(of(Ok, serialized("it is my-post")), response);
   }
@@ -148,7 +149,7 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
       createRequestHandler(Method.GET, "/posts/{postId}", path(0, Integer.class))
         .handle((postId) -> withSuccess(of(Ok, serialized("it is my-post"))));
 
-    handler.execute(request, mappedParameters);
+    handler.execute(request, mappedParameters, logger);
   }
 
 

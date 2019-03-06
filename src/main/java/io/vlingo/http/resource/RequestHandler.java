@@ -9,6 +9,7 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
@@ -36,29 +37,33 @@ public abstract class RequestHandler {
     return Completes.withSuccess(Response.of(Response.Status.InternalServerError));
   }
 
-  protected void checkHandlerOrThrowException(Object handler) {
-    if (handler == null)
+  void checkHandlerOrThrowException(Object handler) {
+    if (handler == null) {
       throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
+    }
   }
 
   abstract Completes<Response> execute(final Request request,
-                                       final Action.MappedParameters mappedParameters);
+                                       final Action.MappedParameters mappedParameters,
+                                       final Logger logger);
 
 
-  Completes<Response> executeRequest(Supplier<Completes<Response>> executeAction, ErrorHandler errorHandler) {
+  Completes<Response> executeRequest(Supplier<Completes<Response>> executeAction,
+                                     ErrorHandler errorHandler,
+                                     Logger logger) {
     Completes<Response> responseCompletes;
     try {
       responseCompletes = executeAction.get();
     } catch(Exception exception) {
-      // Log failure at DEBUG level (missing logger)
       if (errorHandler != null) {
         try {
-          responseCompletes = errorHandler.handle(exception);
+          responseCompletes = errorHandler.handle(exception, logger);
         } catch (Exception errorHandlerException) {
-          // Log failure at ERROR level (missing logger)
+          logger.log("Exception thrown by error handler when handling error", exception);
           responseCompletes = defaultErrorResponse();
         }
       } else {
+        logger.log("Exception thrown by Resource execution", exception);
         responseCompletes = defaultErrorResponse();
       }
     }

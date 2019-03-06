@@ -9,6 +9,7 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Header;
 import io.vlingo.http.Method;
@@ -22,15 +23,16 @@ public class RequestHandler1<T> extends RequestHandler {
   private Handler1<T> handler;
   private ErrorHandler errorHandler;
 
-  RequestHandler1(final Method method, final String path, final ParameterResolver<T> resolver, ErrorHandler errorHandler) {
+  RequestHandler1(final Method method, final String path, final ParameterResolver<T> resolver,
+                  final ErrorHandler errorHandler) {
     super(method, path, Collections.singletonList(resolver));
     this.resolver = resolver;
     this.errorHandler = errorHandler;
   }
 
-  Completes<Response> execute(final T param1) {
+  Completes<Response> execute(final T param1, final Logger logger) {
     checkHandlerOrThrowException(handler);
-    return executeRequest(() -> handler.execute(param1), errorHandler);
+    return executeRequest(() -> handler.execute(param1), errorHandler, logger);
   }
 
   public RequestHandler1<T> handle(final Handler1<T> handler) {
@@ -45,8 +47,9 @@ public class RequestHandler1<T> extends RequestHandler {
 
   @Override
   Completes<Response> execute(final Request request,
-               final Action.MappedParameters mappedParameters) {
-    return execute(resolver.apply(request, mappedParameters));
+                              final Action.MappedParameters mappedParameters,
+                              final Logger logger) {
+    return execute(resolver.apply(request, mappedParameters), logger);
   }
 
   @FunctionalInterface

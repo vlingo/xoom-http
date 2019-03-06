@@ -64,7 +64,7 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
       query("pageSize", Integer.class, 10)
     ).handle((postId, commentId, userId, page, pageSize) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
 
-    final Response response = handler.execute("my-post", "my-comment", "admin", 10, 10).outcome();
+    final Response response = handler.execute("my-post", "my-comment", "admin", 10, 10, logger).outcome();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
@@ -88,7 +88,7 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
       query("page", Integer.class, 10),
       query("pageSize", Integer.class, 10)
     );
-    handler.execute("my-post", "my-comment", "admin", 10, 10);
+    handler.execute("my-post", "my-comment", "admin", 10, 10, logger);
   }
 
   @Test
@@ -103,9 +103,9 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
       query("pageSize", Integer.class, 10))
       .handle((param1, param2, param3, param4, param5) -> { throw new RuntimeException("Test Handler exception"); })
       .onError(
-        error -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
+        (error, logger) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
       );
-    Completes<Response> responseCompletes = handler.execute("idVal1", "idVal2", "idVal3", 1, 2);
+    Completes<Response> responseCompletes = handler.execute("idVal1", "idVal2", "idVal3", 1, 2, logger);
     assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
   }
 
@@ -145,7 +145,7 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
       query("pageSize", Integer.class, 10)
     )
       .handle((postId, commentId, userId, page, pageSize) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
-    final Response response = handler.execute(request, mappedParameters).outcome();
+    final Response response = handler.execute(request, mappedParameters, logger).outcome();
 
     assertResponsesAreEquals(of(Ok, serialized("my-post my-comment")), response);
   }

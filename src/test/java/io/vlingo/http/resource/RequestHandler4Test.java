@@ -58,7 +58,7 @@ public class RequestHandler4Test extends RequestHandlerTestBase {
       query("page", Integer.class, 10)
     ).handle((postId, commentId, userId, page) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
 
-    final Response response = handler.execute("my-post", "my-comment", "admin", null).outcome();
+    final Response response = handler.execute("my-post", "my-comment", "admin", null, logger).outcome();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
@@ -81,7 +81,7 @@ public class RequestHandler4Test extends RequestHandlerTestBase {
       path(2, String.class),
       query("page", Integer.class, 10)
     );
-    handler.execute("my-post", "my-comment", "admin", null);
+    handler.execute("my-post", "my-comment", "admin", null, logger);
   }
 
   @Test
@@ -95,9 +95,9 @@ public class RequestHandler4Test extends RequestHandlerTestBase {
       query("page", Integer.class, 10))
       .handle((param1, param2, param3, param4) -> { throw new RuntimeException("Test Handler exception"); })
       .onError(
-        error -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
+        (error,logger) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
       );
-    Completes<Response> responseCompletes = handler.execute("idVal1", "idVal2", "idVal3", 1);
+    Completes<Response> responseCompletes = handler.execute("idVal1", "idVal2", "idVal3", 1, logger);
     assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
   }
 
@@ -135,7 +135,7 @@ public class RequestHandler4Test extends RequestHandlerTestBase {
       query("page", Integer.class, 10)
     )
       .handle((postId, commentId, userId, page) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
-    final Response response = handler.execute(request, mappedParameters).outcome();
+    final Response response = handler.execute(request, mappedParameters, logger).outcome();
 
     assertResponsesAreEquals(of(Ok, serialized("my-post my-comment")), response);
   }

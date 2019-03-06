@@ -1,5 +1,6 @@
 package io.vlingo.http.resource;
 
+import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
@@ -33,9 +34,10 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
     this.errorHandler = errorHandler;
   }
 
-  Completes<Response> execute(final T param1, final R param2, final U param3, final I param4, final J param5) {
+  Completes<Response> execute(final T param1, final R param2, final U param3, final I param4, final J param5,
+                              final Logger logger) {
     checkHandlerOrThrowException(handler);
-    return executeRequest(() -> handler.execute(param1, param2, param3, param4, param5), errorHandler);
+    return executeRequest(() -> handler.execute(param1, param2, param3, param4, param5), errorHandler, logger);
   }
 
   public RequestHandler5<T, R, U, I, J> handle(final Handler5<T, R, U, I, J> handler) {
@@ -43,19 +45,21 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
     return this;
   }
 
-  public RequestHandler5<T, R, U, I, J> onError(ErrorHandler errorHandler) {
+  public RequestHandler5<T, R, U, I, J> onError(final ErrorHandler errorHandler) {
     this.errorHandler = errorHandler;
     return this;
   }
 
   @Override
-  Completes<Response> execute(final Request request, final Action.MappedParameters mappedParameters) {
+  Completes<Response> execute(final Request request,
+                              final Action.MappedParameters mappedParameters,
+                              final Logger logger) {
     final T param1 = resolverParam1.apply(request, mappedParameters);
     final R param2 = resolverParam2.apply(request, mappedParameters);
     final U param3 = resolverParam3.apply(request, mappedParameters);
     final I param4 = resolverParam4.apply(request, mappedParameters);
     final J param5 = resolverParam5.apply(request, mappedParameters);
-    return execute(param1, param2, param3, param4, param5);
+    return execute(param1, param2, param3, param4, param5, logger);
   }
 
   @FunctionalInterface
