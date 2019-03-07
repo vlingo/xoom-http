@@ -57,7 +57,7 @@ public abstract class RequestHandler {
     } catch(Exception exception) {
       if (errorHandler != null) {
         try {
-          responseCompletes = errorHandler.handle(exception, logger);
+          responseCompletes = errorHandler.handle(exception);
         } catch (Exception errorHandlerException) {
           logger.log("Exception thrown by error handler when handling error", exception);
           responseCompletes = defaultErrorResponse();

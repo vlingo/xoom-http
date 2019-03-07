@@ -51,7 +51,7 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
         throw new RuntimeException("Test Handler exception");
       })
       .onError(
-        (error, logger) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
+        (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
     );
     Completes<Response> responseCompletes = handler.execute(logger);
     assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());

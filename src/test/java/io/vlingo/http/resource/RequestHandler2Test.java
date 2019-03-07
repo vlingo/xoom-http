@@ -85,7 +85,7 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
       path(1, String.class))
       .handle((param1, param2) -> { throw new RuntimeException("Test Handler exception"); })
       .onError(
-        (error,logger) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
+        (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
     );
     Completes<Response> responseCompletes = handler.execute("idVal1", "idVal2", logger);
     assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());

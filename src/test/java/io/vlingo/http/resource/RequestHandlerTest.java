@@ -30,8 +30,8 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
       () -> { throw new RuntimeException("Handler failed"); }
     );
 
-    ErrorHandler validHandler = (ex, logger) -> {
-      Assert.assertTrue( ex instanceof RuntimeException);
+    ErrorHandler validHandler = (exception) -> {
+      Assert.assertTrue( exception instanceof RuntimeException);
       return Completes.withSuccess(Response.of(testStatus));
     };
 
@@ -47,7 +47,7 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
       () -> { throw new RuntimeException("Handler failed"); }
     );
 
-    ErrorHandler badHandler = (ex, logger) -> {
+    ErrorHandler badHandler = (exception) -> {
       throw new IllegalArgumentException("foo");
     };
 

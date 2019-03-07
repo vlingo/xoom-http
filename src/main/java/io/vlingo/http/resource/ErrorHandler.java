@@ -6,9 +6,9 @@ import io.vlingo.http.Response;
 
 public interface ErrorHandler {
 
-  Completes<Response> handle(final Throwable error, final Logger logger);
+  Completes<Response> handle(final Throwable error);
 
   static ErrorHandler handleAllWith(final Response.Status status) {
-    return (error, logger) -> Completes.withSuccess(Response.of(status));
+    return (error) -> Completes.withSuccess(Response.of(status));
   }
 }

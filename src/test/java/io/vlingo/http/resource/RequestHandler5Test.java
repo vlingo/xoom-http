@@ -103,7 +103,7 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
       query("pageSize", Integer.class, 10))
       .handle((param1, param2, param3, param4, param5) -> { throw new RuntimeException("Test Handler exception"); })
       .onError(
-        (error, logger) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
+        (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
       );
     Completes<Response> responseCompletes = handler.execute("idVal1", "idVal2", "idVal3", 1, 2, logger);
     assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
