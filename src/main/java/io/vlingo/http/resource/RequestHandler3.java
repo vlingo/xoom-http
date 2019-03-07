@@ -1,5 +1,6 @@
 package io.vlingo.http.resource;
 
+import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Header;
 import io.vlingo.http.Method;
@@ -20,7 +21,7 @@ public class RequestHandler3<T, R, U> extends RequestHandler {
                   final ParameterResolver<T> resolverParam1,
                   final ParameterResolver<R> resolverParam2,
                   final ParameterResolver<U> resolverParam3,
-                  ErrorHandler errorHandler) {
+                  final ErrorHandler errorHandler) {
     super(method, path, Arrays.asList(resolverParam1, resolverParam2, resolverParam3));
     this.resolverParam1 = resolverParam1;
     this.resolverParam2 = resolverParam2;
@@ -28,9 +29,9 @@ public class RequestHandler3<T, R, U> extends RequestHandler {
     this.errorHandler = errorHandler;
   }
 
-  Completes<Response> execute(final T param1, final R param2, final U param3) {
+  Completes<Response> execute(final T param1, final R param2, final U param3, final Logger logger) {
     checkHandlerOrThrowException(handler);
-    return executeRequest(() -> handler.execute(param1, param2, param3), errorHandler);
+    return executeRequest(() -> handler.execute(param1, param2, param3), errorHandler, logger);
   }
 
   public RequestHandler3<T, R, U> handle(final Handler3<T, R, U> handler) {
@@ -38,17 +39,19 @@ public class RequestHandler3<T, R, U> extends RequestHandler {
     return this;
   }
 
-  public RequestHandler3<T, R, U> onError(ErrorHandler errorHandler) {
+  public RequestHandler3<T, R, U> onError(final ErrorHandler errorHandler) {
     this.errorHandler = errorHandler;
     return this;
   }
 
   @Override
-  Completes<Response> execute(final Request request, final Action.MappedParameters mappedParameters) {
+  Completes<Response> execute(final Request request,
+                              final Action.MappedParameters mappedParameters,
+                              final Logger logger) {
     final T param1 = resolverParam1.apply(request, mappedParameters);
     final R param2 = resolverParam2.apply(request, mappedParameters);
     final U param3 = resolverParam3.apply(request, mappedParameters);
-    return execute(param1, param2, param3);
+    return execute(param1, param2, param3, logger);
   }
 
   @FunctionalInterface

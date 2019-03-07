@@ -1,5 +1,6 @@
 package io.vlingo.http.resource;
 
+import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Header;
 import io.vlingo.http.Method;
@@ -31,9 +32,9 @@ public class RequestHandler4<T, R, U, I> extends RequestHandler {
     this.errorHandler = errorHandler;
   }
 
-  Completes<Response> execute(final T param1, final R param2, final U param3, final I param4) {
+  Completes<Response> execute(final T param1, final R param2, final U param3, final I param4, final Logger logger) {
     checkHandlerOrThrowException(handler);
-    return executeRequest(() -> handler.execute(param1, param2, param3, param4), errorHandler);
+    return executeRequest(() -> handler.execute(param1, param2, param3, param4), errorHandler, logger);
   }
 
   public RequestHandler4<T, R, U, I> handle(final Handler4<T, R, U, I> handler) {
@@ -41,18 +42,20 @@ public class RequestHandler4<T, R, U, I> extends RequestHandler {
     return this;
   }
 
-  public RequestHandler4<T, R, U, I> onError(ErrorHandler errorHandler) {
+  public RequestHandler4<T, R, U, I> onError(final ErrorHandler errorHandler) {
     this.errorHandler = errorHandler;
     return this;
   }
 
   @Override
-  Completes<Response> execute(final Request request, final Action.MappedParameters mappedParameters) {
+  Completes<Response> execute(final Request request,
+                              final Action.MappedParameters mappedParameters,
+                              final Logger logger) {
     final T param1 = resolverParam1.apply(request, mappedParameters);
     final R param2 = resolverParam2.apply(request, mappedParameters);
     final U param3 = resolverParam3.apply(request, mappedParameters);
     final I param4 = resolverParam4.apply(request, mappedParameters);
-    return execute(param1, param2, param3, param4);
+    return execute(param1, param2, param3, param4, logger);
   }
 
   @FunctionalInterface

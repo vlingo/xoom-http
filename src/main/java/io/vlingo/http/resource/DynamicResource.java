@@ -39,7 +39,9 @@ public class DynamicResource extends Resource<ResourceHandler> {
 
   public void dispatchToHandlerWith(final Context context, final Action.MappedParameters mappedParameters) {
     try {
-      Consumer<ResourceHandler> consumer = (resource) -> handlers.get(mappedParameters.actionId).execute(context.request, mappedParameters)
+      Consumer<ResourceHandler> consumer = (resource) ->
+        handlers.get(mappedParameters.actionId)
+                .execute(context.request, mappedParameters, resource.logger())
         .andThenConsume(context.completes::with);
       pooledHandler().handleFor(context, consumer);
     } catch (Exception e) {

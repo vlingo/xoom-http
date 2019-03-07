@@ -1,5 +1,6 @@
 package io.vlingo.http.resource;
 
+import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
@@ -29,12 +30,12 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
       () -> { throw new RuntimeException("Handler failed"); }
     );
 
-    ErrorHandler validHandler = (ex) -> {
-      Assert.assertTrue( ex instanceof RuntimeException);
+    ErrorHandler validHandler = (exception) -> {
+      Assert.assertTrue( exception instanceof RuntimeException);
       return Completes.withSuccess(Response.of(testStatus));
     };
 
-    Response response = handler.execute(validHandler).await();
+    Response response = handler.execute(validHandler, logger).await();
     assertResponsesAreEquals(Response.of(testStatus), response);
   }
 
@@ -46,11 +47,11 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
       () -> { throw new RuntimeException("Handler failed"); }
     );
 
-    ErrorHandler badHandler = (ex) -> {
+    ErrorHandler badHandler = (exception) -> {
       throw new IllegalArgumentException("foo");
     };
 
-    Response response = handler.execute(badHandler).await();
+    Response response = handler.execute(badHandler, logger).await();
     assertResponsesAreEquals(Response.of(InternalServerError), response);
   }
 
@@ -62,7 +63,7 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
       () -> { throw new RuntimeException("Handler failed"); }
     );
 
-    Response response = handler.execute(null).await();
+    Response response = handler.execute(null, logger).await();
     assertResponsesAreEquals(Response.of(InternalServerError), response);
   }
 
@@ -134,12 +135,14 @@ class RequestHandlerFake extends RequestHandler {
   }
 
   @Override
-  Completes<Response> execute(final Request request, final Action.MappedParameters mappedParameters) {
+  Completes<Response> execute(final Request request,
+                              final Action.MappedParameters mappedParameters,
+                              final Logger logger) {
     throw new UnsupportedOperationException();
   }
 
-  Completes<Response> execute(ErrorHandler errorHandler) {
-    return executeRequest(handler, errorHandler);
+  Completes<Response> execute(ErrorHandler errorHandler, Logger logger) {
+    return executeRequest(handler, errorHandler, logger);
   }
 
 }

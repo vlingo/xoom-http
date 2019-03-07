@@ -28,6 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class RequestHandler0Test extends RequestHandlerTestBase {
+
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
@@ -35,7 +36,7 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
   public void simpleHandler() {
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
       .handle(() -> withSuccess(of(Created)));
-    final Response response = handler.execute().outcome();
+    final Response response = handler.execute(logger).outcome();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
@@ -50,9 +51,9 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
         throw new RuntimeException("Test Handler exception");
       })
       .onError(
-      error -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
+        (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
     );
-    Completes<Response> responseCompletes = handler.execute();
+    Completes<Response> responseCompletes = handler.execute(logger);
     assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
   }
 
@@ -74,7 +75,7 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
 
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
       .handle(() -> withSuccess(of(Created)));
-    final Response response = handler.execute(request, mappedParameters).outcome();
+    final Response response = handler.execute(request, mappedParameters, logger).outcome();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);

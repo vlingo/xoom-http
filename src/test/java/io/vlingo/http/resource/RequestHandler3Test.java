@@ -55,7 +55,7 @@ public class RequestHandler3Test extends RequestHandlerTestBase {
       query("page", Integer.class, 10)
     ).handle((postId, commentId, page) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
 
-    final Response response = handler.execute("my-post", "my-comment", null).outcome();
+    final Response response = handler.execute("my-post", "my-comment", null, logger).outcome();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
@@ -77,7 +77,7 @@ public class RequestHandler3Test extends RequestHandlerTestBase {
       path(1, String.class),
       query("page", Integer.class, 10)
     );
-    handler.execute("my-post", "my-comment", 1);
+    handler.execute("my-post", "my-comment", 1, logger);
   }
 
   @Test
@@ -90,9 +90,9 @@ public class RequestHandler3Test extends RequestHandlerTestBase {
       query("page", Integer.class, 10))
       .handle((param1, param2, param3) -> { throw new RuntimeException("Test Handler exception"); })
       .onError(
-        error -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
+        (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
       );
-    Completes<Response> responseCompletes = handler.execute("idVal1", "idVal2", 1);
+    Completes<Response> responseCompletes = handler.execute("idVal1", "idVal2", 1, logger);
     assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
   }
 
@@ -127,7 +127,7 @@ public class RequestHandler3Test extends RequestHandlerTestBase {
       query("page", Integer.class, 10)
     )
       .handle((postId, commentId, page) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
-    final Response response = handler.execute(request, mappedParameters).outcome();
+    final Response response = handler.execute(request, mappedParameters, logger).outcome();
 
     assertResponsesAreEquals(of(Ok, serialized("my-post my-comment")), response);
   }
