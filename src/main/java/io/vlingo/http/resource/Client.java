@@ -111,6 +111,23 @@ public class Client {
               10240);
     }
 
+    public static Configuration defaultedExceptFor(
+            final Stage stage,
+            final Address addressOfHost,
+            final ResponseConsumer consumerOfUnknownResponses,
+            final int writeBufferSize,
+            final int readBufferSize) {
+      return has(
+              stage,
+              addressOfHost,
+              consumerOfUnknownResponses,
+              false,
+              10,
+              writeBufferSize,
+              10,
+              readBufferSize);
+    }
+
     public static Configuration has(
             final Stage stage,
             final Address addressOfHost,
@@ -212,9 +229,9 @@ public class Client {
     @Override
     public Completes<Response> requestWith(final Request request, final Completes<Response> completes) {
       RequestHeader correlationId = request.headers.headerOf(RequestHeader.XCorrelationID);
-      
+
       final Request readyRequest;
-      
+
       if (correlationId == null) {
         correlationId = RequestHeader.of(RequestHeader.XCorrelationID, UUID.randomUUID().toString());
         readyRequest = request.and(correlationId);
