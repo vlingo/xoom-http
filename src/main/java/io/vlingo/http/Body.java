@@ -8,12 +8,15 @@
 package io.vlingo.http;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.Base64;
 
 /**
  * An HTTP request/response body, with concrete subclasses {@code BinaryBody} and {@code TextBody}.
  */
 public class Body {
+  public enum Encoding { Base64, UTF8 };
+
   /** An empty body. */
   public static final Body Empty = new Body();
 
@@ -29,27 +32,53 @@ public class Body {
   }
 
   /**
-   * Answer a new {@code Body} with binary content, which is a {@code BinaryBody}.
+   * Answer a new {@code Body} with binary content using {@code encoding}.
+   * @param body the byte[] content
+   * @param encoding the Encoding to use
+   * @return Body
+   */
+  public static Body from(final byte[] body, final Encoding encoding) {
+    switch (encoding) {
+    case Base64:
+      return new Body(bytesToBase64(body));
+    case UTF8:
+      return new Body(bytesToUTF8(body));
+    }
+    throw new IllegalArgumentException("Unmapped encoding: " + encoding);
+  }
+
+  /**
+   * Answer a new {@code Body} with binary content using {@code encoding}.
+   * @param body the ByteBuffer content
+   * @param encoding the Encoding to use
+   * @return Body
+   */
+  public static Body from(final ByteBuffer body, final Encoding encoding) {
+    switch (encoding) {
+    case Base64:
+      return new Body(bytesToBase64(bufferToArray(body)));
+    case UTF8:
+      return new Body(bytesToUTF8(bufferToArray(body)));
+    }
+    throw new IllegalArgumentException("Unmapped encoding: " + encoding);
+  }
+
+  /**
+   * Answer a new {@code Body} with binary content encoded as a Base64 {@code String}.
    * @param body the byte[] content
    * @return Body
    */
   public static Body from(final byte[] body) {
-    return new Body(bytesToBase64(body));
+    return from(body, Encoding.Base64);
   }
 
   /**
-   * Answer a new {@code Body} with binary content encoded as Base64.
+   * Answer a new {@code Body} with binary content encoded as a Base64 {@code String}.
    * @param body the ByteBuffer content
    * @return Body
    */
   public static Body from(final ByteBuffer body) {
-    if (body.position() > 0) {
-      body.flip();
-    }
-    final int length = body.limit();
-    final byte[] content = new byte[length];
-    System.arraycopy(body.array(), 0, content, 0, length);
-    return new Body(bytesToBase64(content));
+    return new Body(bytesToBase64(bufferToArray(body)));
   }
 
   /**
@@ -62,12 +91,37 @@ public class Body {
   }
 
   /**
+   * Answer a {@code byte[]} from {@code body} bytes.
+   * @param body the ByteBuffer
+   * @return String
+   */
+  private static byte[] bufferToArray(final ByteBuffer body) {
+    if (body.position() > 0) {
+      body.flip();
+    }
+    final int length = body.limit();
+    final byte[] bytes = new byte[length];
+    System.arraycopy(body.array(), 0, bytes, 0, length);
+    return bytes;
+  }
+
+  /**
    * Answer a Base64 {@code String} from {@code body} bytes.
    * @param body the byte[]
    * @return String
    */
   private static String bytesToBase64(final byte[] body) {
-    String encoded = Base64.getEncoder().encodeToString(body);
+    final String encoded = Base64.getEncoder().encodeToString(body);
+    return encoded;
+  }
+
+  /**
+   * Answer a UTF-8 {@code String} from {@code body} bytes.
+   * @param body the byte[]
+   * @return String
+   */
+  private static String bytesToUTF8(final byte[] body) {
+    final String encoded = new String(body, Charset.forName("UTF-8"));
     return encoded;
   }
 
