@@ -13,6 +13,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.Base64;
 
 import org.junit.Test;
@@ -43,7 +44,7 @@ public class BodyTest {
   }
 
   @Test
-  public void testThatByteArrayBodyEncodes() {
+  public void testThatByteArrayBodyEncodesAsBase64() {
     final byte[] bodyBytes = BinaryTextBodyText.getBytes();
     final Body body = Body.from(bodyBytes);
 
@@ -56,7 +57,7 @@ public class BodyTest {
   }
 
   @Test
-  public void testThatFlippedByteBufferBodyEncodes() {
+  public void testThatFlippedByteBufferBodyEncodesAsBase64() {
     final ByteBuffer buffer = ByteBuffer.allocate(1000);
     buffer.put(BinaryTextBodyText.getBytes());
     buffer.flip();
@@ -71,7 +72,7 @@ public class BodyTest {
   }
 
   @Test
-  public void testThatNotFlippedByteBufferBodyEncodes() {
+  public void testThatNotFlippedByteBufferBodyEncodesAsBase64() {
     final ByteBuffer buffer = ByteBuffer.allocate(1000);
     buffer.put(BinaryTextBodyText.getBytes());
     final Body body = Body.from(buffer);
@@ -82,5 +83,59 @@ public class BodyTest {
 
     final String decoded = new String(Base64.getDecoder().decode(body.content.getBytes()));
     assertEquals(BinaryTextBodyText, decoded);
+  }
+
+  @Test
+  public void testThatByteArrayBodyEncodesAsUTF8() {
+    final byte[] bodyBytes = BinaryTextBodyText.getBytes();
+    final Body body = Body.from(bodyBytes, Body.Encoding.UTF8);
+
+    assertNotNull(body);
+    assertNotNull(body.content);
+    assertTrue(body.hasContent());
+
+    final String decoded = new String(body.content.getBytes(), Charset.forName("UTF-8"));
+    assertEquals(BinaryTextBodyText, decoded);
+  }
+
+  @Test
+  public void testThatFlippedByteBufferBodyEncodesAsUTF8() {
+    final ByteBuffer buffer = ByteBuffer.allocate(1000);
+    buffer.put(BinaryTextBodyText.getBytes());
+    buffer.flip();
+    final Body body = Body.from(buffer, Body.Encoding.UTF8);
+
+    assertNotNull(body);
+    assertNotNull(body.content);
+    assertTrue(body.hasContent());
+
+    final String decoded = new String(body.content.getBytes(), Charset.forName("UTF-8"));
+    assertEquals(BinaryTextBodyText, decoded);
+  }
+
+  @Test
+  public void testThatNotFlippedByteBufferBodyEncodesAsUTF8() {
+    final ByteBuffer buffer = ByteBuffer.allocate(1000);
+    buffer.put(BinaryTextBodyText.getBytes());
+    final Body body = Body.from(buffer, Body.Encoding.UTF8);
+
+    assertNotNull(body);
+    assertNotNull(body.content);
+    assertTrue(body.hasContent());
+
+    final String decoded = new String(body.content.getBytes(), Charset.forName("UTF-8"));
+    assertEquals(BinaryTextBodyText, decoded);
+  }
+
+  @Test
+  public void testThatBytesEncodeAsExpectedUTF8() {
+    final byte[] pdfBytes = { 37, 80, 68, 70, 45, 49, 46, 52, 10, 37, -30, -29, -49, -45, 10, 49 };
+
+    final Body body = Body.from(pdfBytes, Body.Encoding.UTF8);
+
+    assertNotNull(body);
+    assertNotNull(body.content);
+    assertTrue(body.hasContent());
+    assertTrue(body.content.startsWith("%PDF"));
   }
 }
