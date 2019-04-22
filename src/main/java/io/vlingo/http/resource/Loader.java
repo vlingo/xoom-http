@@ -149,8 +149,13 @@ public class Loader {
   private static Map<String, ConfigurationResource<?>> loadStaticFilesResource(final Properties properties) {
     final Map<String, ConfigurationResource<?>> staticFilesResourceActions = new HashMap<>();
 
-    final String poolSize = properties.getProperty(staticFilesResourcePool, "5");
     final String root = properties.getProperty(staticFilesResourceRoot);
+
+    if (root == null) {
+      return staticFilesResourceActions;
+    }
+
+    final String poolSize = properties.getProperty(staticFilesResourcePool, "5");
     final String validSubPaths = properties.getProperty(staticFilesResourceSubPaths);
     final String[] actionSubPaths = actionNamesFrom(validSubPaths, staticFilesResourceSubPaths);
     Arrays.sort(actionSubPaths, new Comparator<String>() {
