@@ -21,11 +21,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class RequestHandler {
-  final private Pattern pattern = Pattern.compile("\\{(.*?)\\}");
-
   public final Method method;
   public final String path;
   public final String actionSignature;
+  final private Pattern pattern = Pattern.compile("\\{(.*?)\\}");
 
   RequestHandler(final Method method, final String path, final List<ParameterResolver<?>> parameterResolvers) {
     this.method = method;
@@ -33,8 +32,16 @@ public abstract class RequestHandler {
     this.actionSignature = generateActionSignature(parameterResolvers);
   }
 
-  Completes<Response> defaultErrorResponse() {
+  private Completes<Response> defaultErrorResponse() {
     return Completes.withSuccess(Response.of(Response.Status.InternalServerError));
+  }
+
+  private Completes<Response> defaultErrorHandler(Exception ex) {
+    if (ex instanceof MediaTypeNotSupported) {
+      return Completes.withSuccess(Response.of(Response.Status.UnsupportedMediaType));
+    } else {
+      return defaultErrorResponse();
+    }
   }
 
   void checkHandlerOrThrowException(Object handler) {
@@ -54,7 +61,7 @@ public abstract class RequestHandler {
     Completes<Response> responseCompletes;
     try {
       responseCompletes = executeAction.get();
-    } catch(Exception exception) {
+    } catch (Exception exception) {
       if (errorHandler != null) {
         try {
           responseCompletes = errorHandler.handle(exception);
@@ -64,7 +71,32 @@ public abstract class RequestHandler {
         }
       } else {
         logger.log("Exception thrown by Resource execution", exception);
-        responseCompletes = defaultErrorResponse();
+        responseCompletes = defaultErrorHandler(exception);
+      }
+    }
+    return responseCompletes;
+  }
+
+  Completes<Response> executeObjectRequest(Request request,
+                                               MediaTypeMapper mediaTypeMapper,
+                                               Supplier<Completes<ObjectResponse<?>>> executeAction,
+                                               ErrorHandler errorHandler,
+                                               Logger logger) {
+    Completes<Response> responseCompletes;
+    try {
+      Completes<ObjectResponse<?>> objectResponseCompletes = executeAction.get();
+      responseCompletes = objectResponseCompletes.andThen(or -> or.fromRequest(request, mediaTypeMapper));
+    } catch (Exception exception) {
+      if (errorHandler != null) {
+        try {
+          responseCompletes = errorHandler.handle(exception);
+        } catch (Exception errorHandlerException) {
+          logger.log("Exception thrown by error handler when handling error", exception);
+          responseCompletes = defaultErrorResponse();
+        }
+      } else {
+        logger.log("Exception thrown by Resource execution", exception);
+        responseCompletes = defaultErrorHandler(exception);
       }
     }
     return responseCompletes;
@@ -81,8 +113,8 @@ public abstract class RequestHandler {
     final StringBuilder result = new StringBuilder();
     final Matcher matcher = pattern.matcher(path);
     boolean first = true;
-    for (ParameterResolver<?> resolver: parameterResolvers) {
-      if(resolver.type == ParameterResolver.Type.PATH) {
+    for (ParameterResolver<?> resolver : parameterResolvers) {
+      if (resolver.type == ParameterResolver.Type.PATH) {
         matcher.find();
         if (first) {
           first = false;
@@ -97,11 +129,11 @@ public abstract class RequestHandler {
 
   private void checkOrder(final List<ParameterResolver<?>> parameterResolvers) {
     boolean firstNonPathResolver = false;
-    for(ParameterResolver<?> resolver: parameterResolvers) {
-      if(resolver.type != ParameterResolver.Type.PATH) {
+    for (ParameterResolver<?> resolver : parameterResolvers) {
+      if (resolver.type != ParameterResolver.Type.PATH) {
         firstNonPathResolver = true;
       }
-      if(firstNonPathResolver && resolver.type == ParameterResolver.Type.PATH) {
+      if (firstNonPathResolver && resolver.type == ParameterResolver.Type.PATH) {
         throw new IllegalArgumentException("Path parameters are unsorted");
       }
     }

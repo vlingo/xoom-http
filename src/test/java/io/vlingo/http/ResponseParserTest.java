@@ -36,7 +36,7 @@ public class ResponseParserTest extends ResourceTestFixtures {
     
     assertNotNull(response);
     assertTrue(response.version.isHttp1_1());
-    assertEquals(johnDoeUserSerialized, response.entity.content);
+    assertEquals(johnDoeUserSerialized, response.getEntity().content);
   }
 
   @Test
@@ -58,7 +58,7 @@ public class ResponseParserTest extends ResourceTestFixtures {
       assertTrue(response.version.isHttp1_1());
       assertTrue(bodyIterator.hasNext());
       final String body = bodyIterator.next();
-      assertEquals(body, response.entity.content);
+      assertEquals(body, response.getEntity().content);
     }
 
     assertEquals(10, count);
@@ -83,7 +83,7 @@ public class ResponseParserTest extends ResourceTestFixtures {
       assertTrue(response.version.isHttp1_1());
       assertTrue(bodyIterator.hasNext());
       final String body = bodyIterator.next();
-      assertEquals(body, response.entity.content);
+      assertEquals(body, response.getEntity().content);
     }
 
     assertEquals(200, count);
@@ -122,7 +122,7 @@ public class ResponseParserTest extends ResourceTestFixtures {
       assertTrue(response.version.isHttp1_1());
       assertTrue(bodyIterator.hasNext());
       final String body = bodyIterator.next();
-      assertEquals(body, response.entity.content);
+      assertEquals(body, response.getEntity().content);
     }
 
     assertEquals(200, count);

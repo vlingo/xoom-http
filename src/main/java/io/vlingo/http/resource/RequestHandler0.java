@@ -20,7 +20,9 @@ import java.util.Collections;
 
 public class RequestHandler0 extends RequestHandler {
   private Handler0 handler;
+  private ObjectHandler0 objectHandler;
   private ErrorHandler errorHandler;
+  private MediaTypeMapper mediaTypeMapper;
 
   RequestHandler0(final Method method, final String path) {
     super(method, path, Collections.emptyList());
@@ -35,13 +37,27 @@ public class RequestHandler0 extends RequestHandler {
     return this;
   }
 
+  public RequestHandler0 handle(final ObjectHandler0 handler) {
+    this.objectHandler = handler;
+    return this;
+  }
+
   public RequestHandler0 onError(final ErrorHandler errorHandler) {
     this.errorHandler = errorHandler;
     return this;
   }
 
-  Completes<Response> execute(final Logger logger) {
-    return executeRequest(() -> handler.execute(), errorHandler, logger);
+  public RequestHandler0 mapper(final MediaTypeMapper mediaTypeMapper) {
+    this.mediaTypeMapper = mediaTypeMapper;
+    return this;
+  }
+
+  Completes<Response> execute(final Request request, final Logger logger) {
+    if (handler != null) {
+      return executeRequest(() -> handler.execute(), errorHandler, logger);
+    } else {
+      return executeObjectRequest(request, mediaTypeMapper, () -> objectHandler.execute(), errorHandler, logger);
+    }
   }
 
   @Override
@@ -55,6 +71,11 @@ public class RequestHandler0 extends RequestHandler {
   @FunctionalInterface
   public interface Handler0 {
     Completes<Response> execute();
+  }
+
+  @FunctionalInterface
+  public interface ObjectHandler0 {
+     Completes<ObjectResponse<?>> execute();
   }
 
   // region FluentAPI
@@ -72,6 +93,10 @@ public class RequestHandler0 extends RequestHandler {
 
   public <T> RequestHandler1<T> body(final Class<T> paramClass, final Mapper mapper ) {
     return new RequestHandler1<>(method, path, ParameterResolver.body(paramClass, mapper), errorHandler);
+  }
+
+  public <T> RequestHandler1<T> body(final Class<T> paramClass, final MediaTypeMapper mediaTypeMapper ) {
+    return new RequestHandler1<>(method, path, ParameterResolver.body(paramClass, mediaTypeMapper), errorHandler);
   }
 
   public RequestHandler1<String> query(final String name) {

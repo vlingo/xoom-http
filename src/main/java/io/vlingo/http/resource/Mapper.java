@@ -7,7 +7,10 @@
 
 package io.vlingo.http.resource;
 
+
 public interface Mapper {
   <T> T from(final String data, final Class<T> type);
   <T> String from(final T data);
 }
+
+

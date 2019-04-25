@@ -51,9 +51,9 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     assertEquals(2, completes.response.headers.size());
     assertEquals(Location, completes.response.headers.get(0).name);
     assertTrue(Location, completes.response.headerOf(Location).value.startsWith("/users/"));
-    assertNotNull(completes.response.entity);
+    assertNotNull(completes.response.getEntity());
     
-    final UserData createdUserData = deserialized(completes.response.entity.content, UserData.class);
+    final UserData createdUserData = deserialized(completes.response.getEntity().content, UserData.class);
     assertNotNull(createdUserData);
     assertEquals(johnDoeUserData.nameData.given, createdUserData.nameData.given);
     assertEquals(johnDoeUserData.nameData.family, createdUserData.nameData.family);
@@ -78,7 +78,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     MockCompletesEventuallyResponse.untilWith.completes();
     assertNotNull(getCompletes.response);
     assertEquals(Ok, getCompletes.response.status);
-    final UserData getUserData = deserialized(getCompletes.response.entity.content, UserData.class);
+    final UserData getUserData = deserialized(getCompletes.response.getEntity().content, UserData.class);
     assertNotNull(getUserData);
     assertEquals(johnDoeUserData.nameData.given, getUserData.nameData.given);
     assertEquals(johnDoeUserData.nameData.family, getUserData.nameData.family);
@@ -116,7 +116,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     assertNotNull(getCompletes.response);
     assertEquals(Ok, getCompletes.response.status);
     final Type listOfUserData = new TypeToken<List<UserData>>(){}.getType();
-    final List<UserData> getUserData = deserializedList(getCompletes.response.entity.content, listOfUserData);
+    final List<UserData> getUserData = deserializedList(getCompletes.response.getEntity().content, listOfUserData);
     assertNotNull(getUserData);
     
     final UserData johnUserData = UserData.userAt(postCompletes1.response.headerOf(Location).value, getUserData);
@@ -170,7 +170,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
 
     assertNotNull(patchCompletes1.response);
     assertEquals(Ok, patchCompletes1.response.status);
-    final UserData getJohnDoeDoeUserData = deserialized(patchCompletes1.response.entity.content, UserData.class);
+    final UserData getJohnDoeDoeUserData = deserialized(patchCompletes1.response.getEntity().content, UserData.class);
     assertEquals(johnNameData.given, getJohnDoeDoeUserData.nameData.given);
     assertEquals(johnNameData.family, getJohnDoeDoeUserData.nameData.family);
     assertEquals(johnDoeUserData.contactData.emailAddress, getJohnDoeDoeUserData.contactData.emailAddress);
@@ -192,7 +192,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
 
     assertNotNull(patchCompletes2.response);
     assertEquals(Ok, patchCompletes2.response.status);
-    final UserData getJaneDoeDoeUserData = deserialized(patchCompletes2.response.entity.content, UserData.class);
+    final UserData getJaneDoeDoeUserData = deserialized(patchCompletes2.response.getEntity().content, UserData.class);
     assertEquals(janeNameData.given, getJaneDoeDoeUserData.nameData.given);
     assertEquals(janeNameData.family, getJaneDoeDoeUserData.nameData.family);
     assertEquals(janeDoeUserData.contactData.emailAddress, getJaneDoeDoeUserData.contactData.emailAddress);

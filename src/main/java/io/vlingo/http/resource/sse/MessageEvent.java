@@ -32,7 +32,7 @@ public class MessageEvent {
 
     List<MessageEvent> events = new ArrayList<>(2);
 
-    final String[] rawContent = response.entity.content.split("\n");
+    final String[] rawContent = response.getEntity().content.split("\n");
     int startIndex = 0;
     int currentIndex = 0;
     boolean isEvent = false;

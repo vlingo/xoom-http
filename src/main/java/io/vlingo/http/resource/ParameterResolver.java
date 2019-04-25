@@ -1,7 +1,10 @@
 package io.vlingo.http.resource;
 
+import com.oracle.webservices.internal.api.message.ContentType;
+import io.vlingo.http.MediaType;
 import io.vlingo.http.Header;
 import io.vlingo.http.Request;
+import io.vlingo.http.RequestHeader;
 
 import java.util.function.BiFunction;
 
@@ -34,6 +37,13 @@ class ParameterResolver<T> {
   public static <T> ParameterResolver<T> body(final Class<T> bodyClass, final Mapper mapper) {
     return new ParameterResolver<>(Type.BODY, bodyClass, ((request, mappedParameters) ->
       mapper.from(request.body.toString(), bodyClass)));
+  }
+
+  public static <T> ParameterResolver<T> body(final Class<T> bodyClass, final MediaTypeMapper mediaTypeMapper) {
+    return new ParameterResolver<T>(Type.BODY, bodyClass, ((request, mappedParameters) -> {
+      String bodyMediaType = request.headerValueOr(RequestHeader.ContentType, MediaType.Json().mimeType());
+      return mediaTypeMapper.from(request.body.toString(), MediaType.fromMimeType(bodyMediaType), bodyClass);
+    }));
   }
 
   public static ParameterResolver<Header> header(final String headerName) {

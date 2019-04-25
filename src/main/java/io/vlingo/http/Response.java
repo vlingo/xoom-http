@@ -56,7 +56,7 @@ public class Response {
   public final Status status;
   public final String statusCode;
   public final Headers<ResponseHeader> headers;
-  public final Body entity;
+  private final Body entity;
   public final Version version;
 
   public Header headerOf(final String name) {
@@ -92,7 +92,7 @@ public class Response {
     
     builder.append(Version.HTTP_1_1).append(" ").append(status).append("\n");
     appendAllHeadersTo(builder);
-    builder.append("\n").append(entity);
+    builder.append("\n").append(getEntity());
     
     return builder.toString();
   }
@@ -107,7 +107,7 @@ public class Response {
   }
 
   private void addMissingContentLengthHeader() {
-    final int contentLength = entity.content.length();
+    final int contentLength = getEntity().content.length();
     if (contentLength > 0) {
       final Header header = headers.headerOf(ResponseHeader.ContentLength);
       if (header == null) {
@@ -130,7 +130,11 @@ public class Response {
       headersSize += (header.name.length() + 2 + header.value.length() + 1);
     }
     // HTTP/1.1 + 1 + status code + "\n" + headers + "\n" + entity + just-in-case
-    return 9 + statusCode.length() + 1 + headersSize + 1 + entity.content.length() + 5;
+    return 9 + statusCode.length() + 1 + headersSize + 1 + getEntity().content.length() + 5;
+  }
+
+  public Body getEntity() {
+    return entity;
   }
 
   public enum Status {
