@@ -59,11 +59,31 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
     Name name = new Name("first", "last");
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
       // todo change signature to avoid casting
-      .handle( (RequestHandler0.ObjectHandler0)
-        () -> withSuccess(ObjectResponse.of(Ok, name, Name.class)))
+      .handle(() -> withSuccess(ObjectResponse.of(Ok, name, Name.class)))
       .mapper(defaultMediaTypeMapperForJson());
 
     final Response response = handler.execute(Request.method(Method.GET), logger).outcome();
+
+    assertNotNull(handler);
+    assertEquals(Method.GET, handler.method);
+    assertEquals("/helloworld", handler.path);
+    String nameAsJson = JsonSerialization.serialized(name);
+    assertResponsesAreEquals(of(Ok,
+      ResponseHeader.headers(ResponseHeader.ContentType, MediaType.Json().toString()), nameAsJson),
+      response);
+  }
+
+
+  @Test
+  public void objectNotMappedToMediaType() {
+    Name name = new Name("first", "last");
+    final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
+      // todo change signature to avoid casting
+      .handle(() -> withSuccess(ObjectResponse.of(Ok, name, Name.class)))
+      .mapper(defaultMediaTypeMapperForJson());
+
+    final Response response = handler.execute(
+      Request.method(Method.GET).header(RequestHeader.Accept, "none/none"), logger).outcome();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
