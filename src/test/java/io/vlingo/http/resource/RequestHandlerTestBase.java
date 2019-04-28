@@ -9,12 +9,12 @@
 
 package io.vlingo.http.resource;
 
+import static org.junit.Assert.assertEquals;
+
 import io.vlingo.actors.Logger;
 import io.vlingo.actors.plugin.logging.noop.NoOpLogger;
 import io.vlingo.http.MediaType;
 import io.vlingo.http.Response;
-
-import static org.junit.Assert.assertEquals;
 
 public class RequestHandlerTestBase {
 

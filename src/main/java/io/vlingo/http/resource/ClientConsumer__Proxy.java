@@ -16,9 +16,8 @@ import io.vlingo.actors.Mailbox;
 import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Response;
-import io.vlingo.http.resource.Client.ClientConsumer;
 
-public class ClientClientConsumer__Proxy implements ClientConsumer {
+public class ClientConsumer__Proxy implements ClientConsumer {
 
   private static final String requestWithRepresentation1 = "requestWith(io.vlingo.http.Request)";
   private static final String consumeRepresentation2 = "consume(io.vlingo.wire.message.ConsumerByteBuffer)";
@@ -28,11 +27,12 @@ public class ClientClientConsumer__Proxy implements ClientConsumer {
   private final Actor actor;
   private final Mailbox mailbox;
 
-  public ClientClientConsumer__Proxy(final Actor actor, final Mailbox mailbox){
+  public ClientConsumer__Proxy(final Actor actor, final Mailbox mailbox){
     this.actor = actor;
     this.mailbox = mailbox;
   }
 
+  @Override
   public Completes<Response> requestWith(io.vlingo.http.Request arg0, io.vlingo.common.Completes<Response> arg1) {
     if (!actor.isStopped()) {
       final Consumer<ClientConsumer> consumer = (actor) -> actor.requestWith(arg0, arg1);
@@ -45,6 +45,7 @@ public class ClientClientConsumer__Proxy implements ClientConsumer {
     }
     return null;
   }
+  @Override
   public void consume(io.vlingo.wire.message.ConsumerByteBuffer arg0) {
     if (!actor.isStopped()) {
       final Consumer<ClientConsumer> consumer = (actor) -> actor.consume(arg0);
@@ -54,6 +55,7 @@ public class ClientClientConsumer__Proxy implements ClientConsumer {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, consumeRepresentation2));
     }
   }
+  @Override
   public void intervalSignal(io.vlingo.common.Scheduled<Object> arg0, java.lang.Object arg1) {
     if (!actor.isStopped()) {
       final Consumer<ClientConsumer> consumer = (actor) -> actor.intervalSignal(arg0, arg1);
@@ -63,6 +65,7 @@ public class ClientClientConsumer__Proxy implements ClientConsumer {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, intervalSignalRepresentation3));
     }
   }
+  @Override
   public void stop() {
     if (!actor.isStopped()) {
       final Consumer<ClientConsumer> consumer = (actor) -> actor.stop();
@@ -72,6 +75,7 @@ public class ClientClientConsumer__Proxy implements ClientConsumer {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, stopRepresentation4));
     }
   }
+  @Override
   public boolean isStopped() {
     return actor.isStopped();
   }

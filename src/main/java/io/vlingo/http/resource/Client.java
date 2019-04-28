@@ -7,52 +7,111 @@
 
 package io.vlingo.http.resource;
 
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.List;
 
 import io.vlingo.actors.Actor;
-import io.vlingo.actors.CompletesEventually;
 import io.vlingo.actors.Definition;
+import io.vlingo.actors.RouterSpecification;
 import io.vlingo.actors.Stage;
-import io.vlingo.actors.Stoppable;
-import io.vlingo.common.Cancellable;
 import io.vlingo.common.Completes;
-import io.vlingo.common.Scheduled;
 import io.vlingo.http.Request;
-import io.vlingo.http.RequestHeader;
 import io.vlingo.http.Response;
-import io.vlingo.http.ResponseHeader;
-import io.vlingo.http.ResponseParser;
-import io.vlingo.wire.channel.ResponseChannelConsumer;
-import io.vlingo.wire.fdx.bidirectional.ClientRequestResponseChannel;
-import io.vlingo.wire.message.ByteBufferAllocator;
-import io.vlingo.wire.message.ConsumerByteBuffer;
-import io.vlingo.wire.message.Converters;
 import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
 
+/**
+ * Asynchronous HTTP client.
+ */
 public class Client {
+  public static enum ClientConsumerType { Correlating, LoadBalancing, RoundRobin };
+
   private final Configuration configuration;
   private final ClientConsumer consumer;
 
+  /**
+   * Answer a new {@code Client} from the {@code configuration}.
+   * @param configuration the Configuration
+   * @param type the ClientConsumerType
+   * @param poolSize the int size of the pool of workers
+   * @return Client
+   * @throws Exception when the Client cannot be created
+   */
+  public static Client using(final Configuration configuration, final ClientConsumerType type, final int poolSize) throws Exception {
+    return new Client(configuration, type, poolSize);
+  }
+
+  /**
+   * Answer a new {@code Client} from the {@code configuration}.
+   * @param configuration the Configuration
+   * @return Client
+   * @throws Exception when the Client cannot be created
+   */
   public static Client using(final Configuration configuration) throws Exception {
     return new Client(configuration);
   }
 
-  public Client(final Configuration configuration) throws Exception {
+
+  /**
+   * Constructs my default state from the {@code configuration}.
+   * @param configuration the Configuration
+   * @param type the ClientConsumerType
+   * @param poolSize the int size of the pool of workers
+   * @throws Exception when the Client cannot be created
+   */
+  public Client(final Configuration configuration, final ClientConsumerType type, final int poolSize) throws Exception {
     this.configuration = configuration;
-    this.consumer = configuration.stage.actorFor(
-            ClientConsumer.class,
-            Definition.has(ClientRequesterConsumerActor.class, Definition.parameters(configuration)));
+
+    final Class<? extends Actor> clientConsumerType;
+    final List<Object> parameters;
+
+    switch (type) {
+    case Correlating:
+      clientConsumerType = ClientCorrelatingRequesterConsumerActor.class;
+      parameters = Definition.parameters(configuration);
+      break;
+    case RoundRobin: {
+      clientConsumerType = RoundRobinClientRequestConsumerActor.class;
+      final Definition definition = Definition.has(ClientConsumerWorkerActor.class, Definition.parameters(configuration));
+      final RouterSpecification<ClientConsumer> spec = new RouterSpecification<>(poolSize, definition, ClientConsumer.class);
+      parameters = Definition.parameters(configuration, spec);
+      break;
+      }
+    case LoadBalancing: {
+      clientConsumerType = LoadBalancingClientRequestConsumerActor.class;
+      final Definition definition = Definition.has(ClientConsumerWorkerActor.class, Definition.parameters(configuration));
+      final RouterSpecification<ClientConsumer> spec = new RouterSpecification<>(poolSize, definition, ClientConsumer.class);
+      parameters = Definition.parameters(configuration, spec);
+      break;
+      }
+    default:
+      throw new IllegalArgumentException("ClientConsumerType is not mapped: " + type);
+    }
+
+    this.consumer = configuration.stage.actorFor(ClientConsumer.class,Definition.has(clientConsumerType, parameters));
   }
 
+  /**
+   * Constructs my default state from the {@code configuration}.
+   * @param configuration the Configuration
+   * @throws Exception when the Client cannot be created
+   */
+  public Client(final Configuration configuration) throws Exception {
+    this(configuration, ClientConsumerType.Correlating, 0);
+  }
+
+  /**
+   * Close me.
+   */
   public void close() {
     consumer.stop();
   }
 
+  /**
+   * Answer a {@code Completes<Respose>} as the eventual outcomes of the {@code request}.
+   * @param request the Request to the server
+   * @return {@code Completes<Respose>}
+   */
   public Completes<Response> requestWith(final Request request) {
     final Completes<Response> completes =
             configuration.keepAlive ?
@@ -62,6 +121,9 @@ public class Client {
     return completes;
   }
 
+  /**
+   * Configuration used to create a {@code Client}.
+   */
   public static class Configuration {
     public final Address addressOfHost;
     public final ResponseConsumer consumerOfUnknownResponses;
@@ -72,6 +134,13 @@ public class Client {
     public final int writeBufferSize;
     public final Stage stage;
 
+    /**
+     * Answer the {@code Configuration} with defaults except for the
+     * {@code consumerOfUnknownResponses}.
+     * @param stage the Stage to host the Client
+     * @param consumerOfUnknownResponses the ResponseConsumer of responses that cannot be associated with a given consumer
+     * @return Configuration
+     */
     public static Configuration defaultedExceptFor(
             final Stage stage,
             final ResponseConsumer consumerOfUnknownResponses) {
@@ -81,6 +150,14 @@ public class Client {
               consumerOfUnknownResponses);
     }
 
+    /**
+     * Answer the {@code Configuration} with defaults except for the
+     * {@code addressOfHost} and {@code consumerOfUnknownResponses}.
+     * @param stage the Stage to host the Client
+     * @param addressOfHost the Address of the host server
+     * @param consumerOfUnknownResponses the ResponseConsumer of responses that cannot be associated with a given consumer
+     * @return Configuration
+     */
     public static Configuration defaultedExceptFor(
             final Stage stage,
             final Address addressOfHost,
@@ -96,6 +173,42 @@ public class Client {
               10240);
     }
 
+    /**
+     * Answer the {@code Configuration} with defaults except for the
+     * {@code addressOfHost}, {@code consumerOfUnknownResponses},
+     * {@code writeBufferSize}, and {@code readBufferSize}.
+     * @param stage the Stage to host the Client
+     * @param addressOfHost the Address of the host server
+     * @param consumerOfUnknownResponses the ResponseConsumer of responses that cannot be associated with a given consumer
+     * @param writeBufferSize the int size of the write buffer
+     * @param readBufferSize the int size of the read buffer
+     * @return Configuration
+     */
+    public static Configuration defaultedExceptFor(
+            final Stage stage,
+            final Address addressOfHost,
+            final ResponseConsumer consumerOfUnknownResponses,
+            final int writeBufferSize,
+            final int readBufferSize) {
+      return has(
+              stage,
+              addressOfHost,
+              consumerOfUnknownResponses,
+              false,
+              10,
+              writeBufferSize,
+              10,
+              readBufferSize);
+    }
+
+    /**
+     * Answer the {@code Configuration} for {@code keep-alive} mode with defaults
+     * except for the {@code addressOfHost} and {@code consumerOfUnknownResponses}.
+     * @param stage the Stage to host the Client
+     * @param addressOfHost the Address of the host server
+     * @param consumerOfUnknownResponses the ResponseConsumer of responses that cannot be associated with a given consumer
+     * @return Configuration
+     */
     public static Configuration defaultedKeepAliveExceptFor(
             final Stage stage,
             final Address addressOfHost,
@@ -111,6 +224,18 @@ public class Client {
               10240);
     }
 
+    /**
+     * Answer the {@code Configuration} with the given options.
+     * @param stage the Stage to host the Client
+     * @param addressOfHost the Address of the host server
+     * @param consumerOfUnknownResponses the ResponseConsumer of responses that cannot be associated with a given consumer
+     * @param keepAlive the boolean indicating whether or not the connection is kept alive over multiple requests-responses
+     * @param probeInterval the long number of milliseconds between each consumer channel probe
+     * @param writeBufferSize the int size of the ByteBuffer used for writes/sends
+     * @param readBufferPoolSize the int number of read buffers in the pool
+     * @param readBufferSize the int size of the ByteBuffer used for reads/receives
+     * @return Configuration
+     */
     public static Configuration has(
             final Stage stage,
             final Address addressOfHost,
@@ -131,6 +256,17 @@ public class Client {
               readBufferSize);
     }
 
+    /**
+     * Constructs my default state with the given options.
+     * @param stage the Stage to host the Client
+     * @param addressOfHost the Address of the host server
+     * @param consumerOfUnknownResponses the ResponseConsumer of responses that cannot be associated with a given consumer
+     * @param keepAlive the boolean indicating whether or not the connection is kept alive over multiple requests-responses
+     * @param probeInterval the long number of milliseconds between each consumer channel probe
+     * @param writeBufferSize the int size of the ByteBuffer used for writes/sends
+     * @param readBufferPoolSize the int number of read buffers in the pool
+     * @param readBufferSize the int size of the ByteBuffer used for reads/receives
+     */
     public Configuration(
             final Stage stage,
             final Address addressOfHost,
@@ -149,102 +285,6 @@ public class Client {
       this.writeBufferSize = writeBufferSize;
       this.readBufferPoolSize = readBufferPoolSize;
       this.readBufferSize = readBufferSize;
-    }
-  }
-
-  public static interface ClientConsumer extends ResponseChannelConsumer, Scheduled<Object>, Stoppable {
-    Completes<Response> requestWith(final Request request, final Completes<Response> completes);
-  }
-
-  public static class ClientRequesterConsumerActor extends Actor implements ClientConsumer {
-    private final ByteBuffer buffer;
-    private final Map<String, CompletesEventually> completables;
-    private final ClientRequestResponseChannel channel;
-    private final Configuration configuration;
-    private ResponseParser parser;
-    private final Cancellable probe;
-
-    @SuppressWarnings("unchecked")
-    public ClientRequesterConsumerActor(final Configuration configuration) throws Exception {
-      this.configuration = configuration;
-      this.buffer = ByteBufferAllocator.allocate(configuration.writeBufferSize);
-      this.completables = new HashMap<>();
-      this.channel = clientChannel(configuration);
-      this.probe = stage().scheduler().schedule(selfAs(Scheduled.class), null, 1, configuration.probeInterval);
-    }
-
-    @Override
-    public void consume(final ConsumerByteBuffer buffer) {
-      if (parser == null) {
-        parser = ResponseParser.parserFor(buffer.asByteBuffer());
-      } else {
-        parser.parseNext(buffer.asByteBuffer());
-      }
-      buffer.release();
-
-      while (parser.hasFullResponse()) {
-        final Response response = parser.fullResponse();
-        final ResponseHeader correlationId = response.headers.headerOf(ResponseHeader.XCorrelationID);
-        if (correlationId == null) {
-          logger().log("Client Consumer: Cannot complete response because no correlation id.");
-          configuration.consumerOfUnknownResponses.consume(response);
-        } else {
-          final CompletesEventually completes = configuration.keepAlive ?
-                  completables.get(correlationId.value) :
-                  completables.remove(correlationId.value);
-          if (completes == null) {
-            configuration.stage.world().defaultLogger().log(
-                    "Client Consumer: Cannot complete response because mismatched correlation id: " +
-                     correlationId.value);
-            configuration.consumerOfUnknownResponses.consume(response);
-          } else {
-            completes.with(response);
-          }
-        }
-      }
-    }
-
-    @Override
-    public void intervalSignal(final Scheduled<Object> scheduled, final Object data) {
-      channel.probeChannel();
-    }
-
-    @Override
-    public Completes<Response> requestWith(final Request request, final Completes<Response> completes) {
-      RequestHeader correlationId = request.headers.headerOf(RequestHeader.XCorrelationID);
-      
-      final Request readyRequest;
-      
-      if (correlationId == null) {
-        correlationId = RequestHeader.of(RequestHeader.XCorrelationID, UUID.randomUUID().toString());
-        readyRequest = request.and(correlationId);
-      } else {
-        readyRequest = request;
-      }
-
-      completables.put(correlationId.value, stage().world().completesFor(completes));
-
-      buffer.clear();
-      buffer.put(Converters.textToBytes(readyRequest.toString()));
-      buffer.flip();
-      channel.requestWith(buffer);
-
-      return completes;
-    }
-
-    @Override
-    public void stop() {
-      channel.close();
-      probe.cancel();
-    }
-
-    private ClientRequestResponseChannel clientChannel(final Configuration configuration) throws Exception {
-      return new ClientRequestResponseChannel(
-              configuration.addressOfHost,
-              selfAs(ResponseChannelConsumer.class),
-              configuration.readBufferPoolSize,
-              configuration.readBufferSize,
-              logger());
     }
   }
 }

@@ -22,7 +22,7 @@ public class ResponseTest {
   public void testResponseWithOneHeaderNoEntity() {
     final Response response = Response.of(Version.Http1_1, Ok, headers(CacheControl, "max-age=3600"));
     
-    final String facsimile = "HTTP/1.1 200 OK\nCache-Control: max-age=3600\n\n";
+    final String facsimile = "HTTP/1.1 200 OK\nCache-Control: max-age=3600\nContent-Length: 0\n\n";
     
     assertEquals(facsimile, response.toString());
   }
@@ -41,7 +41,7 @@ public class ResponseTest {
   public void testResponseWithMultipleHeadersNoEntity() {
     final Response response = Response.of(Version.Http1_1, Ok, headers(of(ETag, "123ABC")).and(of(CacheControl, "max-age=3600")));
     
-    final String facsimile = "HTTP/1.1 200 OK\nETag: 123ABC\nCache-Control: max-age=3600\n\n";
+    final String facsimile = "HTTP/1.1 200 OK\nETag: 123ABC\nCache-Control: max-age=3600\nContent-Length: 0\n\n";
     
     assertEquals(facsimile, response.toString());
   }
