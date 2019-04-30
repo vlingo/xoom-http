@@ -92,7 +92,7 @@ public class ClientTest extends ResourceTestFixtures {
                     Client.ClientConsumerType.RoundRobin,
                     5);
 
-    for (int count = 0; count < 10; ++count) {
+    for (int count = 0; count < 100; ++count) {
       final String user = count % 2 == 0 ? uniqueJohnDoe() : uniqueJaneDoe();
       client.requestWith(
               Request
@@ -104,19 +104,64 @@ public class ClientTest extends ResourceTestFixtures {
             .andThenConsume(response -> known.consume(response) );
     }
 
-    final int responseCount = access.readFromExpecting("responseCount", 10, 2000);
+    final int responseCount = access.readFromExpecting("responseCount", 100, 2000);
     final int total = access.readFrom("totalAllResponseCount");
     final int unknownResponseCount = access.readFrom("unknownResponseCount");
     final Map<String,Integer> clientCounts = access.readFrom("responseClientCounts");
 
-    assertEquals(10, total);
-    assertEquals(10, responseCount);
+    assertEquals(100, total);
+    assertEquals(100, responseCount);
     assertEquals(0, unknownResponseCount);
 
     for (final String id : clientCounts.keySet()) {
       final int clientCound = clientCounts.get(id);
-      assertEquals(2, clientCound);
+      assertEquals(20, clientCound);
     }
+  }
+
+  @Test
+  public void testThatLoadBalancingClientDelivers() throws Exception {
+    final TestResponseConsumer safely = new TestResponseConsumer();
+    final AccessSafely access = safely.afterCompleting(100);
+    final UnknownResponseConsumer unknown = new UnknownResponseConsumer(access);
+    final KnownResponseConsumer known = new KnownResponseConsumer(access);
+
+    final Configuration config = Client.Configuration.defaultedExceptFor(world.stage(), unknown);
+    config.testInfo(true);
+
+    final Client client =
+            Client.using(
+                    config,
+                    Client.ClientConsumerType.LoadBalancing,
+                    5);
+
+    for (int count = 0; count < 100; ++count) {
+      final String user = count % 2 == 0 ? uniqueJohnDoe() : uniqueJaneDoe();
+      client.requestWith(
+              Request
+                .has(POST)
+                .and(URI.create("/users"))
+                .and(host("localhost"))
+                .and(contentLength(user))
+                .and(Body.from(user)))
+            .andThenConsume(response -> known.consume(response) );
+    }
+
+    final int responseCount = access.readFromExpecting("responseCount", 100, 2000);
+    final int total = access.readFrom("totalAllResponseCount");
+    final int unknownResponseCount = access.readFrom("unknownResponseCount");
+    final Map<String,Integer> clientCounts = access.readFrom("responseClientCounts");
+
+    assertEquals(100, total);
+    assertEquals(100, responseCount);
+    assertEquals(0, unknownResponseCount);
+
+    int totalClientCounts = 0;
+    for (final String id : clientCounts.keySet()) {
+      final int clientCound = clientCounts.get(id);
+      totalClientCounts += clientCound;
+    }
+    assertEquals(100, totalClientCounts);
   }
 
   @Override
