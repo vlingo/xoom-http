@@ -34,6 +34,13 @@ public interface ClientConsumer extends ResponseChannelConsumer, Scheduled<Objec
   Completes<Response> requestWith(final Request request, final Completes<Response> completes);
 
   /**
+   * Overridden here in case the consumer does not want timer signals.
+   * Consumer must override to get this behavior.
+   */
+  @Override
+  default void intervalSignal(final Scheduled<Object> scheduled, final Object data) { }
+
+  /**
    * The state of a {@code ClientConsumer}.
    */
   static final class State {
