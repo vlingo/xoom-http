@@ -88,9 +88,9 @@ public class ServerTest extends ResourceTestFixtures {
 
     assertEquals(2, progress.consumeCount.get());
     assertEquals(Response.Status.Ok, getResponse.status);
-    assertNotNull(getResponse.getEntity());
-    assertNotNull(getResponse.getEntity().content);
-    assertFalse(getResponse.getEntity().content.isEmpty());
+    assertNotNull(getResponse.entity);
+    assertNotNull(getResponse.entity.content);
+    assertFalse(getResponse.entity.content.isEmpty());
   }
 
   @Test

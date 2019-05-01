@@ -23,9 +23,7 @@ import java.net.URI;
 import java.util.Collections;
 
 import static io.vlingo.common.Completes.withSuccess;
-import static io.vlingo.http.Response.Status.Created;
-import static io.vlingo.http.Response.Status.Imateapot;
-import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.Response.Status.*;
 import static io.vlingo.http.Response.of;
 import static io.vlingo.http.resource.ParameterResolver.*;
 import static org.junit.Assert.assertEquals;
@@ -52,7 +50,7 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
   @Test
   public void objectMappedToMediaType() {
     // todo: test failure cases, which return a different result in the completion pipeline
-    // todo: add media type failure test
+    // todo: add media mimeType failure test
     // todo: create issue for failed actor will miss messages, need supervisor
     // todo: mocks discussion
     // todo: review extraction of execution code
@@ -78,7 +76,6 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
   public void objectNotMappedToMediaType() {
     Name name = new Name("first", "last");
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      // todo change signature to avoid casting
       .handle(() -> withSuccess(ObjectResponse.of(Ok, name, Name.class)))
       .mapper(defaultMediaTypeMapperForJson());
 
@@ -88,10 +85,8 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
     assertEquals("/helloworld", handler.path);
-    String nameAsJson = JsonSerialization.serialized(name);
-    assertResponsesAreEquals(of(Ok,
-      ResponseHeader.headers(ResponseHeader.ContentType, MediaType.Json().toString()), nameAsJson),
-      response);
+
+    assertResponsesAreEquals(of(UnsupportedMediaType), response);
   }
 
 

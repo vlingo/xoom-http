@@ -9,6 +9,6 @@ public class MediaTypeNotSupported extends RuntimeException {
 
   @Override
   public String getMessage() {
-    return "No mapper registered for the following media type: " + mediaType;
+    return "No mapper registered for the following media mimeType: " + mediaType;
   }
 }

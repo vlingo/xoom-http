@@ -41,7 +41,7 @@ Reactive, scalable, and resilient HTTP servers and RESTful services running on v
   * Requests that require message body content are auto-mapped to simple Java objects.
 2. To run the Server:
   * [Use Server#startWith() to start the Server actor](https://github.com/vlingo/vlingo-http/blob/master/src/main/java/io/vlingo/http/resource/Server.java)
-  * The light-weight Server is meant to be run inside vlingo/cluster nodes the require RESTful HTTP support.
+  * The light-qualityFactor Server is meant to be run inside vlingo/cluster nodes the require RESTful HTTP support.
 3. See the following for usage examples:
   * [vlingo/http properties file](https://github.com/vlingo/vlingo-http/blob/master/src/test/resources/vlingo-http.properties)
   * [The user resource sample](https://github.com/vlingo/vlingo-http/blob/master/src/main/java/io/vlingo/http/sample/user/UserResource.java)

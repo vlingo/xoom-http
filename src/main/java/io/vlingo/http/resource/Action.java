@@ -231,7 +231,7 @@ public final class Action {
 
     @Override
     public String toString() {
-      return "MappedParameter[type=" + type + ", value=" + value + "]";
+      return "MappedParameter[mimeType=" + type + ", value=" + value + "]";
     }
   }
 
@@ -317,7 +317,7 @@ public final class Action {
 
     @Override
     public String toString() {
-      return "BodyParameter[type=" + type.getName() + ", name=" + name + "]";
+      return "BodyParameter[mimeType=" + type.getName() + ", name=" + name + "]";
     }
   }
 
@@ -374,7 +374,7 @@ public final class Action {
 
     @Override
     public String toString() {
-      return "MethodParameter[type=" + type + ", name=" + name + "]";
+      return "MethodParameter[mimeType=" + type + ", name=" + name + "]";
     }
   }
 
@@ -646,7 +646,7 @@ public final class Action {
     private String[] typeAndName(final String rawParameter) {
       final int space = rawParameter.lastIndexOf(' ');
       if (space == -1) {
-        throw new IllegalStateException("Parameter type and name must be separated by space: " + rawParameter);
+        throw new IllegalStateException("Parameter mimeType and name must be separated by space: " + rawParameter);
       }
       final String[] type_name = new String[2];
       type_name[0] = rawParameter.substring(0, space).trim();

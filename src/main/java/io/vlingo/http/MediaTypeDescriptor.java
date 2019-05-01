@@ -1,119 +1,76 @@
 package io.vlingo.http;
 
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
-public class MediaTypeDescriptor implements Comparable<MediaTypeDescriptor> {
+public abstract class MediaTypeDescriptor {
 
-  private static final int MIME_TYPE_AND_SUBTYPE_SIZE = 2;
-  private static final String PARAMETER_SEPARATOR = ";";
-  private static final String MIME_SUBTYPE_SEPARATOR = "/";
+  static final String PARAMETER_SEPARATOR = ";";
+  static final String MIME_SUBTYPE_SEPARATOR = "/";
+  static final String PARAMETER_ASSIGNMENT = "=";
+  static final String MIME_TYPE_WILDCARD = "*";
 
-  private static final int PARAMETER_VALUE_OFFSET = 1;
-  private static final int PARAMETER_FIELD_OFFSET = 0;
-  private static final int PARAMETER_AND_VALUE_SIZE = 2;
-  private static final String PARAMETER_ASSIGNMENT = "=";
-  private static final String QUALITY_FIELD_NAME = "q";
+  protected final String mimeType;
+  protected final String mimeSubType;
+  public final Map<String, String> parameters;
 
-
-  public final String mimeType;
-  public final String mimeSubType;
-  public final float weight;
-
-  private MediaTypeDescriptor(String mimeType, String mimeSubType, float weight) {
+  public MediaTypeDescriptor(String mimeType, String mimeSubType, Map<String, String> parameters) {
     this.mimeType = mimeType;
     this.mimeSubType = mimeSubType;
-    this.weight = weight;
+    this.parameters = new HashMap<>(parameters);
   }
 
-  public static MediaTypeDescriptor parseFrom(String contentTypeDescriptor) {
-
-    Builder builder = new Builder();
-    String[] descriptorParts = contentTypeDescriptor.split(PARAMETER_SEPARATOR);
-    if (descriptorParts.length > 1) {
-      parseAttributes(builder, Arrays.copyOfRange(descriptorParts,1, descriptorParts.length));
-    }
-
-    String[] mimeParts = descriptorParts[0].split(MIME_SUBTYPE_SEPARATOR);
-    if (mimeParts.length == MIME_TYPE_AND_SUBTYPE_SIZE) {
-      builder.withMimeType(mimeParts[0].trim())
-             .withMimeSubType(mimeParts[1].trim());
-    }
-
-    return builder.build();
+  public MediaTypeDescriptor(String mimeType, String mimeSubType) {
+    this.mimeType = mimeType;
+    this.mimeSubType = mimeSubType;
+    this.parameters = new HashMap<>();
   }
 
-  private static void parseAttributes(Builder builder, String[] parameters) {
-      builder.withWeight(1.0f);
-      for (String parameter : parameters) {
-        String[] parameterFieldAndValue = parameter.split(PARAMETER_ASSIGNMENT);
-
-        if (parameterFieldAndValue.length == PARAMETER_AND_VALUE_SIZE) {
-          String field = parameterFieldAndValue[PARAMETER_FIELD_OFFSET];
-          String value = parameterFieldAndValue[PARAMETER_VALUE_OFFSET];
-          if (field.trim().equals(QUALITY_FIELD_NAME)) {
-            try {
-              builder.withWeight(Float.parseFloat(value));
-            } catch (NumberFormatException ignored) {
-            }
-          }
-        }
-      }
-  }
-  
   @Override
   public String toString() {
-    return
-      mimeType + MIME_SUBTYPE_SEPARATOR + mimeSubType
-        + PARAMETER_SEPARATOR +
-        QUALITY_FIELD_NAME + PARAMETER_ASSIGNMENT + Float.toString(weight);
-  }
+    StringBuilder sb = new StringBuilder();
+    sb.append(mimeType)
+      .append(MIME_SUBTYPE_SEPARATOR)
+      .append(mimeSubType);
 
-  public boolean isGenericSubType() {
-    return mimeSubType.equals("*");
-  }
-  
-  @Override
-  public int compareTo(MediaTypeDescriptor o) {
-    if (o.weight == this.weight) {
-      if (o.mimeType.equals(mimeType)) {
-        if (isGenericSubType()) {
-          return (o.isGenericSubType() ? 0 : 1);
-        } else {
-          return (o.isGenericSubType() ? 1 : 0);
-        }
-      }
-      else {
-        // in case of a tie, alphabetic order determines precedence
-        return mimeType.compareTo(o.mimeType);
-      }
+    for (String parameterName : parameters.keySet()) {
+      sb.append(PARAMETER_SEPARATOR)
+        .append(parameterName)
+        .append(PARAMETER_SEPARATOR)
+        .append(parameters.get(parameterName));
     }
-    else
-      return (Float.compare(this.weight, o.weight));
+    return sb.toString();
   }
 
-  public boolean isSameOrSuperType(MediaType mediaType) {
-    return
-         (this.mimeType.equals("*") || this.mimeType.equals(mediaType.type))
-      && (this.mimeSubType.equals("*") || this.mimeSubType.equals(mediaType.subType));
-  
-  }
-
-  static class Builder {
+  static class Builder <T> {
     String mimeType;
     String mimeSubType;
-    float weight;
+    Map<String, String> parameters;
+    private Supplier<T> supplier;
 
-    public Builder() {
-      weight = 1.0f;
+    @FunctionalInterface
+    interface Supplier <T> {
+      T supply(String mimeType, String mimeSubType, Map<String, String> parameters);
+    }
+
+    public Builder(Supplier supplier) {
+      this.supplier = supplier;
+      parameters = new HashMap<>();
       mimeType = "";
       mimeSubType = "";
     }
 
     Builder withMimeType(String mimeType) { this.mimeType = mimeType; return this;}
+
     Builder withMimeSubType(String mimeSubType) {this.mimeSubType = mimeSubType; return this;}
-    Builder withWeight(float weight) {this.weight = weight; return this;}
-    MediaTypeDescriptor build() {
-      return new MediaTypeDescriptor(mimeType, mimeSubType, weight);
+
+    Builder withParameter(String paramName, String paramValue) {
+      parameters.put(paramName, paramValue);
+      return this;
+    }
+
+    T build() {
+      return supplier.supply(mimeType, mimeSubType, parameters);
     }
   }
 }

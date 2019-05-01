@@ -16,14 +16,14 @@ public class MediaTypeMapper {
     if (mappersByContentType.containsKey(mediaType)) {
       return mappersByContentType.get(mediaType).from(data, type);
     }
-    throw new IllegalStateException("Mapper not found for content-type " + mediaType);
+    throw new IllegalStateException("Mapper not found for content-mimeType " + mediaType);
   }
 
   public <T> String from(final T data, final MediaType mediaType, final Class<T> type) {
     if (mappersByContentType.containsKey(mediaType)) {
       return  mappersByContentType.get(mediaType).from(data);
     }
-    throw new MediaTypeNotSupported("Mapper not found for content-type " + mediaType);
+    throw new MediaTypeNotSupported("Mapper not found for content-mimeType " + mediaType);
   }
 
   public MediaType[] mappedMediaTypes() {
@@ -39,7 +39,7 @@ public class MediaTypeMapper {
 
     Builder addMapperFor(MediaType mediaType, Mapper mapper) {
       mappersByContentType.computeIfPresent(mediaType,
-        (ct, mp) -> {throw new  IllegalArgumentException("Content type already added");});
+        (ct, mp) -> {throw new  IllegalArgumentException("Content mimeType already added");});
       mappersByContentType.put(mediaType, mapper);
       return this;
     }

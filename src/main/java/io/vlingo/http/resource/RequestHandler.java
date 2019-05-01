@@ -55,53 +55,55 @@ public abstract class RequestHandler {
                                        final Logger logger);
 
 
-  Completes<Response> executeRequest(Supplier<Completes<Response>> executeAction,
-                                     ErrorHandler errorHandler,
-                                     Logger logger) {
+  Completes<Response> executeRequest(final Supplier<Completes<Response>> executeAction,
+                                     final ErrorHandler errorHandler,
+                                     final Logger logger) {
     Completes<Response> responseCompletes;
     try {
       responseCompletes = executeAction.get();
     } catch (Exception exception) {
-      if (errorHandler != null) {
-        try {
-          responseCompletes = errorHandler.handle(exception);
-        } catch (Exception errorHandlerException) {
-          logger.log("Exception thrown by error handler when handling error", exception);
-          responseCompletes = defaultErrorResponse();
-        }
-      } else {
-        logger.log("Exception thrown by Resource execution", exception);
-        responseCompletes = defaultErrorHandler(exception);
-      }
+      responseCompletes = resourceHandlerError(errorHandler, logger, exception);
     }
     return responseCompletes;
   }
 
-  Completes<Response> executeObjectRequest(Request request,
-                                               MediaTypeMapper mediaTypeMapper,
-                                               Supplier<Completes<ObjectResponse<?>>> executeAction,
-                                               ErrorHandler errorHandler,
-                                               Logger logger) {
+  Completes<Response> executeObjectRequest(final Request request,
+                                           final MediaTypeMapper mediaTypeMapper,
+                                           final Supplier<Completes<ObjectResponse<?>>> executeAction,
+                                           final ErrorHandler errorHandler,
+                                           final Logger logger) {
     Completes<Response> responseCompletes;
     try {
       Completes<ObjectResponse<?>> objectResponseCompletes = executeAction.get();
-      responseCompletes = objectResponseCompletes.andThen(or -> or.fromRequest(request, mediaTypeMapper));
+      responseCompletes = objectResponseCompletes
+        .andThen(objResponse -> objResponse.fromRequest(request, mediaTypeMapper))
+        .recoverFrom(exception -> {
+          Completes<Response> errorResponse = resourceHandlerError(errorHandler, logger, exception);
+          // a better solution is needed here since this await causes the thread to block
+          // currently
+          return errorResponse.await();
+        });
     } catch (Exception exception) {
-      if (errorHandler != null) {
-        try {
-          responseCompletes = errorHandler.handle(exception);
-        } catch (Exception errorHandlerException) {
-          logger.log("Exception thrown by error handler when handling error", exception);
-          responseCompletes = defaultErrorResponse();
-        }
-      } else {
-        logger.log("Exception thrown by Resource execution", exception);
-        responseCompletes = defaultErrorHandler(exception);
-      }
+      responseCompletes = resourceHandlerError(errorHandler, logger, exception);
     }
     return responseCompletes;
   }
 
+  private Completes<Response> resourceHandlerError(ErrorHandler errorHandler, Logger logger, Exception exception) {
+    Completes<Response> responseCompletes;
+    if (errorHandler != null) {
+      try {
+        responseCompletes = errorHandler.handle(exception);
+      } catch (Exception errorHandlerException) {
+        logger.log("Exception thrown by error handler when handling error", exception);
+        responseCompletes = defaultErrorResponse();
+      }
+    } else {
+      logger.log("Exception thrown by Resource execution", exception);
+      responseCompletes = defaultErrorHandler(exception);
+    }
+    return responseCompletes;
+  }
 
   private String generateActionSignature(final List<ParameterResolver<?>> parameterResolvers) {
     checkOrder(parameterResolvers);

@@ -1,15 +1,18 @@
 package io.vlingo.http;
-
-
+import java.util.Map;
 import java.util.Objects;
 
-public class MediaType {
+public class MediaType extends MediaTypeDescriptor {
 
   public String type;
   public String subType;
 
-  private MediaType(String type, String subType) {
-    this.type = type; this.subType = subType;
+  public MediaType(String mediaType, String mediaSubType) {
+    super(mediaType, mediaSubType);
+  }
+
+  public MediaType(String mediaType, String mediaSubType, Map<String, String> parameters) {
+    super(mediaType, mediaSubType, parameters);
   }
 
   public String mimeType() {
@@ -35,14 +38,14 @@ public class MediaType {
     return Objects.hash(type, subType);
   }
 
-  public static MediaType fromMimeType(String mediaTypeDescrriptor) {
-    String[] parts = mediaTypeDescrriptor.split("/");
+  public static MediaType fromMimeTypeDescriptor(String mimeTypeDescriptor) {
+    String[] parts = mimeTypeDescriptor.split(MediaTypeDescriptor.MIME_SUBTYPE_SEPARATOR);
     return (parts.length == 2) ?
-          fromMimeType(parts[0], parts[1]) :
+          fromMimeTypeDescriptor(parts[0], parts[1]) :
           null;
   }
 
-  public static MediaType fromMimeType(String mediaType, String mediaSubType) {
+  public static MediaType fromMimeTypeDescriptor(String mediaType, String mediaSubType) {
     return new MediaType(mediaType, mediaSubType);
   }
 

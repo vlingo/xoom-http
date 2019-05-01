@@ -136,7 +136,7 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
   @Test
   public void executeWithRequestAndMappedParametersWithWrongSignatureType() {
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Value my-post is of type String instead of Integer");
+    thrown.expectMessage("Value my-post is of mimeType String instead of Integer");
 
     final Request request = Request.has(Method.GET)
       .and(URI.create("/posts/my-post"))

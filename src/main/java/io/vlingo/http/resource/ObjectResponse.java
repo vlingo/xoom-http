@@ -55,12 +55,11 @@ public class ObjectResponse<T> {
   }
 
   public Response fromRequest(Request request, MediaTypeMapper mapper) {
-    String acceptedMediaTypes = request.headerValueOr(RequestHeader.Accept, DEFAULT_MEDIA_TYPE.mimeType());
-    ResponseMediaTypeSelector responseMediaTypeSelector = new ResponseMediaTypeSelector(acceptedMediaTypes);
-    MediaType responseMediaType = responseMediaTypeSelector.selectType(mapper.mappedMediaTypes());
-    String bodyContent = mapper.from(entity, responseMediaType, clazz);
-    Body body = Body.from(bodyContent);
-    //headers.and(ResponseHeader.ContentType, responseMediaType.mimeType());
+    final String acceptedMediaTypes = request.headerValueOr(RequestHeader.Accept, DEFAULT_MEDIA_TYPE.mimeType());
+    final ResponseMediaTypeSelector responseMediaTypeSelector = new ResponseMediaTypeSelector(acceptedMediaTypes);
+    final MediaType responseMediaType = responseMediaTypeSelector.selectType(mapper.mappedMediaTypes());
+    final String bodyContent = mapper.from(entity, responseMediaType, clazz);
+    final Body body = Body.from(bodyContent);
     headers.add(ResponseHeader.of(ResponseHeader.ContentType, responseMediaType.mimeType()));
     return Response.of(version, status, headers, body);
   }

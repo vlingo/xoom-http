@@ -58,7 +58,7 @@ public class AllSseFeedActor extends Actor implements SseFeed {
     int type = 0;
     int id = startId;
     for ( ; id <= endId; ++id) {
-      substream.add(builder.clear().event("type-" + ('A' + type)).id(id).data("data-" + id).retry(retry).toEvent());
+      substream.add(builder.clear().event("mimeType-" + ('A' + type)).id(id).data("data-" + id).retry(retry).toEvent());
       type = type > 26 ? 0 : type + 1;
     }
 
