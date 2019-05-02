@@ -1,17 +1,17 @@
 package io.vlingo.http.resource;
 
-import io.vlingo.http.MediaType;
+import io.vlingo.http.media.ContentMediaType;
 
 import java.util.Objects;
 
 
 public class Content {
   public final String data;
-  public final MediaType mediaType;
+  public final ContentMediaType contentMediaType;
 
-  public Content(String data, MediaType mediaType) {
+  public Content(String data, ContentMediaType contentMediaType) {
     this.data = data;
-    this.mediaType = mediaType;
+    this.contentMediaType = contentMediaType;
   }
 
   @Override
@@ -20,11 +20,11 @@ public class Content {
     if (o == null || getClass() != o.getClass()) return false;
     Content content = (Content) o;
     return Objects.equals(data, content.data) &&
-      Objects.equals(mediaType, content.mediaType);
+      Objects.equals(contentMediaType, content.contentMediaType);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(data, mediaType);
+    return Objects.hash(data, contentMediaType);
   }
 }

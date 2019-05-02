@@ -11,10 +11,10 @@ package io.vlingo.http.resource;
 
 import io.vlingo.common.Completes;
 import io.vlingo.http.*;
+import io.vlingo.http.media.ContentMediaType;
 import io.vlingo.http.resource.serialization.JsonSerialization;
 import io.vlingo.http.sample.user.NameData;
 import io.vlingo.http.sample.user.model.Name;
-import io.vlingo.http.sample.user.model.User;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -49,14 +49,8 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
 
   @Test
   public void objectMappedToMediaType() {
-    // todo: test failure cases, which return a different result in the completion pipeline
-    // todo: add media mimeType failure test
-    // todo: create issue for failed actor will miss messages, need supervisor
-    // todo: mocks discussion
-    // todo: review extraction of execution code
     Name name = new Name("first", "last");
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      // todo change signature to avoid casting
       .handle(() -> withSuccess(ObjectResponse.of(Ok, name, Name.class)))
       .mapper(defaultMediaTypeMapperForJson());
 
@@ -67,13 +61,13 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
     assertEquals("/helloworld", handler.path);
     String nameAsJson = JsonSerialization.serialized(name);
     assertResponsesAreEquals(of(Ok,
-      ResponseHeader.headers(ResponseHeader.ContentType, MediaType.Json().toString()), nameAsJson),
+      ResponseHeader.headers(ResponseHeader.ContentType, ContentMediaType.Json().toString()), nameAsJson),
       response);
   }
 
 
   @Test
-  public void objectNotMappedToMediaType() {
+  public void mappingNotAvailableForObjectResponseUnsupported() {
     Name name = new Name("first", "last");
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
       .handle(() -> withSuccess(ObjectResponse.of(Ok, name, Name.class)))
@@ -99,6 +93,20 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
       .onError(
         (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
     );
+    Completes<Response> responseCompletes = handler.execute(Request.method(Method.GET), logger);
+    assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
+  }
+
+
+  @Test
+  public void errorHandlerInvokedForObject() {
+    final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
+      .handle((RequestHandler0.ObjectHandler0)() -> {
+        throw new RuntimeException("Test Handler exception");
+      })
+      .onError(
+        (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
+      );
     Completes<Response> responseCompletes = handler.execute(Request.method(Method.GET), logger);
     assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
   }
@@ -166,6 +174,7 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
   }
 
   @Test
+  @SuppressWarnings( "deprecation" )
   public void addingHandlerBodyWithMapper() {
     final Request request = Request.has(Method.POST)
                                    .and(URI.create("/user/admin/name"))

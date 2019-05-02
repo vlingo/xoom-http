@@ -3,17 +3,17 @@ package io.vlingo.http.resource;
 import io.vlingo.http.Body;
 import io.vlingo.http.Header;
 import io.vlingo.http.Header.Headers;
-import io.vlingo.http.MediaType;
+import io.vlingo.http.media.ContentMediaType;
 import io.vlingo.http.Request;
 import io.vlingo.http.RequestHeader;
 import io.vlingo.http.Response;
 import io.vlingo.http.ResponseHeader;
-import io.vlingo.http.ResponseMediaTypeSelector;
+import io.vlingo.http.media.ResponseMediaTypeSelector;
 import io.vlingo.http.Version;
 
 public class ObjectResponse<T> {
 
-  private static final MediaType DEFAULT_MEDIA_TYPE = MediaType.Json();
+  private static final ContentMediaType DEFAULT_MEDIA_TYPE = ContentMediaType.Json();
 
   private final Version version;
   private final Response.Status status;
@@ -55,12 +55,12 @@ public class ObjectResponse<T> {
   }
 
   public Response fromRequest(Request request, MediaTypeMapper mapper) {
-    final String acceptedMediaTypes = request.headerValueOr(RequestHeader.Accept, DEFAULT_MEDIA_TYPE.mimeType());
+    final String acceptedMediaTypes = request.headerValueOr(RequestHeader.Accept, DEFAULT_MEDIA_TYPE.toString());
     final ResponseMediaTypeSelector responseMediaTypeSelector = new ResponseMediaTypeSelector(acceptedMediaTypes);
-    final MediaType responseMediaType = responseMediaTypeSelector.selectType(mapper.mappedMediaTypes());
-    final String bodyContent = mapper.from(entity, responseMediaType, clazz);
+    final ContentMediaType responseContentMediaType = responseMediaTypeSelector.selectType(mapper.mappedMediaTypes());
+    final String bodyContent = mapper.from(entity, responseContentMediaType, clazz);
     final Body body = Body.from(bodyContent);
-    headers.add(ResponseHeader.of(ResponseHeader.ContentType, responseMediaType.mimeType()));
+    headers.add(ResponseHeader.of(ResponseHeader.ContentType, responseContentMediaType.toString()));
     return Response.of(version, status, headers, body);
   }
 }

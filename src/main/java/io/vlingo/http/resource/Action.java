@@ -39,7 +39,7 @@ public final class Action {
     this.uri = uri;
     this.to = new ToSpec(to);
     this.originalTo = to;
-    this.mapper = mapper == null ? DefaultMapper.instance : mapperFrom(mapper);
+    this.mapper = mapper == null ? DefaultJsonMapper.instance : mapperFrom(mapper);
     this.disallowPathParametersWithSlash = disallowPathParametersWithSlash;
     this.additionalParameters = additionalParameters;
     this.matchable = new Matchable(uri);

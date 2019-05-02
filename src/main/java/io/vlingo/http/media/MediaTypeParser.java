@@ -1,8 +1,8 @@
-package io.vlingo.http;
+package io.vlingo.http.media;
 
 import java.util.Arrays;
 
-import static io.vlingo.http.MediaTypeDescriptor.PARAMETER_ASSIGNMENT;
+import static io.vlingo.http.media.MediaTypeDescriptor.PARAMETER_ASSIGNMENT;
 
 public class MediaTypeParser {
 
@@ -11,7 +11,8 @@ public class MediaTypeParser {
   private static final int PARAMETER_FIELD_OFFSET = 0;
   private static final int PARAMETER_AND_VALUE_SIZE = 2;
 
-  public static <T extends MediaTypeDescriptor> T parseFrom(String mediaTypeDescriptor, MediaTypeDescriptor.Builder<T> builder) {
+  public static <T extends MediaTypeDescriptor> T parseFrom(final String mediaTypeDescriptor,
+                                                            final MediaTypeDescriptor.Builder<T> builder) {
     String[] descriptorParts = mediaTypeDescriptor.split(MediaTypeDescriptor.PARAMETER_SEPARATOR);
     if (descriptorParts.length > 1) {
       parseAttributes(builder, Arrays.copyOfRange(descriptorParts, 1, descriptorParts.length));
@@ -25,12 +26,8 @@ public class MediaTypeParser {
     return builder.build();
   }
 
-  public static MediaType parseToMediaType(String mediaTypeDescriptor) {
-   return parseFrom(mediaTypeDescriptor,
-     new MediaTypeDescriptor.Builder<>(MediaType::new));
-  }
-
-  private static <T extends MediaTypeDescriptor> void parseAttributes(MediaTypeDescriptor.Builder<T> builder, String[] parameters) {
+  private static <T extends MediaTypeDescriptor> void parseAttributes(final MediaTypeDescriptor.Builder<T> builder,
+                                                                      final String[] parameters) {
       for (String parameter : parameters) {
         String[] parameterFieldAndValue = parameter.split(PARAMETER_ASSIGNMENT);
 

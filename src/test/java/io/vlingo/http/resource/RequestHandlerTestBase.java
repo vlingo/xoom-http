@@ -12,8 +12,7 @@ package io.vlingo.http.resource;
 import static org.junit.Assert.assertEquals;
 
 import io.vlingo.actors.Logger;
-import io.vlingo.actors.plugin.logging.noop.NoOpLogger;
-import io.vlingo.http.MediaType;
+import io.vlingo.http.media.ContentMediaType;
 import io.vlingo.http.Response;
 
 public class RequestHandlerTestBase {
@@ -36,7 +35,7 @@ public class RequestHandlerTestBase {
   MediaTypeMapper defaultMediaTypeMapperForJson() {
 
     return new MediaTypeMapper.Builder()
-      .addMapperFor(MediaType.Json(), new DefaultMapper())
+      .addMapperFor(ContentMediaType.Json(), new DefaultJsonMapper())
       .build();
   }
 }

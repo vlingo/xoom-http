@@ -28,16 +28,18 @@ public class RequestHandler0 extends RequestHandler {
     super(method, path, Collections.emptyList());
   }
 
-  Completes<Response> defaultErrorResponse() {
-    return Completes.withSuccess(Response.of(Response.Status.InternalServerError));
-  }
-
   public RequestHandler0 handle(final Handler0 handler) {
+    if (this.objectHandler != null) {
+      throw new IllegalArgumentException("Handler already specified via .handle(...)");
+    }
     this.handler = handler;
     return this;
   }
 
   public RequestHandler0 handle(final ObjectHandler0 handler) {
+    if (this.handler != null) {
+      throw new IllegalArgumentException("Handler already specified via .handle(...)");
+    }
     this.objectHandler = handler;
     return this;
   }
@@ -87,10 +89,19 @@ public class RequestHandler0 extends RequestHandler {
     return new RequestHandler1<>(method, path, ParameterResolver.body(paramClass), errorHandler);
   }
 
+  /**
+   * Specify the class that represents the body of the request for all requests using the specified mapper for all
+   * MIME types regardless of the Content-Type header.
+   *
+   * @deprecated Deprecated in favor of using the ContentMediaType method, which handles media types appropriately.
+   * {@link RequestHandler0#body(java.lang.Class, io.vlingo.http.resource.MediaTypeMapper)} instead.
+   */
+  @Deprecated
   public <T> RequestHandler1<T> body(final Class<T> paramClass, final Class<? extends Mapper> mapperClass ) {
     return body(paramClass, mapperFrom(mapperClass));
   }
 
+  @Deprecated
   public <T> RequestHandler1<T> body(final Class<T> paramClass, final Mapper mapper ) {
     return new RequestHandler1<>(method, path, ParameterResolver.body(paramClass, mapper), errorHandler);
   }

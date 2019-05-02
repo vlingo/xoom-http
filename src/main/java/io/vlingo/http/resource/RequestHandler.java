@@ -11,6 +11,7 @@ package io.vlingo.http.resource;
 
 import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
+import io.vlingo.common.Outcome;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
@@ -39,7 +40,10 @@ public abstract class RequestHandler {
   private Completes<Response> defaultErrorHandler(Exception ex) {
     if (ex instanceof MediaTypeNotSupported) {
       return Completes.withSuccess(Response.of(Response.Status.UnsupportedMediaType));
-    } else {
+    } else if (ex instanceof IllegalArgumentException) {
+      return Completes.withSuccess(Response.of(Response.Status.BadRequest));
+    }
+    else {
       return defaultErrorResponse();
     }
   }
@@ -74,13 +78,14 @@ public abstract class RequestHandler {
                                            final Logger logger) {
     Completes<Response> responseCompletes;
     try {
+      Outcome<Throwable, Completes<ObjectResponse<?>>> responseOutcome;
+      // Find way to use outcome to capture failure case that can be used in the .otherwise case
       Completes<ObjectResponse<?>> objectResponseCompletes = executeAction.get();
       responseCompletes = objectResponseCompletes
         .andThen(objResponse -> objResponse.fromRequest(request, mediaTypeMapper))
         .recoverFrom(exception -> {
           Completes<Response> errorResponse = resourceHandlerError(errorHandler, logger, exception);
-          // a better solution is needed here since this await causes the thread to block
-          // currently
+          // todo: Investigate Outcome
           return errorResponse.await();
         });
     } catch (Exception exception) {

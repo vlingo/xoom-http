@@ -1,11 +1,11 @@
 package io.vlingo.http.resource;
 
-import io.vlingo.http.MediaType;
+import io.vlingo.http.media.ContentMediaType;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class MediaTypeMapperTest {
+public class ContentMediaTypeMapperTest {
 
   private class TestMapper<T> implements Mapper {
 
@@ -35,18 +35,17 @@ public class MediaTypeMapperTest {
 
     TestMapper<Object> testMapper = new TestMapper<>(mappedToObject, mappedToString);
     MediaTypeMapper mediaTypeMapper = new MediaTypeMapper.Builder()
-      .addMapperFor(MediaType.Json(), testMapper)
+      .addMapperFor(ContentMediaType.Json(), testMapper)
       .build();
 
-    Content expectedContent = new Content(mappedToString, MediaType.Json());
-    assertEquals(expectedContent, mediaTypeMapper.from(new Object(), MediaType.Json(), Object.class));
+    assertEquals(mappedToString, mediaTypeMapper.from(new Object(), ContentMediaType.Json(), Object.class));
   }
 
   @Test(expected = MediaTypeNotSupported.class)
   public void exception_thrown_for_invalid_mapper() {
     MediaTypeMapper mediaTypeMapper = new MediaTypeMapper.Builder()
       .build();
-    mediaTypeMapper.from(new Object(), MediaType.Json(), Object.class);
+    mediaTypeMapper.from(new Object(), ContentMediaType.Json(), Object.class);
   }
 
 }
