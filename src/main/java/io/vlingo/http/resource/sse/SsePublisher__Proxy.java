@@ -7,13 +7,17 @@
 
 package io.vlingo.http.resource.sse;
 
+import java.util.function.Consumer;
+
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.DeadLetter;
+import io.vlingo.actors.DeadLetters;
 import io.vlingo.actors.LocalMessage;
 import io.vlingo.actors.Mailbox;
 
 public class SsePublisher__Proxy implements io.vlingo.http.resource.sse.SsePublisher {
 
+  private static final String representationConclude0 = "conclude()";
   private static final String subscribeRepresentation1 = "subscribe(io.vlingo.http.resource.sse.SseSubscriber)";
   private static final String unsubscribeRepresentation2 = "unsubscribe(io.vlingo.http.resource.sse.SseSubscriber)";
   private static final String stopRepresentation3 = "stop()";
@@ -44,6 +48,16 @@ public class SsePublisher__Proxy implements io.vlingo.http.resource.sse.SsePubli
       else { mailbox.send(new LocalMessage<SsePublisher>(actor, SsePublisher.class, consumer, unsubscribeRepresentation2)); }
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, unsubscribeRepresentation2));
+    }
+  }
+  @Override
+  public void conclude() {
+    if (!actor.isStopped()) {
+      final Consumer<DeadLetters> consumer = (actor) -> actor.conclude();
+      if (mailbox.isPreallocated()) { mailbox.send(actor, DeadLetters.class, consumer, null, representationConclude0); }
+      else { mailbox.send(new LocalMessage<DeadLetters>(actor, DeadLetters.class, consumer, representationConclude0)); }
+    } else {
+      actor.deadLetters().failedDelivery(new DeadLetter(actor, representationConclude0));
     }
   }
   @Override
