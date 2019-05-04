@@ -11,11 +11,13 @@ import java.util.function.Consumer;
 
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.DeadLetter;
+import io.vlingo.actors.DeadLetters;
 import io.vlingo.actors.LocalMessage;
 import io.vlingo.actors.Mailbox;
 
 public class Dispatcher__Proxy implements Dispatcher {
 
+  private static final String representationConclude0 = "conclude()";
   private static final String dispatchForRepresentation1 = "dispatchFor(io.vlingo.http.Context)";
   private static final String stopRepresentation2 = "stop()";
 
@@ -27,6 +29,7 @@ public class Dispatcher__Proxy implements Dispatcher {
     this.mailbox = mailbox;
   }
 
+  @Override
   public void dispatchFor(io.vlingo.http.Context arg0) {
     if (!actor.isStopped()) {
       final Consumer<Dispatcher> consumer = (actor) -> actor.dispatchFor(arg0);
@@ -36,6 +39,17 @@ public class Dispatcher__Proxy implements Dispatcher {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, dispatchForRepresentation1));
     }
   }
+  @Override
+  public void conclude() {
+    if (!actor.isStopped()) {
+      final Consumer<DeadLetters> consumer = (actor) -> actor.conclude();
+      if (mailbox.isPreallocated()) { mailbox.send(actor, DeadLetters.class, consumer, null, representationConclude0); }
+      else { mailbox.send(new LocalMessage<DeadLetters>(actor, DeadLetters.class, consumer, representationConclude0)); }
+    } else {
+      actor.deadLetters().failedDelivery(new DeadLetter(actor, representationConclude0));
+    }
+  }
+  @Override
   public void stop() {
     if (!actor.isStopped()) {
       final Consumer<Dispatcher> consumer = (actor) -> actor.stop();
@@ -45,6 +59,7 @@ public class Dispatcher__Proxy implements Dispatcher {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, stopRepresentation2));
     }
   }
+  @Override
   public boolean isStopped() {
     return actor.isStopped();
   }
