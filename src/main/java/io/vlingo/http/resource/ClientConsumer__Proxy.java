@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.DeadLetter;
+import io.vlingo.actors.DeadLetters;
 import io.vlingo.actors.LocalMessage;
 import io.vlingo.actors.Mailbox;
 import io.vlingo.common.BasicCompletes;
@@ -19,6 +20,7 @@ import io.vlingo.http.Response;
 
 public class ClientConsumer__Proxy implements ClientConsumer {
 
+  private static final String representationConclude0 = "conclude()";
   private static final String requestWithRepresentation1 = "requestWith(io.vlingo.http.Request)";
   private static final String consumeRepresentation2 = "consume(io.vlingo.wire.message.ConsumerByteBuffer)";
   private static final String intervalSignalRepresentation3 = "intervalSignal(io.vlingo.actors.Scheduled, java.lang.Object)";
@@ -63,6 +65,16 @@ public class ClientConsumer__Proxy implements ClientConsumer {
       else { mailbox.send(new LocalMessage<ClientConsumer>(actor, ClientConsumer.class, consumer, intervalSignalRepresentation3)); }
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, intervalSignalRepresentation3));
+    }
+  }
+  @Override
+  public void conclude() {
+    if (!actor.isStopped()) {
+      final Consumer<DeadLetters> consumer = (actor) -> actor.conclude();
+      if (mailbox.isPreallocated()) { mailbox.send(actor, DeadLetters.class, consumer, null, representationConclude0); }
+      else { mailbox.send(new LocalMessage<DeadLetters>(actor, DeadLetters.class, consumer, representationConclude0)); }
+    } else {
+      actor.deadLetters().failedDelivery(new DeadLetter(actor, representationConclude0));
     }
   }
   @Override
