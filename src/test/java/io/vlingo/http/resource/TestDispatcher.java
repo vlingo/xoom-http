@@ -14,10 +14,14 @@ import io.vlingo.http.Context;
 public class TestDispatcher implements Dispatcher {
   private final Logger logger;
   private final Resources resources;
-  
+
   public TestDispatcher(final Resources resources) {
     this.resources = resources;
     this.logger = JDKLogger.testInstance();
+  }
+
+  @Override
+  public void conclude() {
   }
 
   @Override
