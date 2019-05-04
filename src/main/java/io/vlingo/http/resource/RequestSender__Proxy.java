@@ -7,13 +7,17 @@
 
 package io.vlingo.http.resource;
 
+import java.util.function.Consumer;
+
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.DeadLetter;
+import io.vlingo.actors.DeadLetters;
 import io.vlingo.actors.LocalMessage;
 import io.vlingo.actors.Mailbox;
 
 public class RequestSender__Proxy implements io.vlingo.http.resource.RequestSender {
 
+  private static final String representationConclude0 = "conclude()";
   private static final String sendRequestRepresentation1 = "sendRequest(io.vlingo.http.Request)";
   private static final String stopRepresentation2 = "stop()";
 
@@ -33,6 +37,16 @@ public class RequestSender__Proxy implements io.vlingo.http.resource.RequestSend
       else { mailbox.send(new LocalMessage<RequestSender>(actor, RequestSender.class, consumer, sendRequestRepresentation1)); }
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, sendRequestRepresentation1));
+    }
+  }
+  @Override
+  public void conclude() {
+    if (!actor.isStopped()) {
+      final Consumer<DeadLetters> consumer = (actor) -> actor.conclude();
+      if (mailbox.isPreallocated()) { mailbox.send(actor, DeadLetters.class, consumer, null, representationConclude0); }
+      else { mailbox.send(new LocalMessage<DeadLetters>(actor, DeadLetters.class, consumer, representationConclude0)); }
+    } else {
+      actor.deadLetters().failedDelivery(new DeadLetter(actor, representationConclude0));
     }
   }
   @Override
