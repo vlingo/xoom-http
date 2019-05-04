@@ -11,9 +11,9 @@ import java.util.function.Consumer;
 
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.DeadLetter;
-import io.vlingo.actors.DeadLetters;
 import io.vlingo.actors.LocalMessage;
 import io.vlingo.actors.Mailbox;
+import io.vlingo.actors.Stoppable;
 import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Response;
@@ -70,9 +70,9 @@ public class ClientConsumer__Proxy implements ClientConsumer {
   @Override
   public void conclude() {
     if (!actor.isStopped()) {
-      final Consumer<DeadLetters> consumer = (actor) -> actor.conclude();
-      if (mailbox.isPreallocated()) { mailbox.send(actor, DeadLetters.class, consumer, null, representationConclude0); }
-      else { mailbox.send(new LocalMessage<DeadLetters>(actor, DeadLetters.class, consumer, representationConclude0)); }
+      final Consumer<Stoppable> consumer = (actor) -> actor.conclude();
+      if (mailbox.isPreallocated()) { mailbox.send(actor, Stoppable.class, consumer, null, representationConclude0); }
+      else { mailbox.send(new LocalMessage<Stoppable>(actor, Stoppable.class, consumer, representationConclude0)); }
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, representationConclude0));
     }
