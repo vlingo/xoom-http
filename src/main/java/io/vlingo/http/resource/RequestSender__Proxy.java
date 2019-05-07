@@ -15,28 +15,28 @@ import io.vlingo.actors.LocalMessage;
 import io.vlingo.actors.Mailbox;
 import io.vlingo.actors.Stoppable;
 
-public class Dispatcher__Proxy implements Dispatcher {
+public class RequestSender__Proxy implements io.vlingo.http.resource.RequestSender {
 
   private static final String representationConclude0 = "conclude()";
-  private static final String dispatchForRepresentation1 = "dispatchFor(io.vlingo.http.Context)";
+  private static final String sendRequestRepresentation1 = "sendRequest(io.vlingo.http.Request)";
   private static final String stopRepresentation2 = "stop()";
 
   private final Actor actor;
   private final Mailbox mailbox;
 
-  public Dispatcher__Proxy(final Actor actor, final Mailbox mailbox){
+  public RequestSender__Proxy(final Actor actor, final Mailbox mailbox){
     this.actor = actor;
     this.mailbox = mailbox;
   }
 
   @Override
-  public void dispatchFor(io.vlingo.http.Context arg0) {
+  public void sendRequest(io.vlingo.http.Request arg0) {
     if (!actor.isStopped()) {
-      final Consumer<Dispatcher> consumer = (actor) -> actor.dispatchFor(arg0);
-      if (mailbox.isPreallocated()) { mailbox.send(actor, Dispatcher.class, consumer, null, dispatchForRepresentation1); }
-      else { mailbox.send(new LocalMessage<Dispatcher>(actor, Dispatcher.class, consumer, dispatchForRepresentation1)); }
+      final java.util.function.Consumer<RequestSender> consumer = (actor) -> actor.sendRequest(arg0);
+      if (mailbox.isPreallocated()) { mailbox.send(actor, RequestSender.class, consumer, null, sendRequestRepresentation1); }
+      else { mailbox.send(new LocalMessage<RequestSender>(actor, RequestSender.class, consumer, sendRequestRepresentation1)); }
     } else {
-      actor.deadLetters().failedDelivery(new DeadLetter(actor, dispatchForRepresentation1));
+      actor.deadLetters().failedDelivery(new DeadLetter(actor, sendRequestRepresentation1));
     }
   }
   @Override
@@ -52,9 +52,9 @@ public class Dispatcher__Proxy implements Dispatcher {
   @Override
   public void stop() {
     if (!actor.isStopped()) {
-      final Consumer<Dispatcher> consumer = (actor) -> actor.stop();
-      if (mailbox.isPreallocated()) { mailbox.send(actor, Dispatcher.class, consumer, null, stopRepresentation2); }
-      else { mailbox.send(new LocalMessage<Dispatcher>(actor, Dispatcher.class, consumer, stopRepresentation2)); }
+      final java.util.function.Consumer<RequestSender> consumer = (actor) -> actor.stop();
+      if (mailbox.isPreallocated()) { mailbox.send(actor, RequestSender.class, consumer, null, stopRepresentation2); }
+      else { mailbox.send(new LocalMessage<RequestSender>(actor, RequestSender.class, consumer, stopRepresentation2)); }
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, stopRepresentation2));
     }

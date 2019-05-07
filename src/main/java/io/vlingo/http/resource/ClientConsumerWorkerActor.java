@@ -7,40 +7,47 @@
 
 package io.vlingo.http.resource;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.CompletesEventually;
+import io.vlingo.actors.Definition;
 import io.vlingo.common.Completes;
-import io.vlingo.common.Scheduled;
 import io.vlingo.http.Request;
+import io.vlingo.http.RequestHeader;
 import io.vlingo.http.Response;
+import io.vlingo.http.ResponseHeader;
 import io.vlingo.http.ResponseParser;
 import io.vlingo.http.resource.Client.Configuration;
 import io.vlingo.wire.channel.ResponseChannelConsumer;
-import io.vlingo.wire.message.ByteBufferAllocator;
 import io.vlingo.wire.message.ConsumerByteBuffer;
-import io.vlingo.wire.message.Converters;
 
 /**
  * Common behavior implemented by the worker fulfilling the {@code ClientConsumer} contract.
  */
 public class ClientConsumerWorkerActor extends Actor implements ClientConsumer {
+  private static final String EmptyTestId = "";
+  private static final AtomicInteger testIdGenerator = new AtomicInteger(0);
+
+  private final String testId;
+
   private CompletesEventually completesEventually;
-  private final State state;
+  private ResponseParser parser;
+  private final RequestSender requestSender;
 
   /**
    * Constructs my default state.
    * @param configuration the Configuration
    * @throws Exception when the ClientConsumer cannot be created
    */
-  @SuppressWarnings("unchecked")
   public ClientConsumerWorkerActor(final Configuration configuration) throws Exception {
-    this.state =
-            new State(
-                    configuration,
-                    ClientConsumerCommons.clientChannel(configuration, selfAs(ResponseChannelConsumer.class), logger()),
-                    null,
-                    stage().scheduler().schedule(selfAs(Scheduled.class), null, 1, configuration.probeInterval),
-                    ByteBufferAllocator.allocate(configuration.writeBufferSize));
+    this.testId = configuration.hasTestInfo() ?
+            Integer.toString(testIdGenerator.incrementAndGet()) :
+            EmptyTestId;
+
+    this.requestSender = startRequestSender(configuration);
+
+    this.parser = null;
   }
 
   /**
@@ -48,30 +55,33 @@ public class ClientConsumerWorkerActor extends Actor implements ClientConsumer {
    */
   @Override
   public void consume(final ConsumerByteBuffer buffer) {
-    if (state.parser == null) {
-      state.parser = ResponseParser.parserFor(buffer.asByteBuffer());
+    if (parser == null) {
+      parser = ResponseParser.parserFor(buffer.asByteBuffer());
     } else {
-      state.parser.parseNext(buffer.asByteBuffer());
+      parser.parseNext(buffer.asByteBuffer());
     }
     buffer.release();
 
     // don't disperse stowed messages unless a full response has arrived
-    if (state.parser.hasFullResponse()) {
-      while (state.parser.hasFullResponse()) {
-        final Response response = state.parser.fullResponse();
-        completesEventually.with(response);
+    if (parser.hasFullResponse()) {
+      final Response response = parser.fullResponse();
+
+      if (testId != EmptyTestId) {
+        response.headers.add(ResponseHeader.of(Client.ClientIdCustomHeader, testId));
+        //logger().log("Client Worker: " + testId + " Consuming");
+        //logger().log("Client Worker: " + testId + "\nConsuming:\n" + response);
       }
+
+      completesEventually.with(response);
+
       completesEventually = null;
+
       disperseStowedMessages();
     }
-  }
 
-  /**
-   * @see io.vlingo.common.Scheduled#intervalSignal(io.vlingo.common.Scheduled, java.lang.Object)
-   */
-  @Override
-  public void intervalSignal(final Scheduled<Object> scheduled, final Object data) {
-    state.channel.probeChannel();
+    if (!parser.isMissingContent()) {
+      parser = null;
+    }
   }
 
   /**
@@ -81,10 +91,14 @@ public class ClientConsumerWorkerActor extends Actor implements ClientConsumer {
   public Completes<Response> requestWith(final Request request, final Completes<Response> completes) {
     completesEventually = stage().world().completesFor(completes);
 
-    state.buffer.clear();
-    state.buffer.put(Converters.textToBytes(request.toString()));
-    state.buffer.flip();
-    state.channel.requestWith(state.buffer);
+    if (testId != EmptyTestId) {
+      request.headers.add(RequestHeader.of(Client.ClientIdCustomHeader, testId));
+      request.headers.add(RequestHeader.of(RequestHeader.XCorrelationID, testId));
+      //logger().log("Client Worker: " + testId + " Requesting");
+      //logger().log("Client Worker: " + testId + "\nRequesting:\n" + request);
+    }
+
+    requestSender.sendRequest(request);
 
     stowMessages(ResponseChannelConsumer.class);
 
@@ -96,7 +110,21 @@ public class ClientConsumerWorkerActor extends Actor implements ClientConsumer {
    */
   @Override
   public void stop() {
-    state.channel.close();
-    state.probe.cancel();
+    requestSender.stop();
+
+    super.stop();
+  }
+
+  private RequestSender startRequestSender(final Configuration configuration) throws Exception {
+    final ResponseChannelConsumer self = selfAs(ResponseChannelConsumer.class);
+
+    final Definition definition =
+            Definition.has(
+                    RequestSenderProbeActor.class,
+                    Definition.parameters(configuration, self, testId));
+
+    RequestSender requestSender = childActorFor(RequestSender.class, definition);
+
+    return requestSender;
   }
 }

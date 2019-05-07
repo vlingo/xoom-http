@@ -13,11 +13,13 @@ import io.vlingo.actors.Actor;
 import io.vlingo.actors.DeadLetter;
 import io.vlingo.actors.LocalMessage;
 import io.vlingo.actors.Mailbox;
+import io.vlingo.actors.Stoppable;
 import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
 
 public class Server__Proxy implements Server {
 
+  private static final String representationConclude0 = "conclude()";
   private static final String shutDownRepresentation1 = "shutDown()";
   private static final String startUpRepresentation2 = "startUp()";
   private static final String stopRepresentation3 = "stop()";
@@ -61,6 +63,17 @@ public class Server__Proxy implements Server {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, startUpRepresentation2));
     }
     return null;
+  }
+
+  @Override
+  public void conclude() {
+    if (!actor.isStopped()) {
+      final Consumer<Stoppable> consumer = (actor) -> actor.conclude();
+      if (mailbox.isPreallocated()) { mailbox.send(actor, Stoppable.class, consumer, null, representationConclude0); }
+      else { mailbox.send(new LocalMessage<Stoppable>(actor, Stoppable.class, consumer, representationConclude0)); }
+    } else {
+      actor.deadLetters().failedDelivery(new DeadLetter(actor, representationConclude0));
+    }
   }
 
   @Override

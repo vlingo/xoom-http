@@ -20,6 +20,7 @@ import io.vlingo.wire.message.ConsumerByteBuffer;
  * Load-balancing router of `ClientConsumer` requests.
  */
 public class LoadBalancingClientRequestConsumerActor extends SmallestMailboxRouter<ClientConsumer> implements ClientConsumer {
+  private static String ErrorMessage = "LoadBalancingClientRequestConsumerActor: Should not be reached. Message: ";
 
   /**
    * Constructs my default state.
@@ -39,6 +40,8 @@ public class LoadBalancingClientRequestConsumerActor extends SmallestMailboxRout
   @Override
   public void consume(final ConsumerByteBuffer buffer) {
     // no-op
+    final String message = ErrorMessage + "consume()";
+    logger().log(message, new UnsupportedOperationException(message));
   }
 
   /**
@@ -47,6 +50,8 @@ public class LoadBalancingClientRequestConsumerActor extends SmallestMailboxRout
   @Override
   public void intervalSignal(final Scheduled<Object> scheduled, final Object data) {
     // no-op
+    final String message = ErrorMessage + "intervalSignal()";
+    logger().log(message, new UnsupportedOperationException(message));
   }
 
   /**

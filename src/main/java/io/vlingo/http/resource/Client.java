@@ -24,6 +24,8 @@ import io.vlingo.wire.node.Host;
  * Asynchronous HTTP client.
  */
 public class Client {
+  public static String ClientIdCustomHeader = "X-VLINGO-CLIENT-ID";
+
   public static enum ClientConsumerType { Correlating, LoadBalancing, RoundRobin };
 
   private final Configuration configuration;
@@ -133,6 +135,7 @@ public class Client {
     public final int readBufferPoolSize;
     public final int writeBufferSize;
     public final Stage stage;
+    public Object testInfo = null;
 
     /**
      * Answer the {@code Configuration} with defaults except for the
@@ -285,6 +288,35 @@ public class Client {
       this.writeBufferSize = writeBufferSize;
       this.readBufferPoolSize = readBufferPoolSize;
       this.readBufferSize = readBufferSize;
+    }
+
+    /**
+     * Answer whether or not I have {@code testInfo}.
+     * @return boolean
+     */
+    public boolean hasTestInfo() {
+      return testInfo != null;
+    }
+
+    /**
+     * Answer my test info, which may be null.
+     * @param <R> the type expected by the test request/response handler
+     * @return R
+     */
+    @SuppressWarnings("unchecked")
+    public <R> R testInfo() {
+      return (R) testInfo;
+    }
+
+    /**
+     * Marks this configuration as used for testing. There may be a
+     * contract with a given client worker type to attach some test
+     * data (perhaps a custom header) that conveys useful information
+     * to the test being run.
+     * @param testInfo the Object reference to test information
+     */
+    public void testInfo(final Object testInfo) {
+      this.testInfo = testInfo;
     }
   }
 }
