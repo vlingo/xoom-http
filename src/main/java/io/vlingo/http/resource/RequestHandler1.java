@@ -21,22 +21,47 @@ import java.util.Collections;
 public class RequestHandler1<T> extends RequestHandler {
   final ParameterResolver<T> resolver;
   private Handler1<T> handler;
+  private ObjectHandler1<T> objectHandler;
   private ErrorHandler errorHandler;
+  private MediaTypeMapper mediaTypeMapper;
 
-  RequestHandler1(final Method method, final String path, final ParameterResolver<T> resolver,
-                  final ErrorHandler errorHandler) {
+  RequestHandler1(final Method method,
+                  final String path,
+                  final ParameterResolver<T> resolver,
+                  final ErrorHandler errorHandler,
+                  final MediaTypeMapper mediaTypeMapper) {
     super(method, path, Collections.singletonList(resolver));
     this.resolver = resolver;
     this.errorHandler = errorHandler;
+    this.mediaTypeMapper = mediaTypeMapper;
   }
 
-  Completes<Response> execute(final T param1, final Logger logger) {
-    checkHandlerOrThrowException(handler);
-    return executeRequest(() -> handler.execute(param1), errorHandler, logger);
+  Completes<Response> execute(final Request request, final T param1, final Logger logger) {
+    checkHandlerOrThrowException(handler, objectHandler);
+    if (handler != null) {
+      return executeRequest(() -> handler.execute(param1), errorHandler, logger);
+    } else {
+      return executeObjectRequest(request,
+                                mediaTypeMapper,
+                                () -> objectHandler.execute(param1),
+                                errorHandler,
+                                logger);
+    }
   }
 
   public RequestHandler1<T> handle(final Handler1<T> handler) {
+    if (this.objectHandler != null) {
+      throw new IllegalArgumentException("Handler already specified via .handle(...)");
+    }
     this.handler = handler;
+    return this;
+  }
+
+  public RequestHandler1<T> handle(final RequestHandler1.ObjectHandler1 handler) {
+    if (this.handler != null) {
+      throw new IllegalArgumentException("Handler already specified via .handle(...)");
+    }
+    this.objectHandler = handler;
     return this;
   }
 
@@ -49,7 +74,7 @@ public class RequestHandler1<T> extends RequestHandler {
   Completes<Response> execute(final Request request,
                               final Action.MappedParameters mappedParameters,
                               final Logger logger) {
-    return execute(resolver.apply(request, mappedParameters), logger);
+    return execute(request, resolver.apply(request, mappedParameters), logger);
   }
 
   @FunctionalInterface
@@ -57,22 +82,50 @@ public class RequestHandler1<T> extends RequestHandler {
     Completes<Response> execute(T param1);
   }
 
+  @FunctionalInterface
+  public interface ObjectHandler1<T> {
+    Completes<ObjectResponse<?>> execute(T param1);
+  }
+
   // region FluentAPI
 
   public <R> RequestHandler2<T, R> param(final Class<R> paramClass) {
-    return new RequestHandler2<>(method, path, resolver, ParameterResolver.path(1, paramClass), errorHandler);
+    return new RequestHandler2<>(method, path, resolver, ParameterResolver.path(1, paramClass), errorHandler, mediaTypeMapper);
   }
 
   public <R> RequestHandler2<T, R> body(final Class<R> bodyClass) {
-    return new RequestHandler2<>(method, path, resolver, ParameterResolver.body(bodyClass), errorHandler);
+    return new RequestHandler2<>(method, path, resolver, ParameterResolver.body(bodyClass, mediaTypeMapper), errorHandler, mediaTypeMapper);
   }
 
+  /**
+   * Specify the class that represents the body of the request for all requests using the specified mapper for all
+   * MIME types regardless of the Content-Type header.
+   *
+   * @deprecated Deprecated in favor of using the ContentMediaType method, which handles media types appropriately.
+   * {@link RequestHandler1#body(java.lang.Class, io.vlingo.http.resource.MediaTypeMapper)} instead, or via
+   * {@link RequestHandler1#body(java.lang.Class)}
+   */
+  @Deprecated
   public <R> RequestHandler2<T, R> body(final Class<R> bodyClass, final Class<? extends Mapper> mapperClass) {
     return body(bodyClass, mapperFrom(mapperClass));
   }
 
+  /**
+   * Specify the class that represents the body of the request for all requests using the specified mapper for all
+   * MIME types regardless of the Content-Type header.
+   *
+   * @deprecated Deprecated in favor of using the ContentMediaType method, which handles media types appropriately.
+   * {@link RequestHandler1#body(java.lang.Class, io.vlingo.http.resource.MediaTypeMapper)}instead, or via
+   * {@link RequestHandler1#body(java.lang.Class)}
+   */
+  @Deprecated
   public <R> RequestHandler2<T, R> body(final Class<R> bodyClass, final Mapper mapper) {
-    return new RequestHandler2<>(method, path, resolver, ParameterResolver.body(bodyClass, mapper), errorHandler);
+    return new RequestHandler2<>(method, path, resolver, ParameterResolver.body(bodyClass, mapper), errorHandler, mediaTypeMapper);
+  }
+
+  public <R> RequestHandler2<T, R> body(final Class<R> bodyClass, final MediaTypeMapper mediaTypeMapper) {
+    this.mediaTypeMapper = mediaTypeMapper;
+    return new RequestHandler2<>(method, path, resolver, ParameterResolver.body(bodyClass, mediaTypeMapper), errorHandler, mediaTypeMapper);
   }
 
   public RequestHandler2<T, String> query(final String name) {
@@ -84,11 +137,11 @@ public class RequestHandler1<T> extends RequestHandler {
   }
 
   public <R> RequestHandler2<T, R> query(final String name, final Class<R> queryClass, final R defaultValue) {
-    return new RequestHandler2<>(method, path, resolver, ParameterResolver.query(name, queryClass, defaultValue), errorHandler);
+    return new RequestHandler2<>(method, path, resolver, ParameterResolver.query(name, queryClass, defaultValue), errorHandler, mediaTypeMapper);
   }
 
   public RequestHandler2<T, Header> header(final String name) {
-    return new RequestHandler2<>(method, path, resolver, ParameterResolver.header(name), errorHandler);
+    return new RequestHandler2<>(method, path, resolver, ParameterResolver.header(name), errorHandler, mediaTypeMapper);
   }
 
   // endregion

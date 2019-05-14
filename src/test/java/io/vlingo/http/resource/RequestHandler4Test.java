@@ -44,7 +44,8 @@ public class RequestHandler4Test extends RequestHandlerTestBase {
       parameterResolver2,
       parameterResolver3,
       parameterResolver4,
-      ErrorHandler.handleAllWith(InternalServerError));
+      ErrorHandler.handleAllWith(InternalServerError),
+      DefaultMediaTypeMapper.instance());
   }
 
   @Test
@@ -56,9 +57,9 @@ public class RequestHandler4Test extends RequestHandlerTestBase {
       path(1, String.class),
       path(2, String.class),
       query("page", Integer.class, 10)
-    ).handle((postId, commentId, userId, page) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
+    ).handle((RequestHandler4.Handler4<String, String, String, Integer>) (postId, commentId, userId, page) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
 
-    final Response response = handler.execute("my-post", "my-comment", "admin", null, logger).outcome();
+    final Response response = handler.execute(Request.method(Method.GET), "my-post", "my-comment", "admin", null, logger).outcome();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
@@ -81,7 +82,7 @@ public class RequestHandler4Test extends RequestHandlerTestBase {
       path(2, String.class),
       query("page", Integer.class, 10)
     );
-    handler.execute("my-post", "my-comment", "admin", null, logger);
+    handler.execute(Request.method(Method.GET), "my-post", "my-comment", "admin", null, logger);
   }
 
   @Test
@@ -93,11 +94,12 @@ public class RequestHandler4Test extends RequestHandlerTestBase {
       path(1, String.class),
       path(2, String.class),
       query("page", Integer.class, 10))
-      .handle((param1, param2, param3, param4) -> { throw new RuntimeException("Test Handler exception"); })
+      .handle((RequestHandler4.Handler4<String, String, String, Integer>) (param1, param2, param3, param4) ->
+      { throw new RuntimeException("Test Handler exception"); })
       .onError(
         (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
       );
-    Completes<Response> responseCompletes = handler.execute("idVal1", "idVal2", "idVal3", 1, logger);
+    Completes<Response> responseCompletes = handler.execute(Request.method(Method.GET), "idVal1", "idVal2", "idVal3", 1, logger);
     assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
   }
 
@@ -134,7 +136,8 @@ public class RequestHandler4Test extends RequestHandlerTestBase {
       path(2, String.class),
       query("page", Integer.class, 10)
     )
-      .handle((postId, commentId, userId, page) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
+      .handle((RequestHandler4.Handler4<String, String, String, Integer>) (postId, commentId, userId, page) ->
+        withSuccess(of(Ok, serialized(postId + " " + commentId))));
     final Response response = handler.execute(request, mappedParameters, logger).outcome();
 
     assertResponsesAreEquals(of(Ok, serialized("my-post my-comment")), response);
@@ -198,6 +201,7 @@ public class RequestHandler4Test extends RequestHandlerTestBase {
     assertEquals(new NameData("John", "Doe"), handler.resolverParam5.apply(request, mappedParameters));
   }
 
+  @SuppressWarnings("deprecation")
   @Test
   public void addingHandlerBodyWithMapper() {
     final Request request = Request.has(Method.POST)

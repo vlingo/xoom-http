@@ -5,7 +5,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class ContentMediaTypeMapperTest {
+public class MediaTypeMapperTest {
 
   private class TestMapper<T> implements Mapper {
 
@@ -41,7 +41,7 @@ public class ContentMediaTypeMapperTest {
     assertEquals(mappedToString, mediaTypeMapper.from(new Object(), ContentMediaType.Json(), Object.class));
   }
 
-  @Test(expected = MediaTypeNotSupported.class)
+  @Test(expected = MediaTypeNotSupportedException.class)
   public void exception_thrown_for_invalid_mapper() {
     MediaTypeMapper mediaTypeMapper = new MediaTypeMapper.Builder()
       .build();

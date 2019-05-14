@@ -11,6 +11,7 @@ package io.vlingo.http.resource;
 
 import io.vlingo.common.Completes;
 import io.vlingo.http.*;
+import io.vlingo.http.resource.RequestHandler3.Handler3;
 import io.vlingo.http.sample.user.NameData;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,7 +43,8 @@ public class RequestHandler3Test extends RequestHandlerTestBase {
       parameterResolver1,
       parameterResolver2,
       parameterResolver3,
-      ErrorHandler.handleAllWith(InternalServerError));
+      ErrorHandler.handleAllWith(InternalServerError),
+      DefaultMediaTypeMapper.instance());
   }
 
   @Test
@@ -53,9 +55,10 @@ public class RequestHandler3Test extends RequestHandlerTestBase {
       path(0, String.class),
       path(1, String.class),
       query("page", Integer.class, 10)
-    ).handle((postId, commentId, page) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
+    ).handle((Handler3<String, String, Integer>) (postId, commentId, page)
+      -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
 
-    final Response response = handler.execute("my-post", "my-comment", null, logger).outcome();
+    final Response response = handler.execute(Request.method(Method.GET), "my-post", "my-comment", null, logger).outcome();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
@@ -77,7 +80,7 @@ public class RequestHandler3Test extends RequestHandlerTestBase {
       path(1, String.class),
       query("page", Integer.class, 10)
     );
-    handler.execute("my-post", "my-comment", 1, logger);
+    handler.execute(Request.method(Method.GET), "my-post", "my-comment", 1, logger);
   }
 
   @Test
@@ -88,11 +91,12 @@ public class RequestHandler3Test extends RequestHandlerTestBase {
       path(0, String.class),
       path(1, String.class),
       query("page", Integer.class, 10))
-      .handle((param1, param2, param3) -> { throw new RuntimeException("Test Handler exception"); })
+      .handle((Handler3<String, String, Integer>) (param1, param2, param3)
+        -> { throw new RuntimeException("Test Handler exception"); })
       .onError(
         (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
       );
-    Completes<Response> responseCompletes = handler.execute("idVal1", "idVal2", 1, logger);
+    Completes<Response> responseCompletes = handler.execute(Request.method(Method.GET), "idVal1", "idVal2", 1, logger);
     assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
   }
 
@@ -126,7 +130,7 @@ public class RequestHandler3Test extends RequestHandlerTestBase {
       path(1, String.class),
       query("page", Integer.class, 10)
     )
-      .handle((postId, commentId, page) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
+      .handle((Handler3<String,String,Integer>)(postId, commentId, page) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
     final Response response = handler.execute(request, mappedParameters, logger).outcome();
 
     assertResponsesAreEquals(of(Ok, serialized("my-post my-comment")), response);
@@ -188,6 +192,7 @@ public class RequestHandler3Test extends RequestHandlerTestBase {
   }
 
 
+  @SuppressWarnings("deprecation")
   @Test
   public void addingHandlerBodyWithMapper() {
     final Request request = Request.has(Method.POST)

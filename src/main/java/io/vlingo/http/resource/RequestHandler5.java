@@ -15,7 +15,9 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
   final ParameterResolver<I> resolverParam4;
   final ParameterResolver<J> resolverParam5;
   private Handler5<T, R, U, I, J> handler;
+  private ObjectHandler5<T, R, U, I, J> objectHandler;
   private ErrorHandler errorHandler;
+  private MediaTypeMapper mediaTypeMapper;
 
   RequestHandler5(final Method method,
                   final String path,
@@ -24,7 +26,8 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
                   final ParameterResolver<U> resolverParam3,
                   final ParameterResolver<I> resolverParam4,
                   final ParameterResolver<J> resolverParam5,
-                  final ErrorHandler errorHandler) {
+                  final ErrorHandler errorHandler,
+                  final MediaTypeMapper mediaTypeMapper) {
     super(method, path, Arrays.asList(resolverParam1, resolverParam2, resolverParam3, resolverParam4, resolverParam5));
     this.resolverParam1 = resolverParam1;
     this.resolverParam2 = resolverParam2;
@@ -32,16 +35,41 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
     this.resolverParam4 = resolverParam4;
     this.resolverParam5 = resolverParam5;
     this.errorHandler = errorHandler;
+    this.mediaTypeMapper = mediaTypeMapper;
   }
 
-  Completes<Response> execute(final T param1, final R param2, final U param3, final I param4, final J param5,
+  Completes<Response> execute(final Request request,
+                              final T param1,
+                              final R param2,
+                              final U param3,
+                              final I param4,
+                              final J param5,
                               final Logger logger) {
-    checkHandlerOrThrowException(handler);
-    return executeRequest(() -> handler.execute(param1, param2, param3, param4, param5), errorHandler, logger);
+    checkHandlerOrThrowException(handler, objectHandler);
+    if (handler != null) {
+      return executeRequest(() -> handler.execute(param1, param2, param3, param4, param5), errorHandler, logger);
+    } else {
+      return executeObjectRequest(request,
+                                  mediaTypeMapper,
+                                  () -> objectHandler.execute(param1, param2, param3, param4, param5),
+                                  errorHandler,
+                                  logger);
+    }
   }
 
   public RequestHandler5<T, R, U, I, J> handle(final Handler5<T, R, U, I, J> handler) {
+    if (this.objectHandler != null) {
+      throw new IllegalArgumentException("Handler already specified via .handle(...)");
+    }
     this.handler = handler;
+    return this;
+  }
+
+  public RequestHandler5<T, R, U, I, J> handle(final ObjectHandler5<T, R, U, I, J> handler) {
+    if (this.handler != null) {
+      throw new IllegalArgumentException("Handler already specified via .handle(...)");
+    }
+    this.objectHandler = handler;
     return this;
   }
 
@@ -59,11 +87,16 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
     final U param3 = resolverParam3.apply(request, mappedParameters);
     final I param4 = resolverParam4.apply(request, mappedParameters);
     final J param5 = resolverParam5.apply(request, mappedParameters);
-    return execute(param1, param2, param3, param4, param5, logger);
+    return execute(request, param1, param2, param3, param4, param5, logger);
   }
 
   @FunctionalInterface
   public interface Handler5<T, R, U, I, J> {
     Completes<Response> execute(T param1, R param2, U param3, I param4, J param5);
+  }
+
+  @FunctionalInterface
+  public interface ObjectHandler5<T, R, U, I, J> {
+    Completes<ObjectResponse<?>> execute(T param1, R param2, U param3, I param4, J param5);
   }
 }

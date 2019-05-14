@@ -1,9 +1,9 @@
 package io.vlingo.http.resource;
 
-public class MediaTypeNotSupported extends RuntimeException {
+public class MediaTypeNotSupportedException extends RuntimeException {
   public final String mediaType;
 
-  public MediaTypeNotSupported(String mediaType) {
+  public MediaTypeNotSupportedException(String mediaType) {
     this.mediaType = mediaType;
   }
 

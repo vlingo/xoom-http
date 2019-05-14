@@ -46,46 +46,8 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
     assertResponsesAreEquals(of(Created), response);
   }
 
-
   @Test
-  public void objectMappedToMediaType() {
-    Name name = new Name("first", "last");
-    final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      .handle(() -> withSuccess(ObjectResponse.of(Ok, name, Name.class)))
-      .mapper(defaultMediaTypeMapperForJson());
-
-    final Response response = handler.execute(Request.method(Method.GET), logger).outcome();
-
-    assertNotNull(handler);
-    assertEquals(Method.GET, handler.method);
-    assertEquals("/helloworld", handler.path);
-    String nameAsJson = JsonSerialization.serialized(name);
-    assertResponsesAreEquals(of(Ok,
-      ResponseHeader.headers(ResponseHeader.ContentType, ContentMediaType.Json().toString()), nameAsJson),
-      response);
-  }
-
-
-  @Test
-  public void mappingNotAvailableForObjectResponseUnsupported() {
-    Name name = new Name("first", "last");
-    final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      .handle(() -> withSuccess(ObjectResponse.of(Ok, name, Name.class)))
-      .mapper(defaultMediaTypeMapperForJson());
-
-    final Response response = handler.execute(
-      Request.method(Method.GET).header(RequestHeader.Accept, "none/none"), logger).outcome();
-
-    assertNotNull(handler);
-    assertEquals(Method.GET, handler.method);
-    assertEquals("/helloworld", handler.path);
-
-    assertResponsesAreEquals(of(UnsupportedMediaType), response);
-  }
-
-
-  @Test
-  public void errorHandlerInvoked() {
+  public void customErrorHandlerAppliedWhenExecutionFails() {
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
       .handle((RequestHandler0.Handler0)() -> {
         throw new RuntimeException("Test Handler exception");
@@ -93,20 +55,6 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
       .onError(
         (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
     );
-    Completes<Response> responseCompletes = handler.execute(Request.method(Method.GET), logger);
-    assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
-  }
-
-
-  @Test
-  public void errorHandlerInvokedForObject() {
-    final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      .handle((RequestHandler0.ObjectHandler0)() -> {
-        throw new RuntimeException("Test Handler exception");
-      })
-      .onError(
-        (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
-      );
     Completes<Response> responseCompletes = handler.execute(Request.method(Method.GET), logger);
     assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
   }
@@ -206,7 +154,7 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
       );
 
     final RequestHandler1<NameData> handler1 = new RequestHandler0(Method.GET, "/user/admin/name")
-      .body(NameData.class, defaultMediaTypeMapperForJson());
+      .body(NameData.class);
 
     assertResolvesAreEquals(body(NameData.class, new TestMapper()), handler1.resolver);
     assertEquals(new NameData("John", "Doe"), handler1.resolver.apply(request, mappedParameters));

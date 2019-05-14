@@ -40,7 +40,9 @@ class ParameterResolver<T> {
 
   public static <T> ParameterResolver<T> body(final Class<T> bodyClass, final MediaTypeMapper mediaTypeMapper) {
     return new ParameterResolver<T>(Type.BODY, bodyClass, ((request, mappedParameters) -> {
-      String bodyMediaType = request.headerValueOr(RequestHeader.ContentType, ContentMediaType.Json().toString());
+      // This is a fall-back when content-type not provided for backwards compat for curl/cmd line users
+      String assumedBodyContentType = ContentMediaType.Json().toString();
+      String bodyMediaType = request.headerValueOr(RequestHeader.ContentType, assumedBodyContentType);
       return mediaTypeMapper.from(request.body.toString(), ContentMediaType.parseFromDescriptor(bodyMediaType), bodyClass);
     }));
   }

@@ -1,6 +1,6 @@
 package io.vlingo.http.media;
 
-import io.vlingo.http.resource.MediaTypeNotSupported;
+import io.vlingo.http.resource.MediaTypeNotSupportedException;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -39,7 +39,7 @@ public class ResponseMediaTypeSelector {
         }
       }
     }
-    throw new MediaTypeNotSupported(mediaTypeDescriptors);
+    throw new MediaTypeNotSupportedException(mediaTypeDescriptors);
   }
 
 

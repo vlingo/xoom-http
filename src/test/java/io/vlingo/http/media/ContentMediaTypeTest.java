@@ -1,13 +1,13 @@
 package io.vlingo.http.media;
 
-import io.vlingo.http.resource.MediaTypeNotSupported;
+import io.vlingo.http.resource.MediaTypeNotSupportedException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
 public class ContentMediaTypeTest {
 
-  @Test(expected = MediaTypeNotSupported.class)
+  @Test(expected = MediaTypeNotSupportedException.class)
   public void wildCardsAreNotAllowed() {
     new ContentMediaType("application", "*");
   }

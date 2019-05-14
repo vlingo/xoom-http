@@ -14,6 +14,7 @@ import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 import io.vlingo.http.Version;
+import io.vlingo.http.resource.RequestHandler5.Handler5;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -49,7 +50,8 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
       parameterResolver3,
       parameterResolver4,
       parameterResolver5,
-      ErrorHandler.handleAllWith(InternalServerError));
+      ErrorHandler.handleAllWith(InternalServerError),
+      DefaultMediaTypeMapper.instance());
   }
 
   @Test
@@ -62,9 +64,10 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
       path(2, String.class),
       query("page", Integer.class, 10),
       query("pageSize", Integer.class, 10)
-    ).handle((postId, commentId, userId, page, pageSize) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
+    ).handle((Handler5<String, String, String, Integer, Integer>) (postId, commentId, userId, page, pageSize) ->
+      withSuccess(of(Ok, serialized(postId + " " + commentId))));
 
-    final Response response = handler.execute("my-post", "my-comment", "admin", 10, 10, logger).outcome();
+    final Response response = handler.execute(Request.method(Method.GET), "my-post", "my-comment", "admin", 10, 10, logger).outcome();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
@@ -88,7 +91,7 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
       query("page", Integer.class, 10),
       query("pageSize", Integer.class, 10)
     );
-    handler.execute("my-post", "my-comment", "admin", 10, 10, logger);
+    handler.execute(Request.method(Method.GET), "my-post", "my-comment", "admin", 10, 10, logger);
   }
 
   @Test
@@ -101,11 +104,12 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
       path(2, String.class),
       query("page", Integer.class, 10),
       query("pageSize", Integer.class, 10))
-      .handle((param1, param2, param3, param4, param5) -> { throw new RuntimeException("Test Handler exception"); })
+      .handle((Handler5<String, String, String, Integer, Integer>) (param1, param2, param3, param4, param5)
+        -> { throw new RuntimeException("Test Handler exception"); })
       .onError(
         (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
       );
-    Completes<Response> responseCompletes = handler.execute("idVal1", "idVal2", "idVal3", 1, 2, logger);
+    Completes<Response> responseCompletes = handler.execute(Request.method(Method.GET), "idVal1", "idVal2", "idVal3", 1, 2, logger);
     assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
   }
 
@@ -144,7 +148,9 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
       query("page", Integer.class, 10),
       query("pageSize", Integer.class, 10)
     )
-      .handle((postId, commentId, userId, page, pageSize) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
+      .handle((Handler5<String, String, String, Integer, Integer>) (postId, commentId, userId, page, pageSize)
+        -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
+
     final Response response = handler.execute(request, mappedParameters, logger).outcome();
 
     assertResponsesAreEquals(of(Ok, serialized("my-post my-comment")), response);

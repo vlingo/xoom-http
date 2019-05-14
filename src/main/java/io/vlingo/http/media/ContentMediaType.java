@@ -1,6 +1,6 @@
 package io.vlingo.http.media;
 
-import io.vlingo.http.resource.MediaTypeNotSupported;
+import io.vlingo.http.resource.MediaTypeNotSupportedException;
 
 import java.util.Map;
 
@@ -27,7 +27,7 @@ public class ContentMediaType extends MediaTypeDescriptor {
   private void validate() {
     mimeTypes.valueOf(mimeType);
     if (mimeSubType.equals("*")) {
-      throw new MediaTypeNotSupported("Illegal MIME type:" + toString());
+      throw new MediaTypeNotSupportedException("Illegal MIME type:" + toString());
     }
   }
 

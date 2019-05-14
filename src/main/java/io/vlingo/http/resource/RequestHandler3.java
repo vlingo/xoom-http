@@ -14,28 +14,51 @@ public class RequestHandler3<T, R, U> extends RequestHandler {
   final ParameterResolver<R> resolverParam2;
   final ParameterResolver<U> resolverParam3;
   private Handler3<T, R, U> handler;
+  private ObjectHandler3<T, R, U> objectHandler;
   private ErrorHandler errorHandler;
+  private MediaTypeMapper mediaTypeMapper;
 
   RequestHandler3(final Method method,
                   final String path,
                   final ParameterResolver<T> resolverParam1,
                   final ParameterResolver<R> resolverParam2,
                   final ParameterResolver<U> resolverParam3,
-                  final ErrorHandler errorHandler) {
+                  final ErrorHandler errorHandler,
+                  final MediaTypeMapper mediaTypeMapper) {
     super(method, path, Arrays.asList(resolverParam1, resolverParam2, resolverParam3));
     this.resolverParam1 = resolverParam1;
     this.resolverParam2 = resolverParam2;
     this.resolverParam3 = resolverParam3;
     this.errorHandler = errorHandler;
+    this.mediaTypeMapper = mediaTypeMapper;
   }
 
-  Completes<Response> execute(final T param1, final R param2, final U param3, final Logger logger) {
-    checkHandlerOrThrowException(handler);
-    return executeRequest(() -> handler.execute(param1, param2, param3), errorHandler, logger);
+  Completes<Response> execute(final Request request, final T param1, final R param2, final U param3, final Logger logger) {
+    checkHandlerOrThrowException(handler, objectHandler);
+    if (handler != null) {
+      return executeRequest(() -> handler.execute(param1, param2, param3), errorHandler, logger);
+    } else {
+      return executeObjectRequest(request,
+                                  mediaTypeMapper,
+                                  () -> objectHandler.execute(param1, param2, param3),
+                                  errorHandler,
+                                  logger);
+    }
   }
 
   public RequestHandler3<T, R, U> handle(final Handler3<T, R, U> handler) {
+    if (this.objectHandler != null) {
+      throw new IllegalArgumentException("Handler already specified via .handle(...)");
+    }
     this.handler = handler;
+    return this;
+  }
+
+  public RequestHandler3<T, R, U> handle(final ObjectHandler3<T, R, U> handler) {
+    if (this.handler != null) {
+      throw new IllegalArgumentException("Handler already specified via .handle(...)");
+    }
+    this.objectHandler = handler;
     return this;
   }
 
@@ -51,7 +74,7 @@ public class RequestHandler3<T, R, U> extends RequestHandler {
     final T param1 = resolverParam1.apply(request, mappedParameters);
     final R param2 = resolverParam2.apply(request, mappedParameters);
     final U param3 = resolverParam3.apply(request, mappedParameters);
-    return execute(param1, param2, param3, logger);
+    return execute(request, param1, param2, param3, logger);
   }
 
   @FunctionalInterface
@@ -59,27 +82,59 @@ public class RequestHandler3<T, R, U> extends RequestHandler {
     Completes<Response> execute(T param1, R param2, U param3);
   }
 
+  @FunctionalInterface
+  public interface ObjectHandler3<T, R, U> {
+    Completes<ObjectResponse<?>> execute(T param1, R param2, U param3);
+  }
+
   // region FluentAPI
   public <I> RequestHandler4<T, R, U, I> param(final Class<I> paramClass) {
     return new RequestHandler4<>(method, path, resolverParam1, resolverParam2, resolverParam3,
       ParameterResolver.path(3, paramClass),
-      errorHandler);
+      errorHandler,
+      mediaTypeMapper);
   }
 
   public <I> RequestHandler4<T, R, U, I> body(final Class<I> bodyClass) {
     return new RequestHandler4<>(method, path, resolverParam1, resolverParam2, resolverParam3,
-      ParameterResolver.body(bodyClass),
-      errorHandler);
+      ParameterResolver.body(bodyClass, mediaTypeMapper),
+      errorHandler,
+      mediaTypeMapper);
   }
 
+  /**
+   * Specify the class that represents the body of the request for all requests using the specified mapper for all
+   * MIME types regardless of the Content-Type header.
+   *
+   * @deprecated Deprecated in favor of using the ContentMediaType method, which handles media types appropriately.
+   * {@link RequestHandler3#body(java.lang.Class, io.vlingo.http.resource.MediaTypeMapper)} instead, or via
+   * {@link RequestHandler3#body(java.lang.Class)}
+   */
   public <I> RequestHandler4<T, R, U, I> body(final Class<I> bodyClass, final Class<? extends Mapper> mapperClass) {
     return body(bodyClass, mapperFrom(mapperClass));
   }
 
+  /**
+   * Specify the class that represents the body of the request for all requests using the specified mapper for all
+   * MIME types regardless of the Content-Type header.
+   *
+   * @deprecated Deprecated in favor of using the ContentMediaType method, which handles media types appropriately.
+   * {@link RequestHandler3#body(java.lang.Class, io.vlingo.http.resource.MediaTypeMapper)} instead, or via
+   * {@link RequestHandler3#body(java.lang.Class)}
+   */
   public <I> RequestHandler4<T, R, U, I> body(final Class<I> bodyClass, final Mapper mapper) {
     return new RequestHandler4<>(method, path, resolverParam1, resolverParam2, resolverParam3,
       ParameterResolver.body(bodyClass, mapper),
-      errorHandler);
+      errorHandler,
+      mediaTypeMapper);
+  }
+
+  public <I> RequestHandler4<T, R, U, I> body(final Class<I> bodyClass, final MediaTypeMapper mediaTypeMapper) {
+    this.mediaTypeMapper = mediaTypeMapper;
+    return new RequestHandler4<>(method, path, resolverParam1, resolverParam2, resolverParam3,
+      ParameterResolver.body(bodyClass, mediaTypeMapper),
+      errorHandler,
+      mediaTypeMapper);
   }
 
   public RequestHandler4<T, R, U, String> query(final String name) {
@@ -89,13 +144,15 @@ public class RequestHandler3<T, R, U> extends RequestHandler {
   public <I> RequestHandler4<T, R, U, I> query(final String name, final Class<I> queryClass) {
     return new RequestHandler4<>(method, path, resolverParam1, resolverParam2, resolverParam3,
       ParameterResolver.query(name, queryClass),
-      errorHandler);
+      errorHandler,
+      mediaTypeMapper);
   }
 
   public RequestHandler4<T, R, U, Header> header(final String name) {
     return new RequestHandler4<>(method, path, resolverParam1, resolverParam2, resolverParam3,
       ParameterResolver.header(name),
-      errorHandler);
+      errorHandler,
+      mediaTypeMapper);
   }
   // endregion
 }

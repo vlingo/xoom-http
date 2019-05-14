@@ -38,7 +38,7 @@ public abstract class RequestHandler {
   }
 
   private Completes<Response> defaultErrorHandler(Exception ex) {
-    if (ex instanceof MediaTypeNotSupported) {
+    if (ex instanceof MediaTypeNotSupportedException) {
       return Completes.withSuccess(Response.of(Response.Status.UnsupportedMediaType));
     } else if (ex instanceof IllegalArgumentException) {
       return Completes.withSuccess(Response.of(Response.Status.BadRequest));
@@ -48,8 +48,8 @@ public abstract class RequestHandler {
     }
   }
 
-  void checkHandlerOrThrowException(Object handler) {
-    if (handler == null) {
+  void checkHandlerOrThrowException(Object handler, Object objectHandler) {
+    if (handler == null && objectHandler == null) {
       throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
     }
   }

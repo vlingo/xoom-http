@@ -5,7 +5,11 @@ import io.vlingo.common.Completes;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
+import io.vlingo.http.ResponseHeader;
+import io.vlingo.http.media.ContentMediaType;
+import io.vlingo.http.resource.serialization.JsonSerialization;
 import io.vlingo.http.sample.user.NameData;
+import io.vlingo.http.sample.user.model.Name;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -15,10 +19,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
-import static io.vlingo.http.Response.Status.InternalServerError;
+import static io.vlingo.http.Response.Status.*;
+import static io.vlingo.http.Response.of;
 import static org.junit.Assert.assertEquals;
 
 public class RequestHandlerTest extends RequestHandlerTestBase {
+
+  @Test
+  public void internalServerErrorWhenNoHandlerDefined() {
+    final RequestHandlerFake handler = new RequestHandlerFake(Method.GET,
+      "/hello",
+      new ArrayList<>(),
+      null
+    );
+
+    Response response = handler.execute(null, logger).await();
+    assertResponsesAreEquals(of(InternalServerError), response);
+  }
 
   @Test
   public void executionErrorUsesErrorHandlerWhenExceptionThrown() {
@@ -32,11 +49,29 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
 
     ErrorHandler validHandler = (exception) -> {
       Assert.assertTrue( exception instanceof RuntimeException);
-      return Completes.withSuccess(Response.of(testStatus));
+      return Completes.withSuccess(of(testStatus));
     };
 
     Response response = handler.execute(validHandler, logger).await();
-    assertResponsesAreEquals(Response.of(testStatus), response);
+    assertResponsesAreEquals(of(testStatus), response);
+  }
+
+  @Test
+  public void executionErrorObjectUsesErrorHandlerWhenExceptionThrown() {
+    final Response.Status testStatus = Response.Status.BadRequest;
+    final ErrorHandler validHandler = (exception) -> {
+      Assert.assertTrue( exception instanceof RuntimeException);
+      return Completes.withSuccess(of(testStatus));
+    };
+
+    final RequestObjectHandlerFake handler = new RequestObjectHandlerFake(Method.GET,
+      "/hello",
+      validHandler,
+      () -> { throw new RuntimeException("Handler failed"); }
+    );
+
+    Response response = handler.execute(Request.method(Method.GET), null, logger).await();
+    assertResponsesAreEquals(of(testStatus), response);
   }
 
   @Test
@@ -52,7 +87,7 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
     };
 
     Response response = handler.execute(badHandler, logger).await();
-    assertResponsesAreEquals(Response.of(InternalServerError), response);
+    assertResponsesAreEquals(of(InternalServerError), response);
   }
 
   @Test
@@ -64,9 +99,37 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
     );
 
     Response response = handler.execute(null, logger).await();
-    assertResponsesAreEquals(Response.of(InternalServerError), response);
+    assertResponsesAreEquals(of(InternalServerError), response);
   }
 
+  @Test
+  public void mappingNotAvailableReturnsMediaTypeNotFoundResponse() {
+    final RequestHandlerFake handler = new RequestHandlerFake(Method.GET,
+      "/hello",
+      new ArrayList<>(),
+      () -> { throw new MediaTypeNotSupportedException("foo/bar"); }
+    );
+
+    Response response = handler.execute(null, logger).await();
+    assertResponsesAreEquals(of(UnsupportedMediaType), response);
+  }
+
+  @Test
+  public void objectResponseMappedToContentType() {
+    final Name name = new Name("first", "last");
+    final RequestObjectHandlerFake handler = new RequestObjectHandlerFake(Method.GET,
+      "/hello",
+      () -> Completes.withSuccess(ObjectResponse.of(Ok, name, Name.class))
+    );
+
+    Response response = handler.execute(Request.method(Method.GET), null, logger).await();
+    String nameAsJson = JsonSerialization.serialized(name);
+    assertResponsesAreEquals(
+      of(Ok,
+        ResponseHeader.headers(ResponseHeader.ContentType, ContentMediaType.Json().toString()),
+        nameAsJson),
+      response);
+  }
 
 
   @Test
@@ -118,13 +181,37 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
   }
 }
 
+class RequestObjectHandlerFake extends RequestHandler {
+
+  private Supplier<Completes<ObjectResponse<?>>> executeAction;
+  private ErrorHandler errorHandler;
+
+  RequestObjectHandlerFake(Method method, String path, Supplier<Completes<ObjectResponse<?>>> executeAction) {
+    super(method, path, new ArrayList<>());
+    this.executeAction = executeAction;
+    this.errorHandler = null;
+  }
+
+  RequestObjectHandlerFake(Method method, String path, ErrorHandler errorHandler, Supplier<Completes<ObjectResponse<?>>> executeAction) {
+    super(method, path, new ArrayList<>());
+    this.executeAction = executeAction;
+    this.errorHandler = errorHandler;
+  }
+
+  @Override
+  Completes<Response> execute(Request request, Action.MappedParameters mappedParameters, Logger logger) {
+    return executeObjectRequest(request, DefaultMediaTypeMapper.instance(), executeAction, errorHandler, logger);
+  }
+
+}
+
 class RequestHandlerFake extends RequestHandler {
 
   Supplier<Completes<Response>> handler;
 
   RequestHandlerFake(Method method, String path, List<ParameterResolver<?>> parameterResolvers) {
     super(method, path, parameterResolvers);
-    handler = () -> Completes.withSuccess(Response.of(Response.Status.Ok));
+    handler = () -> Completes.withSuccess(of(Ok));
   }
 
   RequestHandlerFake(Method method, String path,
