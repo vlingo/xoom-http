@@ -16,8 +16,6 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
   final ParameterResolver<J> resolverParam5;
   private Handler5<T, R, U, I, J> handler;
   private ObjectHandler5<T, R, U, I, J> objectHandler;
-  private ErrorHandler errorHandler;
-  private MediaTypeMapper mediaTypeMapper;
 
   RequestHandler5(final Method method,
                   final String path,
@@ -28,14 +26,12 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
                   final ParameterResolver<J> resolverParam5,
                   final ErrorHandler errorHandler,
                   final MediaTypeMapper mediaTypeMapper) {
-    super(method, path, Arrays.asList(resolverParam1, resolverParam2, resolverParam3, resolverParam4, resolverParam5));
+    super(method, path, Arrays.asList(resolverParam1, resolverParam2, resolverParam3, resolverParam4, resolverParam5), errorHandler, mediaTypeMapper);
     this.resolverParam1 = resolverParam1;
     this.resolverParam2 = resolverParam2;
     this.resolverParam3 = resolverParam3;
     this.resolverParam4 = resolverParam4;
     this.resolverParam5 = resolverParam5;
-    this.errorHandler = errorHandler;
-    this.mediaTypeMapper = mediaTypeMapper;
   }
 
   Completes<Response> execute(final Request request,

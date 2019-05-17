@@ -23,8 +23,6 @@ public class RequestHandler2<T, R> extends RequestHandler {
   final ParameterResolver<R> resolverParam2;
   private Handler2<T, R> handler;
   private ObjectHandler2<T, R> objectHandler;
-  private ErrorHandler errorHandler;
-  private MediaTypeMapper mediaTypeMapper;
 
   RequestHandler2(final Method method,
                   final String path,
@@ -32,11 +30,9 @@ public class RequestHandler2<T, R> extends RequestHandler {
                   final ParameterResolver<R> resolverParam2,
                   final ErrorHandler errorHandler,
                   final MediaTypeMapper mediaTypeMapper) {
-    super(method, path, Arrays.asList(resolverParam1, resolverParam2));
+    super(method, path, Arrays.asList(resolverParam1, resolverParam2), errorHandler, mediaTypeMapper);
     this.resolverParam1 = resolverParam1;
     this.resolverParam2 = resolverParam2;
-    this.errorHandler = errorHandler;
-    this.mediaTypeMapper = mediaTypeMapper;
   }
 
   Completes<Response> execute(final Request request, final T param1, final R param2, final Logger logger) {

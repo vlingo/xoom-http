@@ -17,9 +17,6 @@ public class RequestHandler4<T, R, U, I> extends RequestHandler {
   private Handler4<T, R, U, I> handler;
   private ObjectHandler4<T, R, U, I> objectHandler;
 
-  private ErrorHandler errorHandler;
-  private MediaTypeMapper mediaTypeMapper;
-
   RequestHandler4(final Method method,
                   final String path,
                   final ParameterResolver<T> resolverParam1,
@@ -28,13 +25,11 @@ public class RequestHandler4<T, R, U, I> extends RequestHandler {
                   final ParameterResolver<I> resolverParam4,
                   final ErrorHandler errorHandler,
                   final MediaTypeMapper mediaTypeMapper) {
-    super(method, path, Arrays.asList(resolverParam1, resolverParam2, resolverParam3, resolverParam4));
+    super(method, path, Arrays.asList(resolverParam1, resolverParam2, resolverParam3, resolverParam4), errorHandler, mediaTypeMapper);
     this.resolverParam1 = resolverParam1;
     this.resolverParam2 = resolverParam2;
     this.resolverParam3 = resolverParam3;
     this.resolverParam4 = resolverParam4;
-    this.errorHandler = errorHandler;
-    this.mediaTypeMapper = mediaTypeMapper;
   }
 
   Completes<Response> execute(final Request request,

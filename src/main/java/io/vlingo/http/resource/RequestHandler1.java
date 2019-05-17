@@ -22,31 +22,23 @@ public class RequestHandler1<T> extends RequestHandler {
   final ParameterResolver<T> resolver;
   private Handler1<T> handler;
   private ObjectHandler1<T> objectHandler;
-  private ErrorHandler errorHandler;
-  private MediaTypeMapper mediaTypeMapper;
 
   RequestHandler1(final Method method,
                   final String path,
                   final ParameterResolver<T> resolver,
                   final ErrorHandler errorHandler,
                   final MediaTypeMapper mediaTypeMapper) {
-    super(method, path, Collections.singletonList(resolver));
+    super(method, path, Collections.singletonList(resolver), errorHandler, mediaTypeMapper);
     this.resolver = resolver;
-    this.errorHandler = errorHandler;
-    this.mediaTypeMapper = mediaTypeMapper;
   }
 
   Completes<Response> execute(final Request request, final T param1, final Logger logger) {
-    checkHandlerOrThrowException(handler, objectHandler);
-    if (handler != null) {
-      return executeRequest(() -> handler.execute(param1), errorHandler, logger);
-    } else {
-      return executeObjectRequest(request,
-                                mediaTypeMapper,
-                                () -> objectHandler.execute(param1),
-                                errorHandler,
-                                logger);
-    }
+    return executeFirstValidHandler(request,
+                                    handler,
+                                    () -> handler.execute(param1),
+                                    objectHandler,
+                                    () -> objectHandler.execute(param1),
+                                    logger);
   }
 
   public RequestHandler1<T> handle(final Handler1<T> handler) {

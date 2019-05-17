@@ -15,19 +15,49 @@ import io.vlingo.http.Header;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
+import io.vlingo.http.resource.RequestHandler0.Handler0;
 
 import java.util.Collections;
 import java.util.function.Supplier;
 
+class RequestExecutor0 extends RequestExecutor {
+
+  private final Handler0 handler;
+
+  public RequestExecutor0(Handler0 handler) {
+    this.handler = handler;
+  }
+
+  @Override
+  Completes<Response> execute(Request request,
+                              Action.MappedParameters mappedParameters,
+                              Logger logger) {
+    return ;
+  }
+
+  RequestExecutor0 from(Handler0 handler) {
+    return new RequestExecutor0(handler);
+  }
+}
+
+
+
 public class RequestHandler0 extends RequestHandler {
   private Handler0 handler;
   private ObjectHandler0 objectHandler;
-  private ErrorHandler errorHandler;
-  private MediaTypeMapper mediaTypeMapper;
+
+  @FunctionalInterface
+  public interface Handler0 {
+    Completes<Response> execute();
+  }
+
+  @FunctionalInterface
+  public interface ObjectHandler0 {
+    Completes<ObjectResponse<?>> execute();
+  }
 
   RequestHandler0(final Method method, final String path) {
     super(method, path, Collections.emptyList());
-    this.mediaTypeMapper = DefaultMediaTypeMapper.instance();
   }
 
   public RequestHandler0 handle(final Handler0 handler) {
@@ -56,20 +86,6 @@ public class RequestHandler0 extends RequestHandler {
     return this;
   }
 
-  private Completes<Response> executeFirstValidHandler(final Request request,
-                                               final Object handler,
-                                               final Supplier<Completes<Response>> handlerSupplier,
-                                               final Object objectHandler,
-                                               final Supplier<Completes<ObjectResponse<?>>> objectHandlerSupplier,
-                                               final Logger logger) {
-    checkHandlerOrThrowException(handler, objectHandler);
-    if (handler != null) {
-      return executeRequest(handlerSupplier, errorHandler, logger);
-    } else {
-      return executeObjectRequest(request, mediaTypeMapper, objectHandlerSupplier, errorHandler, logger);
-    }
-  }
-
   Completes<Response> execute(final Request request, final Logger logger) {
     return executeFirstValidHandler(request,
                               handler,
@@ -84,16 +100,6 @@ public class RequestHandler0 extends RequestHandler {
                               final Action.MappedParameters mappedParameters,
                               final Logger logger) {
     return execute(request, logger);
-  }
-
-  @FunctionalInterface
-  public interface Handler0 {
-    Completes<Response> execute();
-  }
-
-  @FunctionalInterface
-  public interface ObjectHandler0 {
-    Completes<ObjectResponse<?>> execute();
   }
 
   // region FluentAPI
