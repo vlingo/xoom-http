@@ -14,8 +14,7 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
   final ParameterResolver<U> resolverParam3;
   final ParameterResolver<I> resolverParam4;
   final ParameterResolver<J> resolverParam5;
-  private Handler5<T, R, U, I, J> handler;
-  private ObjectHandler5<T, R, U, I, J> objectHandler;
+  private ParamExecutor5<T,R,U,I,J> executor;
 
   RequestHandler5(final Method method,
                   final String path,
@@ -41,31 +40,27 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
                               final I param4,
                               final J param5,
                               final Logger logger) {
-    checkHandlerOrThrowException(handler, objectHandler);
-    if (handler != null) {
-      return executeRequest(() -> handler.execute(param1, param2, param3, param4, param5), errorHandler, logger);
-    } else {
-      return executeObjectRequest(request,
-                                  mediaTypeMapper,
-                                  () -> objectHandler.execute(param1, param2, param3, param4, param5),
-                                  errorHandler,
-                                  logger);
-    }
+    checkExecutor(executor);
+    return executor.execute(request, param1, param2, param3, param4, param5, mediaTypeMapper, errorHandler, logger);
+  }
+  
+  @FunctionalInterface
+  public interface Handler5<T, R, U, I, J> {
+    Completes<Response> execute(T param1, R param2, U param3, I param4, J param5);
   }
 
+  @FunctionalInterface
+  public interface ObjectHandler5<T, R, U, I, J> {
+    Completes<ObjectResponse<?>> execute(T param1, R param2, U param3, I param4, J param5);
+  }
+  
   public RequestHandler5<T, R, U, I, J> handle(final Handler5<T, R, U, I, J> handler) {
-    if (this.objectHandler != null) {
-      throw new IllegalArgumentException("Handler already specified via .handle(...)");
-    }
-    this.handler = handler;
+    executor = RequestExecutor5.from(handler);
     return this;
   }
 
   public RequestHandler5<T, R, U, I, J> handle(final ObjectHandler5<T, R, U, I, J> handler) {
-    if (this.handler != null) {
-      throw new IllegalArgumentException("Handler already specified via .handle(...)");
-    }
-    this.objectHandler = handler;
+    executor = RequestObjectExecutor5.from(handler);
     return this;
   }
 
@@ -86,13 +81,60 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
     return execute(request, param1, param2, param3, param4, param5, logger);
   }
 
-  @FunctionalInterface
-  public interface Handler5<T, R, U, I, J> {
-    Completes<Response> execute(T param1, R param2, U param3, I param4, J param5);
+  interface ParamExecutor5<T, R, U, I, J> {
+    Completes<Response> execute(final Request request,
+                                final T param1,
+                                final R param2,
+                                final U param3,
+                                final I param4,
+                                final J param5,
+                                final MediaTypeMapper mediaTypeMapper,
+                                final ErrorHandler errorHandler,
+                                final Logger logger);
   }
 
-  @FunctionalInterface
-  public interface ObjectHandler5<T, R, U, I, J> {
-    Completes<ObjectResponse<?>> execute(T param1, R param2, U param3, I param4, J param5);
+  static class RequestExecutor5<T, R, U, I, J> extends RequestExecutor implements ParamExecutor5<T, R, U, I, J> {
+    private final Handler5<T,R,U,I,J> handler;
+
+    private RequestExecutor5(Handler5<T,R,U,I,J> handler) { this.handler = handler; }
+
+    public Completes<Response> execute(final Request request,
+                                       final T param1,
+                                       final R param2,
+                                       final U param3,
+                                       final I param4,
+                                       final J param5,
+                                       final MediaTypeMapper mediaTypeMapper,
+                                       final ErrorHandler errorHandler,
+                                       final Logger logger) {
+      return executeRequest(() -> handler.execute(param1, param2, param3, param4, param5), errorHandler, logger);
+    }
+
+    static <T,R,U,I,J> RequestExecutor5<T,R,U,I,J> from(final Handler5<T,R,U,I,J> handler) {
+      return new RequestExecutor5<>(handler);}
+  }
+
+  static class RequestObjectExecutor5<T, R, U, I, J> extends RequestObjectExecutor implements ParamExecutor5<T, R, U, I, J> {
+    private final ObjectHandler5<T,R,U,I,J> handler;
+    private RequestObjectExecutor5(ObjectHandler5<T,R,U,I,J> handler) { this.handler = handler;}
+
+    public Completes<Response> execute(final Request request,
+                                       final T param1,
+                                       final R param2,
+                                       final U param3,
+                                       final I param4,
+                                       final J param5,
+                                       final MediaTypeMapper mediaTypeMapper,
+                                       final ErrorHandler errorHandler,
+                                       final Logger logger) {
+      return executeObjectRequest(request,
+                                  mediaTypeMapper,
+                                  () -> handler.execute(param1, param2, param3, param4, param5),
+                                  errorHandler,
+                                  logger);
+    }
+
+    static <T,R,U,I,J> RequestObjectExecutor5<T,R,U,I,J> from(final ObjectHandler5<T,R,U,I,J> handler) {
+      return new RequestObjectExecutor5<>(handler);}
   }
 }

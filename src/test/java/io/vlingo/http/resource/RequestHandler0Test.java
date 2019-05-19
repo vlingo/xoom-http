@@ -46,6 +46,15 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
     assertResponsesAreEquals(of(Created), response);
   }
 
+  @Test()
+  public void throwExceptionWhenNoHandlerIsDefined() {
+    thrown.expect(HandlerMissingException.class);
+    thrown.expectMessage("No handler defined for GET /helloworld");
+
+    final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld");
+    handler.execute(Request.method(Method.GET), logger);
+  }
+
   @Test
   public void customErrorHandlerAppliedWhenExecutionFails() {
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")

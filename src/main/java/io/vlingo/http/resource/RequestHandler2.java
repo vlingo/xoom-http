@@ -21,8 +21,7 @@ import java.util.Arrays;
 public class RequestHandler2<T, R> extends RequestHandler {
   final ParameterResolver<T> resolverParam1;
   final ParameterResolver<R> resolverParam2;
-  private Handler2<T, R> handler;
-  private ObjectHandler2<T, R> objectHandler;
+  private ParamExecutor2<T,R> executor;
 
   RequestHandler2(final Method method,
                   final String path,
@@ -36,31 +35,17 @@ public class RequestHandler2<T, R> extends RequestHandler {
   }
 
   Completes<Response> execute(final Request request, final T param1, final R param2, final Logger logger) {
-    checkHandlerOrThrowException(handler, objectHandler);
-    if (handler != null) {
-      return executeRequest(() -> handler.execute(param1, param2), errorHandler, logger);
-    } else {
-      return executeObjectRequest(request,
-                                  mediaTypeMapper,
-                                  () -> objectHandler.execute(param1, param2),
-                                  errorHandler,
-                                  logger);
-    }
+    checkExecutor(executor);
+    return executor.execute(request, param1, param2, mediaTypeMapper, errorHandler, logger);
   }
 
   public RequestHandler2<T, R> handle(final Handler2<T, R> handler) {
-    if (this.objectHandler != null) {
-      throw new IllegalArgumentException("Handler already specified via .handle(...)");
-    }
-    this.handler = handler;
+    executor = RequestExecutor2.from(handler);
     return this;
   }
 
   public RequestHandler2<T, R> handle(final ObjectHandler2<T, R> handler) {
-    if (this.handler != null) {
-      throw new IllegalArgumentException("Handler already specified via .handle(...)");
-    }
-    this.objectHandler = handler;
+    executor = RequestObjectExecutor2.from(handler);
     return this;
   }
 
@@ -143,4 +128,52 @@ public class RequestHandler2<T, R> extends RequestHandler {
     return new RequestHandler3<>(method, path, resolverParam1, resolverParam2, ParameterResolver.header(name), errorHandler, mediaTypeMapper);
   }
   // endregion
+  interface ParamExecutor2<T, R> {
+    Completes<Response> execute(final Request request,
+                                final T param1,
+                                final R param2,
+                                final MediaTypeMapper mediaTypeMapper,
+                                final ErrorHandler errorHandler,
+                                final Logger logger);
+  }
+
+  static class RequestExecutor2<T, R> extends RequestExecutor implements ParamExecutor2<T,R> {
+    private final Handler2<T,R> handler;
+
+    private RequestExecutor2(Handler2<T,R> handler) { this.handler = handler; }
+
+    public Completes<Response> execute(final Request request,
+                                       final T param1,
+                                       final R param2,
+                                       final MediaTypeMapper mediaTypeMapper,
+                                       final ErrorHandler errorHandler,
+                                       final Logger logger) {
+      return executeRequest(() -> handler.execute(param1, param2), errorHandler, logger);
+    }
+
+    static <T,R> RequestExecutor2<T,R> from(final Handler2<T,R> handler) {
+      return new RequestExecutor2<>(handler);}
+  }
+
+  static class RequestObjectExecutor2<T,R> extends RequestObjectExecutor implements ParamExecutor2<T,R> {
+    private final ObjectHandler2<T,R> handler;
+    private RequestObjectExecutor2(ObjectHandler2<T,R> handler) { this.handler = handler;}
+
+    public Completes<Response> execute(final Request request,
+                                       final T param1,
+                                       final R param2,
+                                       final MediaTypeMapper mediaTypeMapper,
+                                       final ErrorHandler errorHandler,
+                                       final Logger logger) {
+      return executeObjectRequest(request,
+                                  mediaTypeMapper,
+                                  () -> handler.execute(param1, param2),
+                                  errorHandler,
+                                  logger);
+    }
+
+    static <T,R> RequestObjectExecutor2<T,R> from(final ObjectHandler2<T,R> handler) {
+      return new RequestObjectExecutor2<>(handler);}
+  }
+
 }

@@ -21,21 +21,10 @@ import java.util.function.Supplier;
 
 import static io.vlingo.http.Response.Status.*;
 import static io.vlingo.http.Response.of;
+import static io.vlingo.http.resource.RequestHandler0.*;
 import static org.junit.Assert.assertEquals;
 
 public class RequestHandlerTest extends RequestHandlerTestBase {
-
-  @Test
-  public void internalServerErrorWhenNoHandlerDefined() {
-    final RequestHandlerFake handler = new RequestHandlerFake(Method.GET,
-      "/hello",
-      new ArrayList<>(),
-      null
-    );
-
-    Response response = handler.execute(null, logger).await();
-    assertResponsesAreEquals(of(InternalServerError), response);
-  }
 
   @Test
   public void executionErrorUsesErrorHandlerWhenExceptionThrown() {
@@ -52,7 +41,7 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
       return Completes.withSuccess(of(testStatus));
     };
 
-    Response response = handler.execute(validHandler, logger).await();
+    Response response = handler.execute(Request.method(Method.GET), validHandler, logger).await();
     assertResponsesAreEquals(of(testStatus), response);
   }
 
@@ -86,7 +75,7 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
       throw new IllegalArgumentException("foo");
     };
 
-    Response response = handler.execute(badHandler, logger).await();
+    Response response = handler.execute(Request.method(Method.GET), badHandler, logger).await();
     assertResponsesAreEquals(of(InternalServerError), response);
   }
 
@@ -98,7 +87,7 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
       () -> { throw new RuntimeException("Handler failed"); }
     );
 
-    Response response = handler.execute(null, logger).await();
+    Response response = handler.execute(Request.method(Method.GET), (ErrorHandler) null, logger).await();
     assertResponsesAreEquals(of(InternalServerError), response);
   }
 
@@ -110,7 +99,7 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
       () -> { throw new MediaTypeNotSupportedException("foo/bar"); }
     );
 
-    Response response = handler.execute(null, logger).await();
+    Response response = handler.execute(Request.method(Method.GET), (ErrorHandler)null, logger).await();
     assertResponsesAreEquals(of(UnsupportedMediaType), response);
   }
 
@@ -183,42 +172,42 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
 
 class RequestObjectHandlerFake extends RequestHandler {
 
-  private Supplier<Completes<ObjectResponse<?>>> executeAction;
+  private ParamExecutor0 executor;
   private ErrorHandler errorHandler;
 
-  RequestObjectHandlerFake(Method method, String path, Supplier<Completes<ObjectResponse<?>>> executeAction) {
+  RequestObjectHandlerFake(Method method, String path, ObjectHandler0 handler) {
     super(method, path, new ArrayList<>());
-    this.executeAction = executeAction;
+    this.executor = RequestObjectExecutor0.from(handler);
     this.errorHandler = null;
   }
 
-  RequestObjectHandlerFake(Method method, String path, ErrorHandler errorHandler, Supplier<Completes<ObjectResponse<?>>> executeAction) {
+  RequestObjectHandlerFake(Method method, String path, ErrorHandler errorHandler, ObjectHandler0 handler) {
     super(method, path, new ArrayList<>());
-    this.executeAction = executeAction;
+    this.executor = RequestObjectExecutor0.from(handler);
     this.errorHandler = errorHandler;
   }
 
   @Override
   Completes<Response> execute(Request request, Action.MappedParameters mappedParameters, Logger logger) {
-    return executeObjectRequest(request, DefaultMediaTypeMapper.instance(), executeAction, errorHandler, logger);
+   return executor.execute(request, null, errorHandler, logger);
   }
 
 }
 
 class RequestHandlerFake extends RequestHandler {
 
-  Supplier<Completes<Response>> handler;
+  ParamExecutor0 executor;
 
   RequestHandlerFake(Method method, String path, List<ParameterResolver<?>> parameterResolvers) {
     super(method, path, parameterResolvers);
-    handler = () -> Completes.withSuccess(of(Ok));
+    executor = RequestExecutor0.from( () -> Completes.withSuccess(of(Ok)));
   }
 
   RequestHandlerFake(Method method, String path,
                      List<ParameterResolver<?>> parameterResolvers,
-                     Supplier<Completes<Response>> handler) {
+                     Handler0 handler) {
     super(method, path, parameterResolvers);
-    this.handler = handler;
+    executor = RequestExecutor0.from(handler);
   }
 
   @Override
@@ -228,8 +217,8 @@ class RequestHandlerFake extends RequestHandler {
     throw new UnsupportedOperationException();
   }
 
-  Completes<Response> execute(ErrorHandler errorHandler, Logger logger) {
-    return executeRequest(handler, errorHandler, logger);
+  Completes<Response> execute(Request request, ErrorHandler errorHandler, Logger logger) {
+    return executor.execute(request, null, errorHandler, logger);
   }
 
 }

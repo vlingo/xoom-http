@@ -15,36 +15,11 @@ import io.vlingo.http.Header;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
-import io.vlingo.http.resource.RequestHandler0.Handler0;
 
 import java.util.Collections;
-import java.util.function.Supplier;
-
-class RequestExecutor0 extends RequestExecutor {
-
-  private final Handler0 handler;
-
-  public RequestExecutor0(Handler0 handler) {
-    this.handler = handler;
-  }
-
-  @Override
-  Completes<Response> execute(Request request,
-                              Action.MappedParameters mappedParameters,
-                              Logger logger) {
-    return ;
-  }
-
-  RequestExecutor0 from(Handler0 handler) {
-    return new RequestExecutor0(handler);
-  }
-}
-
-
 
 public class RequestHandler0 extends RequestHandler {
-  private Handler0 handler;
-  private ObjectHandler0 objectHandler;
+  private ParamExecutor0 executor;
 
   @FunctionalInterface
   public interface Handler0 {
@@ -61,18 +36,12 @@ public class RequestHandler0 extends RequestHandler {
   }
 
   public RequestHandler0 handle(final Handler0 handler) {
-    if (this.objectHandler != null) {
-      throw new IllegalArgumentException("Handler already specified via .handle(...)");
-    }
-    this.handler = handler;
+    this.executor = RequestExecutor0.from(handler);
     return this;
   }
 
   public RequestHandler0 handle(final ObjectHandler0 handler) {
-    if (this.handler != null) {
-      throw new IllegalArgumentException("Handler already specified via .handle(...)");
-    }
-    this.objectHandler = handler;
+    this.executor = new RequestObjectExecutor0(handler);
     return this;
   }
 
@@ -87,12 +56,8 @@ public class RequestHandler0 extends RequestHandler {
   }
 
   Completes<Response> execute(final Request request, final Logger logger) {
-    return executeFirstValidHandler(request,
-                              handler,
-                              () -> handler.execute(),
-                              objectHandler,
-                              () -> objectHandler.execute(),
-                              logger);
+    checkExecutor(executor);
+    return executor.execute(request, mediaTypeMapper, errorHandler, logger);
   }
 
   @Override
@@ -158,4 +123,39 @@ public class RequestHandler0 extends RequestHandler {
     return new RequestHandler1<>(method, path, ParameterResolver.header(name), errorHandler, mediaTypeMapper);
   }
   // endregion
+
+  interface ParamExecutor0 {
+    Completes<Response> execute(Request request,
+                                MediaTypeMapper mediaTypeMapper,
+                                ErrorHandler errorHandler,
+                                Logger logger);
+  }
+
+  static class RequestExecutor0 extends RequestExecutor implements ParamExecutor0 {
+    private final Handler0 handler;
+    private RequestExecutor0(Handler0 handler) { this.handler = handler; }
+
+    public Completes<Response> execute(Request request,
+                                MediaTypeMapper mediaTypeMapper,
+                                ErrorHandler errorHandler,
+                                Logger logger) {
+      return executeRequest(handler::execute, errorHandler, logger);
+    }
+
+    static RequestExecutor0 from(Handler0 handler) { return new RequestExecutor0(handler);}
+  }
+
+  static class RequestObjectExecutor0 extends RequestObjectExecutor implements ParamExecutor0 {
+    private final ObjectHandler0 handler;
+    private RequestObjectExecutor0(ObjectHandler0 handler) { this.handler = handler;}
+
+    public Completes<Response> execute(Request request,
+                                MediaTypeMapper mediaTypeMapper,
+                                ErrorHandler errorHandler,
+                                Logger logger) {
+      return executeObjectRequest(request, mediaTypeMapper, handler::execute, errorHandler, logger);
+    }
+
+    static RequestObjectExecutor0 from(ObjectHandler0 handler) { return new RequestObjectExecutor0(handler);}
+  }
 }

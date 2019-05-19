@@ -59,6 +59,19 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
     assertResponsesAreEquals(of(Ok, serialized("my-post")), response);
   }
 
+  @Test()
+  public void throwExceptionWhenNoHandlerIsDefined() {
+    thrown.expect(HandlerMissingException.class);
+    thrown.expectMessage("No handler defined for GET /posts/{postId}");
+
+    final RequestHandler1<String> handler = createRequestHandler(
+      Method.GET,
+      "/posts/{postId}",
+      path(0, String.class)
+    );
+    handler.execute(Request.method(Method.GET), "my-post", logger);
+  }
+
   @Test
   public void customErrorHandlerAppliedWhenExecutionFails() {
     final RequestHandler1<String> handler = createRequestHandler(Method.GET, "/posts/{postId}", path(0, String.class))

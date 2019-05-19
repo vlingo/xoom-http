@@ -20,8 +20,7 @@ import java.util.Collections;
 
 public class RequestHandler1<T> extends RequestHandler {
   final ParameterResolver<T> resolver;
-  private Handler1<T> handler;
-  private ObjectHandler1<T> objectHandler;
+  private ParamExecutor1<T> executor;
 
   RequestHandler1(final Method method,
                   final String path,
@@ -33,27 +32,17 @@ public class RequestHandler1<T> extends RequestHandler {
   }
 
   Completes<Response> execute(final Request request, final T param1, final Logger logger) {
-    return executeFirstValidHandler(request,
-                                    handler,
-                                    () -> handler.execute(param1),
-                                    objectHandler,
-                                    () -> objectHandler.execute(param1),
-                                    logger);
+    checkExecutor(executor);
+    return executor.execute(request, param1, mediaTypeMapper, errorHandler, logger);
   }
 
   public RequestHandler1<T> handle(final Handler1<T> handler) {
-    if (this.objectHandler != null) {
-      throw new IllegalArgumentException("Handler already specified via .handle(...)");
-    }
-    this.handler = handler;
+    executor = RequestExecutor1.from(handler);
     return this;
   }
 
-  public RequestHandler1<T> handle(final RequestHandler1.ObjectHandler1 handler) {
-    if (this.handler != null) {
-      throw new IllegalArgumentException("Handler already specified via .handle(...)");
-    }
-    this.objectHandler = handler;
+  public RequestHandler1<T> handle(final RequestHandler1.ObjectHandler1<T> handler) {
+    executor = RequestObjectExecutor1.from(handler);
     return this;
   }
 
@@ -66,6 +55,7 @@ public class RequestHandler1<T> extends RequestHandler {
   Completes<Response> execute(final Request request,
                               final Action.MappedParameters mappedParameters,
                               final Logger logger) {
+    checkExecutor(executor);
     return execute(request, resolver.apply(request, mappedParameters), logger);
   }
 
@@ -137,4 +127,49 @@ public class RequestHandler1<T> extends RequestHandler {
   }
 
   // endregion
+
+  interface ParamExecutor1<T> {
+    Completes<Response> execute(final Request request,
+                                final T param1,
+                                final MediaTypeMapper mediaTypeMapper,
+                                final ErrorHandler errorHandler,
+                                final Logger logger);
+  }
+
+  static class RequestExecutor1<T> extends RequestExecutor implements ParamExecutor1<T> {
+    private final Handler1<T> handler;
+
+    private RequestExecutor1(RequestHandler1.Handler1<T> handler) { this.handler = handler; }
+
+    public Completes<Response> execute(final Request request,
+                                final T param1,
+                                final MediaTypeMapper mediaTypeMapper,
+                                final ErrorHandler errorHandler,
+                                final Logger logger) {
+      return executeRequest(() -> handler.execute(param1), errorHandler, logger);
+    }
+
+    static <T> RequestExecutor1<T> from(final Handler1<T> handler) {
+      return new RequestExecutor1<>(handler);}
+  }
+
+  static class RequestObjectExecutor1<T> extends RequestObjectExecutor implements ParamExecutor1<T> {
+    private final ObjectHandler1<T> handler;
+    private RequestObjectExecutor1(ObjectHandler1<T> handler) { this.handler = handler;}
+
+    public Completes<Response> execute(final Request request,
+                                final T param1,
+                                final MediaTypeMapper mediaTypeMapper,
+                                final ErrorHandler errorHandler,
+                                final Logger logger) {
+      return executeObjectRequest(request,
+                                  mediaTypeMapper,
+                                  () -> handler.execute(param1),
+                                  errorHandler,
+                                  logger);
+    }
+
+    static <T> RequestObjectExecutor1<T> from(final ObjectHandler1<T> handler) {
+      return new RequestObjectExecutor1<>(handler);}
+  }
 }

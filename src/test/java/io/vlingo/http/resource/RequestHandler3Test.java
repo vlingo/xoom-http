@@ -71,7 +71,7 @@ public class RequestHandler3Test extends RequestHandlerTestBase {
   @Test()
   public void throwExceptionWhenNoHandlerIsDefined() {
     thrown.expect(HandlerMissingException.class);
-    thrown.expectMessage("No handle defined for GET /posts/{postId}");
+    thrown.expectMessage("No handler defined for GET /posts/{postId}/comment/{commentId}");
 
     final RequestHandler3<String, String, Integer> handler = createRequestHandler(
       Method.GET,

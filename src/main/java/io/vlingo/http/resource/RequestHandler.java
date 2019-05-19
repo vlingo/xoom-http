@@ -21,68 +21,7 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-abstract class RequestExecutor {
-
-  private Completes<Response> defaultErrorResponse() {
-    return Completes.withSuccess(Response.of(Response.Status.InternalServerError));
-  }
-
-  abstract Completes<Response> execute(final Request request,
-                                       final Action.MappedParameters mappedParameters,
-                                       final Logger logger);
-
-
-  private Completes<Response> executeRequest(final Supplier<Completes<Response>> executeAction,
-                                     final ErrorHandler errorHandler,
-                                     final Logger logger) {
-    Completes<Response> responseCompletes;
-    try {
-      responseCompletes = executeAction.get();
-    } catch (Exception exception) {
-      responseCompletes = resourceHandlerError(errorHandler, logger, exception);
-    }
-    return responseCompletes;
-  }
-
-  // todo: See missing code
-  private Completes<Response> executeObjectRequest(final Request request,
-                                           final MediaTypeMapper mediaTypeMapper,
-                                           final Supplier<Completes<ObjectResponse<?>>> executeAction,
-                                           final ErrorHandler errorHandler,
-                                           final Logger logger) {
-    Completes<Response> responseCompletes;
-    try {
-      Outcome<Throwable, Completes<ObjectResponse<?>>> responseOutcome;
-      // todo: Find way to use outcome to capture failure case that can be used in the .otherwise case
-      Completes<ObjectResponse<?>> objectResponseCompletes = executeAction.get();
-      responseCompletes = objectResponseCompletes
-        .andThen(objResponse -> objResponse.fromRequest(request, mediaTypeMapper))
-        .recoverFrom(exception -> {
-          Completes<Response> errorResponse = resourceHandlerError(errorHandler, logger, exception);
-          return errorResponse.await();
-        });
-    } catch (Exception exception) {
-      responseCompletes = resourceHandlerError(errorHandler, logger, exception);
-    }
-    return responseCompletes;
-  }
-
-  private Completes<Response> resourceHandlerError(ErrorHandler errorHandler, Logger logger, Exception exception) {
-    Completes<Response> responseCompletes;
-      try {
-        logger.log("Exception thrown by Resource execution", exception);
-        responseCompletes = (errorHandler != null) ?
-          errorHandler.handle(exception) :
-          DefaultErrorHandler.instance().handle(exception);
-      } catch (Exception errorHandlerException) {
-        logger.log("Exception thrown by error handler when handling error", exception);
-        responseCompletes = defaultErrorResponse();
-      }
-    return responseCompletes;
-  }
-}
-
-public abstract class RequestHandler {
+abstract class RequestHandler {
   public final Method method;
   public final String path;
   public final String actionSignature;
@@ -94,8 +33,8 @@ public abstract class RequestHandler {
     this.method = method;
     this.path = path;
     this.actionSignature = generateActionSignature(parameterResolvers);
-    this.errorHandler = null;
-    this.mediaTypeMapper = DefaultMediaTypeMapper.instance();;
+    this.errorHandler = DefaultErrorHandler.instance();
+    this.mediaTypeMapper = DefaultMediaTypeMapper.instance();
   }
 
   RequestHandler(final Method method,
@@ -110,40 +49,9 @@ public abstract class RequestHandler {
     this.mediaTypeMapper = mediaTypeMapper;
   }
 
-  private Completes<Response> defaultErrorResponse() {
-    return Completes.withSuccess(Response.of(Response.Status.InternalServerError));
-  }
-
-  private Completes<Response> defaultErrorHandler(Exception ex) {
-    if (ex instanceof MediaTypeNotSupportedException) {
-      return Completes.withSuccess(Response.of(Response.Status.UnsupportedMediaType));
-    } else if (ex instanceof IllegalArgumentException) {
-      return Completes.withSuccess(Response.of(Response.Status.BadRequest));
-    }
-    else {
-      return defaultErrorResponse();
-    }
-  }
-
-  //todo: remove
-  void checkHandlerOrThrowException(Object handler, Object objectHandler) {
-    if (handler == null && objectHandler == null) {
-      throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
-    }
-  }
-
-  protected Completes<Response> executeFirstValidHandler(final Request request,
-                                                         final Object handler,
-                                                         final Supplier<Completes<Response>> handlerSupplier,
-                                                         final Object objectHandler,
-                                                         final Supplier<Completes<ObjectResponse<?>>> objectHandlerSupplier,
-                                                         final Logger logger) {
-    if (handler != null) {
-      return executeRequest(handlerSupplier, errorHandler, logger);
-    } else if (objectHandler != null){
-      return executeObjectRequest(request, mediaTypeMapper, objectHandlerSupplier, errorHandler, logger);
-    } else {
-           throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
+  protected void checkExecutor(Object executor) {
+    if (executor == null) {
+      throw new HandlerMissingException("No handler defined for " + method.toString() + " " + path);
     }
   }
 
@@ -151,57 +59,6 @@ public abstract class RequestHandler {
                                        final Action.MappedParameters mappedParameters,
                                        final Logger logger);
 
-
-  Completes<Response> executeRequest(final Supplier<Completes<Response>> executeAction,
-                                     final ErrorHandler errorHandler,
-                                     final Logger logger) {
-    Completes<Response> responseCompletes;
-    try {
-      responseCompletes = executeAction.get();
-    } catch (Exception exception) {
-      responseCompletes = resourceHandlerError(errorHandler, logger, exception);
-    }
-    return responseCompletes;
-  }
-
-  Completes<Response> executeObjectRequest(final Request request,
-                                           final MediaTypeMapper mediaTypeMapper,
-                                           final Supplier<Completes<ObjectResponse<?>>> executeAction,
-                                           final ErrorHandler errorHandler,
-                                           final Logger logger) {
-    Completes<Response> responseCompletes;
-    try {
-      Outcome<Throwable, Completes<ObjectResponse<?>>> responseOutcome;
-      // Find way to use outcome to capture failure case that can be used in the .otherwise case
-      Completes<ObjectResponse<?>> objectResponseCompletes = executeAction.get();
-      responseCompletes = objectResponseCompletes
-        .andThen(objResponse -> objResponse.fromRequest(request, mediaTypeMapper))
-        .recoverFrom(exception -> {
-          Completes<Response> errorResponse = resourceHandlerError(errorHandler, logger, exception);
-          // todo: Investigate Outcome
-          return errorResponse.await();
-        });
-    } catch (Exception exception) {
-      responseCompletes = resourceHandlerError(errorHandler, logger, exception);
-    }
-    return responseCompletes;
-  }
-
-  private Completes<Response> resourceHandlerError(ErrorHandler errorHandler, Logger logger, Exception exception) {
-    Completes<Response> responseCompletes;
-    if (errorHandler != null) {
-      try {
-        responseCompletes = errorHandler.handle(exception);
-      } catch (Exception errorHandlerException) {
-        logger.log("Exception thrown by error handler when handling error", exception);
-        responseCompletes = defaultErrorResponse();
-      }
-    } else {
-      logger.log("Exception thrown by Resource execution", exception);
-      responseCompletes = defaultErrorHandler(exception);
-    }
-    return responseCompletes;
-  }
 
   private String generateActionSignature(final List<ParameterResolver<?>> parameterResolvers) {
     checkOrder(parameterResolvers);
