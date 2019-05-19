@@ -165,11 +165,11 @@ public class RequestHandler2<T, R> extends RequestHandler {
                                        final MediaTypeMapper mediaTypeMapper,
                                        final ErrorHandler errorHandler,
                                        final Logger logger) {
-      return executeObjectRequest(request,
-                                  mediaTypeMapper,
-                                  () -> handler.execute(param1, param2),
-                                  errorHandler,
-                                  logger);
+      return executeRequest(request,
+                            mediaTypeMapper,
+                            () -> handler.execute(param1, param2),
+                            errorHandler,
+                            logger);
     }
 
     static <T,R> RequestObjectExecutor2<T,R> from(final ObjectHandler2<T,R> handler) {

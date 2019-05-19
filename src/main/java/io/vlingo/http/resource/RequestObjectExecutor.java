@@ -11,11 +11,11 @@ import java.util.function.Supplier;
 abstract class RequestObjectExecutor  {
 
   // todo: See missing code
-  protected Completes<Response> executeObjectRequest(final Request request,
-                                                     final MediaTypeMapper mediaTypeMapper,
-                                                     final Supplier<Completes<ObjectResponse<?>>> executeAction,
-                                                     final ErrorHandler errorHandler,
-                                                     final Logger logger) {
+  static Completes<Response> executeRequest(final Request request,
+                                            final MediaTypeMapper mediaTypeMapper,
+                                            final Supplier<Completes<ObjectResponse<?>>> executeAction,
+                                            final ErrorHandler errorHandler,
+                                            final Logger logger) {
     Completes<Response> responseCompletes;
     try {
       Outcome<Throwable, Completes<ObjectResponse<?>>> responseOutcome;

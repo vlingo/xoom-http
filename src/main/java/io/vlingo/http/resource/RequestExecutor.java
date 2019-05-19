@@ -8,9 +8,9 @@ import java.util.function.Supplier;
 
 abstract class RequestExecutor {
 
-  protected Completes<Response> executeRequest(final Supplier<Completes<Response>> executeAction,
-                                               final ErrorHandler errorHandler,
-                                               final Logger logger) {
+  static Completes<Response> executeRequest(final Supplier<Completes<Response>> executeAction,
+                                            final ErrorHandler errorHandler,
+                                            final Logger logger) {
     Completes<Response> responseCompletes;
     try {
       responseCompletes = executeAction.get();

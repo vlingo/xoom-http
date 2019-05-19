@@ -153,7 +153,7 @@ public class RequestHandler0 extends RequestHandler {
                                 MediaTypeMapper mediaTypeMapper,
                                 ErrorHandler errorHandler,
                                 Logger logger) {
-      return executeObjectRequest(request, mediaTypeMapper, handler::execute, errorHandler, logger);
+      return executeRequest(request, mediaTypeMapper, handler::execute, errorHandler, logger);
     }
 
     static RequestObjectExecutor0 from(ObjectHandler0 handler) { return new RequestObjectExecutor0(handler);}

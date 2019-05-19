@@ -55,6 +55,13 @@ abstract class RequestHandler {
     }
   }
 
+  protected Completes<Response> runParamExecutor(Object paramExecutor, Supplier<Completes<Response>> executeRequest) {
+    if (paramExecutor == null) {
+      throw new HandlerMissingException("No handler defined for " + method.toString() + " " + path);
+    }
+    return executeRequest.get();
+  }
+
   abstract Completes<Response> execute(final Request request,
                                        final Action.MappedParameters mappedParameters,
                                        final Logger logger);

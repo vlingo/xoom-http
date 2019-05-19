@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
 
 import static io.vlingo.http.Response.Status.*;
 import static io.vlingo.http.Response.of;
@@ -183,7 +182,8 @@ class RequestObjectHandlerFake extends RequestHandler {
 
   RequestObjectHandlerFake(Method method, String path, ErrorHandler errorHandler, ObjectHandler0 handler) {
     super(method, path, new ArrayList<>());
-    this.executor = RequestObjectExecutor0.from(handler);
+    executor = ((request, mediaTypeMapper1, errorHandler1, logger1) ->
+      RequestObjectExecutor.executeRequest(request, mediaTypeMapper1, () -> handler.execute(), errorHandler1, logger1));
     this.errorHandler = errorHandler;
   }
 
@@ -198,16 +198,18 @@ class RequestHandlerFake extends RequestHandler {
 
   ParamExecutor0 executor;
 
-  RequestHandlerFake(Method method, String path, List<ParameterResolver<?>> parameterResolvers) {
+  RequestHandlerFake(final Method method, final String path, final List<ParameterResolver<?>> parameterResolvers) {
     super(method, path, parameterResolvers);
-    executor = RequestExecutor0.from( () -> Completes.withSuccess(of(Ok)));
+    executor = ((request, mediaTypeMapper1, errorHandler1, logger1) ->
+      RequestExecutor.executeRequest(() -> Completes.withSuccess(Response.of(Ok)), errorHandler1, logger1));
   }
 
   RequestHandlerFake(Method method, String path,
                      List<ParameterResolver<?>> parameterResolvers,
                      Handler0 handler) {
     super(method, path, parameterResolvers);
-    executor = RequestExecutor0.from(handler);
+    executor = ((request, mediaTypeMapper1, errorHandler1, logger1) ->
+      RequestExecutor.executeRequest(handler::execute, errorHandler1, logger1));
   }
 
   @Override

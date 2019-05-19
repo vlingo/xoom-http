@@ -176,11 +176,11 @@ public class RequestHandler3<T, R, U> extends RequestHandler {
                                        final MediaTypeMapper mediaTypeMapper,
                                        final ErrorHandler errorHandler,
                                        final Logger logger) {
-      return executeObjectRequest(request,
-                                  mediaTypeMapper,
-                                  () -> handler.execute(param1, param2, param3),
-                                  errorHandler,
-                                  logger);
+      return executeRequest(request,
+                            mediaTypeMapper,
+                            () -> handler.execute(param1, param2, param3),
+                            errorHandler,
+                            logger);
     }
 
     static <T,R,U> RequestObjectExecutor3<T,R,U> from(final ObjectHandler3<T,R,U> handler) {
