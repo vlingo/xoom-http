@@ -17,11 +17,32 @@ import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
 import java.util.Arrays;
+import java.util.function.Supplier;
 
 public class RequestHandler2<T, R> extends RequestHandler {
   final ParameterResolver<T> resolverParam1;
   final ParameterResolver<R> resolverParam2;
   private ParamExecutor2<T,R> executor;
+
+  @FunctionalInterface
+  public interface Handler2<T, R> {
+    Completes<Response> execute(T param1, R param2);
+  }
+
+  @FunctionalInterface
+  public interface ObjectHandler2<T, R> {
+    Completes<ObjectResponse<?>> execute(T param1, R param2);
+  }
+
+  @FunctionalInterface
+  interface ParamExecutor2<T, R> {
+    Completes<Response> execute(final Request request,
+                                final T param1,
+                                final R param2,
+                                final MediaTypeMapper mediaTypeMapper,
+                                final ErrorHandler errorHandler,
+                                final Logger logger);
+  }
 
   RequestHandler2(final Method method,
                   final String path,
@@ -35,17 +56,25 @@ public class RequestHandler2<T, R> extends RequestHandler {
   }
 
   Completes<Response> execute(final Request request, final T param1, final R param2, final Logger logger) {
-    checkExecutor(executor);
-    return executor.execute(request, param1, param2, mediaTypeMapper, errorHandler, logger);
+    final Supplier<Completes<Response>> exec = () ->
+      executor.execute(request, param1, param2, mediaTypeMapper, errorHandler, logger);
+
+    return runParamExecutor(executor, () -> RequestExecutor.executeRequest(exec, errorHandler, logger));
   }
 
   public RequestHandler2<T, R> handle(final Handler2<T, R> handler) {
-    executor = RequestExecutor2.from(handler);
+    executor = ((request, param1, param2, mediaTypeMapper1, errorHandler1, logger1) ->
+      RequestExecutor.executeRequest(() -> handler.execute(param1, param2), errorHandler1, logger1));
     return this;
   }
 
   public RequestHandler2<T, R> handle(final ObjectHandler2<T, R> handler) {
-    executor = RequestObjectExecutor2.from(handler);
+    executor = ((request, param1, param2, mediaTypeMapper1, errorHandler1, logger) ->
+      RequestObjectExecutor.executeRequest(request,
+        mediaTypeMapper1,
+        () -> handler.execute(param1, param2),
+        errorHandler1,
+        logger));
     return this;
   }
 
@@ -62,17 +91,6 @@ public class RequestHandler2<T, R> extends RequestHandler {
     final R param2 = resolverParam2.apply(request, mappedParameters);
     return execute(request, param1, param2, logger);
   }
-
-  @FunctionalInterface
-  public interface Handler2<T, R> {
-    Completes<Response> execute(T param1, R param2);
-  }
-
-  @FunctionalInterface
-  public interface ObjectHandler2<T, R> {
-    Completes<ObjectResponse<?>> execute(T param1, R param2);
-  }
-
 
   // region FluentAPI
   public <U> RequestHandler3<T, R, U> param(final Class<U> paramClass) {
@@ -128,14 +146,7 @@ public class RequestHandler2<T, R> extends RequestHandler {
     return new RequestHandler3<>(method, path, resolverParam1, resolverParam2, ParameterResolver.header(name), errorHandler, mediaTypeMapper);
   }
   // endregion
-  interface ParamExecutor2<T, R> {
-    Completes<Response> execute(final Request request,
-                                final T param1,
-                                final R param2,
-                                final MediaTypeMapper mediaTypeMapper,
-                                final ErrorHandler errorHandler,
-                                final Logger logger);
-  }
+
 
   static class RequestExecutor2<T, R> extends RequestExecutor implements ParamExecutor2<T,R> {
     private final Handler2<T,R> handler;

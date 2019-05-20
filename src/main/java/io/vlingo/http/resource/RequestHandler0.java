@@ -17,6 +17,7 @@ import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
 import java.util.Collections;
+import java.util.function.Supplier;
 
 public class RequestHandler0 extends RequestHandler {
   private ParamExecutor0 executor;
@@ -31,17 +32,27 @@ public class RequestHandler0 extends RequestHandler {
     Completes<ObjectResponse<?>> execute();
   }
 
+  @FunctionalInterface
+  interface ParamExecutor0 {
+    Completes<Response> execute(Request request,
+                                MediaTypeMapper mediaTypeMapper,
+                                ErrorHandler errorHandler,
+                                Logger logger);
+  }
+
   RequestHandler0(final Method method, final String path) {
     super(method, path, Collections.emptyList());
   }
 
   public RequestHandler0 handle(final Handler0 handler) {
-    this.executor = RequestExecutor0.from(handler);
+    this.executor = ((request, mediaTypeMapper1, errorHandler1, logger) ->
+      RequestExecutor.executeRequest(() -> handler.execute(), errorHandler1, logger));
     return this;
   }
 
   public RequestHandler0 handle(final ObjectHandler0 handler) {
-    this.executor = new RequestObjectExecutor0(handler);
+    this.executor = ((request, mediaTypeMapper1, errorHandler1, logger) ->
+      RequestObjectExecutor.executeRequest(request, mediaTypeMapper1, () -> handler.execute(), errorHandler1, logger));
     return this;
   }
 
@@ -56,8 +67,10 @@ public class RequestHandler0 extends RequestHandler {
   }
 
   Completes<Response> execute(final Request request, final Logger logger) {
-    checkExecutor(executor);
-    return executor.execute(request, mediaTypeMapper, errorHandler, logger);
+    final Supplier<Completes<Response>> exec = () ->
+      executor.execute(request, mediaTypeMapper, errorHandler, logger);
+
+    return runParamExecutor(executor, () -> RequestExecutor.executeRequest(exec, errorHandler, logger));
   }
 
   @Override
@@ -123,39 +136,4 @@ public class RequestHandler0 extends RequestHandler {
     return new RequestHandler1<>(method, path, ParameterResolver.header(name), errorHandler, mediaTypeMapper);
   }
   // endregion
-
-  interface ParamExecutor0 {
-    Completes<Response> execute(Request request,
-                                MediaTypeMapper mediaTypeMapper,
-                                ErrorHandler errorHandler,
-                                Logger logger);
-  }
-
-  static class RequestExecutor0 extends RequestExecutor implements ParamExecutor0 {
-    private final Handler0 handler;
-    private RequestExecutor0(Handler0 handler) { this.handler = handler; }
-
-    public Completes<Response> execute(Request request,
-                                MediaTypeMapper mediaTypeMapper,
-                                ErrorHandler errorHandler,
-                                Logger logger) {
-      return executeRequest(handler::execute, errorHandler, logger);
-    }
-
-    static RequestExecutor0 from(Handler0 handler) { return new RequestExecutor0(handler);}
-  }
-
-  static class RequestObjectExecutor0 extends RequestObjectExecutor implements ParamExecutor0 {
-    private final ObjectHandler0 handler;
-    private RequestObjectExecutor0(ObjectHandler0 handler) { this.handler = handler;}
-
-    public Completes<Response> execute(Request request,
-                                MediaTypeMapper mediaTypeMapper,
-                                ErrorHandler errorHandler,
-                                Logger logger) {
-      return executeRequest(request, mediaTypeMapper, handler::execute, errorHandler, logger);
-    }
-
-    static RequestObjectExecutor0 from(ObjectHandler0 handler) { return new RequestObjectExecutor0(handler);}
-  }
 }

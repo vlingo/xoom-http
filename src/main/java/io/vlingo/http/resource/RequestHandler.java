@@ -49,12 +49,6 @@ abstract class RequestHandler {
     this.mediaTypeMapper = mediaTypeMapper;
   }
 
-  protected void checkExecutor(Object executor) {
-    if (executor == null) {
-      throw new HandlerMissingException("No handler defined for " + method.toString() + " " + path);
-    }
-  }
-
   protected Completes<Response> runParamExecutor(Object paramExecutor, Supplier<Completes<Response>> executeRequest) {
     if (paramExecutor == null) {
       throw new HandlerMissingException("No handler defined for " + method.toString() + " " + path);

@@ -8,6 +8,7 @@ import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
 import java.util.Arrays;
+import java.util.function.Supplier;
 
 public class RequestHandler4<T, R, U, I> extends RequestHandler {
   final ParameterResolver<T> resolverParam1;
@@ -15,6 +16,28 @@ public class RequestHandler4<T, R, U, I> extends RequestHandler {
   final ParameterResolver<U> resolverParam3;
   final ParameterResolver<I> resolverParam4;
   private ParamExecutor4<T,R,U,I> executor;
+
+
+  @FunctionalInterface
+  public interface Handler4<T, R, U, I> {
+    Completes<Response> execute(T param1, R param2, U param3, I param4);
+  }
+
+  @FunctionalInterface
+  public interface ObjectHandler4<T, R, U, I> {
+    Completes<ObjectResponse<?>> execute(T param1, R param2, U param3, I param4);
+  }
+
+  interface ParamExecutor4<T, R, U, I> {
+    Completes<Response> execute(final Request request,
+                                final T param1,
+                                final R param2,
+                                final U param3,
+                                final I param4,
+                                final MediaTypeMapper mediaTypeMapper,
+                                final ErrorHandler errorHandler,
+                                final Logger logger);
+  }
 
   RequestHandler4(final Method method,
                   final String path,
@@ -37,17 +60,25 @@ public class RequestHandler4<T, R, U, I> extends RequestHandler {
                               final U param3,
                               final I param4,
                               final Logger logger) {
-    checkExecutor(executor);
-    return executor.execute(request, param1, param2, param3, param4, mediaTypeMapper, errorHandler, logger);
+    final Supplier<Completes<Response>> exec = () ->
+      executor.execute(request, param1, param2, param3, param4, mediaTypeMapper, errorHandler, logger);
+
+    return runParamExecutor(executor, () -> RequestExecutor.executeRequest(exec, errorHandler, logger));
   }
 
   public RequestHandler4<T, R, U, I> handle(final Handler4<T, R, U, I> handler) {
-    executor = RequestExecutor4.from(handler);
+    executor = ((request, param1, param2, param3, param4, mediaTypeMapper1, errorHandler1, logger1) ->
+      RequestExecutor.executeRequest(() -> handler.execute(param1, param2, param3, param4), errorHandler1, logger1));
     return this;
   }
 
   public RequestHandler4<T, R, U, I> handle(final ObjectHandler4<T, R, U, I> handler) {
-    executor = RequestObjectExecutor4.from(handler);
+    executor = ((request, param1, param2, param3, param4, mediaTypeMapper1, errorHandler1, logger) ->
+      RequestObjectExecutor.executeRequest(request,
+        mediaTypeMapper1,
+        () -> handler.execute(param1, param2, param3, param4),
+        errorHandler1,
+        logger));
     return this;
   }
 
@@ -64,18 +95,11 @@ public class RequestHandler4<T, R, U, I> extends RequestHandler {
     final R param2 = resolverParam2.apply(request, mappedParameters);
     final U param3 = resolverParam3.apply(request, mappedParameters);
     final I param4 = resolverParam4.apply(request, mappedParameters);
-    return execute(request, param1, param2, param3, param4, logger);
+    final Supplier<Completes<Response>> exec = () ->
+      executor.execute(request, param1, param2, param3, param4, mediaTypeMapper, errorHandler, logger);
+    return runParamExecutor(executor, () -> RequestExecutor.executeRequest(exec, errorHandler, logger));
   }
 
-  @FunctionalInterface
-  public interface Handler4<T, R, U, I> {
-    Completes<Response> execute(T param1, R param2, U param3, I param4);
-  }
-
-  @FunctionalInterface
-  public interface ObjectHandler4<T, R, U, I> {
-    Completes<ObjectResponse<?>> execute(T param1, R param2, U param3, I param4);
-  }
 
   // region FluentAPI
   public <J> RequestHandler5<T, R, U, I, J> param(final Class<J> paramClass) {
@@ -144,57 +168,4 @@ public class RequestHandler4<T, R, U, I> extends RequestHandler {
       mediaTypeMapper);
   }
   // endregion
-  interface ParamExecutor4<T, R, U, I> {
-    Completes<Response> execute(final Request request,
-                                final T param1,
-                                final R param2,
-                                final U param3,
-                                final I param4,
-                                final MediaTypeMapper mediaTypeMapper,
-                                final ErrorHandler errorHandler,
-                                final Logger logger);
-  }
-
-  static class RequestExecutor4<T, R, U, I> extends RequestExecutor implements ParamExecutor4<T, R, U, I> {
-    private final Handler4<T,R,U,I> handler;
-
-    private RequestExecutor4(Handler4<T,R,U,I> handler) { this.handler = handler; }
-
-    public Completes<Response> execute(final Request request,
-                                       final T param1,
-                                       final R param2,
-                                       final U param3,
-                                       final I param4,
-                                       final MediaTypeMapper mediaTypeMapper,
-                                       final ErrorHandler errorHandler,
-                                       final Logger logger) {
-      return executeRequest(() -> handler.execute(param1, param2, param3, param4), errorHandler, logger);
-    }
-
-    static <T,R,U,I> RequestExecutor4<T,R,U,I> from(final Handler4<T,R,U,I> handler) {
-      return new RequestExecutor4<>(handler);}
-  }
-
-  static class RequestObjectExecutor4<T, R, U, I> extends RequestObjectExecutor implements ParamExecutor4<T, R, U, I> {
-    private final ObjectHandler4<T,R,U,I> handler;
-    private RequestObjectExecutor4(ObjectHandler4<T,R,U,I> handler) { this.handler = handler;}
-
-    public Completes<Response> execute(final Request request,
-                                       final T param1,
-                                       final R param2,
-                                       final U param3,
-                                       final I param4,
-                                       final MediaTypeMapper mediaTypeMapper,
-                                       final ErrorHandler errorHandler,
-                                       final Logger logger) {
-      return executeRequest(request,
-                            mediaTypeMapper,
-                            () -> handler.execute(param1, param2, param3, param4),
-                            errorHandler,
-                            logger);
-    }
-
-    static <T,R,U,I> RequestObjectExecutor4<T,R,U,I> from(final ObjectHandler4<T,R,U,I> handler) {
-      return new RequestObjectExecutor4<>(handler);}
-  }
 }

@@ -31,6 +31,7 @@ public class RequestHandler1<T> extends RequestHandler {
     Completes<ObjectResponse<?>> execute(T param1);
   }
 
+  @FunctionalInterface
   interface ParamExecutor1<T> {
     Completes<Response> execute(final Request request,
                                 final T param1,

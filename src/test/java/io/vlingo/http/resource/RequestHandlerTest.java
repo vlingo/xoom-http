@@ -176,7 +176,8 @@ class RequestObjectHandlerFake extends RequestHandler {
 
   RequestObjectHandlerFake(Method method, String path, ObjectHandler0 handler) {
     super(method, path, new ArrayList<>());
-    this.executor = RequestObjectExecutor0.from(handler);
+    this.executor = (request, mediaTypeMapper1, errorHandler1, logger) ->
+      RequestObjectExecutor.executeRequest(request, mediaTypeMapper1, () -> handler.execute(), errorHandler, logger);
     this.errorHandler = null;
   }
 
