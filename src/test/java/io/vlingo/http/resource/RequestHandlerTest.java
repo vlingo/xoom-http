@@ -35,12 +35,12 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
       () -> { throw new RuntimeException("Handler failed"); }
     );
 
-    ErrorHandler validHandler = (exception) -> {
+    ErrorHandler customHandler = (exception) -> {
       Assert.assertTrue( exception instanceof RuntimeException);
       return Completes.withSuccess(of(testStatus));
     };
 
-    Response response = handler.execute(Request.method(Method.GET), validHandler, logger).await();
+    Response response = handler.execute(Request.method(Method.GET), customHandler, logger).await();
     assertResponsesAreEquals(of(testStatus), response);
   }
 
@@ -190,7 +190,9 @@ class RequestObjectHandlerFake extends RequestHandler {
 
   @Override
   Completes<Response> execute(Request request, Action.MappedParameters mappedParameters, Logger logger) {
-   return executor.execute(request, null, errorHandler, logger);
+   return executor.execute(request,
+                           DefaultMediaTypeMapper.instance(),
+                           errorHandler, logger);
   }
 
 }

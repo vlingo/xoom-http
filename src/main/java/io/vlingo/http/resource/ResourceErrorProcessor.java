@@ -10,6 +10,10 @@ public class ResourceErrorProcessor {
     return Completes.withSuccess(Response.of(Response.Status.InternalServerError));
   }
 
+  static Completes<ObjectResponse<?>> resourceHandlerObjectError(ErrorHandler errorHandler, Logger logger, Exception exception) {
+    return Completes.withSuccess( ObjectResponse.of(Response.Status.Ok, "", String.class));
+  }
+
   static Completes<Response> resourceHandlerError(ErrorHandler errorHandler, Logger logger, Exception exception) {
     Completes<Response> responseCompletes;
     try {

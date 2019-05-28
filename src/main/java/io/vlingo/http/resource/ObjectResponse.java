@@ -54,7 +54,7 @@ public class ObjectResponse<T> {
     return new ObjectResponse<>(Version.Http1_1, status, Header.Headers.empty(), entity, classType);
   }
 
-  public Response fromRequest(Request request, MediaTypeMapper mapper) {
+  public Response responseFrom(Request request, MediaTypeMapper mapper) {
     final String acceptedMediaTypes = request.headerValueOr(RequestHeader.Accept, DEFAULT_MEDIA_TYPE.toString());
     final ResponseMediaTypeSelector responseMediaTypeSelector = new ResponseMediaTypeSelector(acceptedMediaTypes);
     final ContentMediaType responseContentMediaType = responseMediaTypeSelector.selectType(mapper.mappedMediaTypes());
