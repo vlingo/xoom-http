@@ -10,7 +10,9 @@ package io.vlingo.http.resource;
 import io.vlingo.actors.Logger;
 import io.vlingo.http.resource.Client.Configuration;
 import io.vlingo.wire.channel.ResponseChannelConsumer;
+import io.vlingo.wire.fdx.bidirectional.BasicClientRequestResponseChannel;
 import io.vlingo.wire.fdx.bidirectional.ClientRequestResponseChannel;
+import io.vlingo.wire.fdx.bidirectional.SecureClientRequestResponseChannel;
 
 /**
  * Common behaviors needed by all {@code ClientConsumer} implementations.
@@ -26,11 +28,21 @@ public class ClientConsumerCommons {
           final Configuration configuration,
           final ResponseChannelConsumer consumer,
           final Logger logger) throws Exception {
-    return new ClientRequestResponseChannel(
-            configuration.addressOfHost,
-            consumer,
-            configuration.readBufferPoolSize,
-            configuration.readBufferSize,
-            logger);
+
+    if (configuration.secure) {
+      return new SecureClientRequestResponseChannel(
+              configuration.addressOfHost,
+              consumer,
+              configuration.readBufferPoolSize,
+              configuration.readBufferSize,
+              logger);
+    } else {
+      return new BasicClientRequestResponseChannel(
+              configuration.addressOfHost,
+              consumer,
+              configuration.readBufferPoolSize,
+              configuration.readBufferSize,
+              logger);
+    }
   }
 }
