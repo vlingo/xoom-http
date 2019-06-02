@@ -7,6 +7,11 @@
 
 package io.vlingo.http.resource;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
@@ -22,16 +27,15 @@ import io.vlingo.http.resource.Configuration.Timing;
 import io.vlingo.http.resource.TestResponseChannelConsumer.Progress;
 import io.vlingo.http.sample.user.model.User;
 import io.vlingo.wire.channel.ResponseChannelConsumer;
+import io.vlingo.wire.fdx.bidirectional.BasicClientRequestResponseChannel;
 import io.vlingo.wire.fdx.bidirectional.ClientRequestResponseChannel;
 import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
 
-import static org.junit.Assert.*;
-
 public class ServerTest extends ResourceTestFixtures {
   private static final int TOTAL_REQUESTS_RESPONSES = 1_000;
-  
+
   private static final AtomicInteger baseServerPort = new AtomicInteger(18080);
 
   private ClientRequestResponseChannel client;
@@ -73,11 +77,11 @@ public class ServerTest extends ResourceTestFixtures {
 
     assertEquals(1, progress.consumeCount.get());
     assertNotNull(createdResponse.headers.headerOf(ResponseHeader.Location));
-    
+
     final String getUserMessage = "GET " + createdResponse.headerOf(ResponseHeader.Location).value + " HTTP/1.1\nHost: vlingo.io\n\n";
 
     client.requestWith(toByteBuffer(getUserMessage));
-    
+
     progress.untilConsumed = TestUntil.happenings(1);
     while (progress.untilConsumed.remaining() > 0) {
       client.probeChannel();
@@ -96,7 +100,7 @@ public class ServerTest extends ResourceTestFixtures {
   @Test
   public void testThatServerDispatchesManyRequests() throws Exception {
     final long startTime = System.currentTimeMillis();
-    
+
     progress.untilConsumed = TestUntil.happenings(TOTAL_REQUESTS_RESPONSES);
     final int totalPairs = TOTAL_REQUESTS_RESPONSES / 2;
     int currentConsumeCount = 0;
@@ -113,7 +117,7 @@ public class ServerTest extends ResourceTestFixtures {
     while (progress.untilConsumed.remaining() > 0) {
       client.probeChannel();
     }
-    
+
     System.out.println("TOTAL REQUESTS-RESPONSES: " + TOTAL_REQUESTS_RESPONSES + " TIME: " + (System.currentTimeMillis() - startTime) + " ms");
 
     assertEquals(TOTAL_REQUESTS_RESPONSES, progress.consumeCount.get());
@@ -121,6 +125,7 @@ public class ServerTest extends ResourceTestFixtures {
     assertNotNull(createdResponse.headers.headerOf(ResponseHeader.Location));
   }
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
@@ -132,12 +137,13 @@ public class ServerTest extends ResourceTestFixtures {
     assertTrue(server.startUp().await(500L));
 
     progress = new Progress();
-    
+
     consumer = world.actorFor(ResponseChannelConsumer.class, Definition.has(TestResponseChannelConsumer.class, Definition.parameters(progress)));
 
-    client = new ClientRequestResponseChannel(Address.from(Host.of("localhost"), serverPort, AddressType.NONE), consumer, 100, 10240, world.defaultLogger());
+    client = new BasicClientRequestResponseChannel(Address.from(Host.of("localhost"), serverPort, AddressType.NONE), consumer, 100, 10240, world.defaultLogger());
   }
 
+  @Override
   @After
   public void tearDown() {
     client.close();
