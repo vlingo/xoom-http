@@ -26,6 +26,7 @@ import io.vlingo.actors.testkit.TestUntil;
 import io.vlingo.http.Response;
 import io.vlingo.http.resource.TestResponseChannelConsumer.Progress;
 import io.vlingo.wire.channel.ResponseChannelConsumer;
+import io.vlingo.wire.fdx.bidirectional.BasicClientRequestResponseChannel;
 import io.vlingo.wire.fdx.bidirectional.ClientRequestResponseChannel;
 import io.vlingo.wire.message.ByteBufferAllocator;
 import io.vlingo.wire.message.Converters;
@@ -176,7 +177,7 @@ public class StaticFilesResourceTest {
 
     progress = new Progress();
     consumer = world.actorFor(ResponseChannelConsumer.class, Definition.has(TestResponseChannelConsumer.class, Definition.parameters(progress)));
-    client = new ClientRequestResponseChannel(Address.from(Host.of("localhost"), serverPort, AddressType.NONE), consumer, 100, 10240, world.defaultLogger());
+    client = new BasicClientRequestResponseChannel(Address.from(Host.of("localhost"), serverPort, AddressType.NONE), consumer, 100, 10240, world.defaultLogger());
   }
 
   private String getRequest(final String filePath) {
