@@ -21,11 +21,17 @@ import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
 
 /**
- * Asynchronous HTTP client.
+ * Defines an HTTP client for sending {@code Request}s and receiving {@code Request}s.
  */
 public class Client {
+  /**
+   * Custom header for sending and receiving a client id.
+   */
   public static String ClientIdCustomHeader = "X-VLINGO-CLIENT-ID";
 
+  /**
+   * Defines the types supported by this client.
+   */
   public static enum ClientConsumerType { Correlating, LoadBalancing, RoundRobin };
 
   private final Configuration configuration;
@@ -52,7 +58,6 @@ public class Client {
   public static Client using(final Configuration configuration) throws Exception {
     return new Client(configuration);
   }
-
 
   /**
    * Constructs my default state from the {@code configuration}.
@@ -90,7 +95,7 @@ public class Client {
       throw new IllegalArgumentException("ClientConsumerType is not mapped: " + type);
     }
 
-    this.consumer = configuration.stage.actorFor(ClientConsumer.class,Definition.has(clientConsumerType, parameters));
+    this.consumer = configuration.stage.actorFor(ClientConsumer.class, Definition.has(clientConsumerType, parameters));
   }
 
   /**
@@ -103,7 +108,7 @@ public class Client {
   }
 
   /**
-   * Close me.
+   * @see io.vlingo.http.resource.Client#close()
    */
   public void close() {
     consumer.stop();
@@ -135,6 +140,7 @@ public class Client {
     public final int readBufferPoolSize;
     public final int writeBufferSize;
     public final Stage stage;
+    public final boolean secure;
     public Object testInfo = null;
 
     /**
@@ -256,7 +262,41 @@ public class Client {
               probeInterval,
               writeBufferSize,
               readBufferPoolSize,
-              readBufferSize);
+              readBufferSize,
+              false);
+    }
+
+    /**
+     * Answer the {@code Configuration} with the given options and that requires a secure channel.
+     * @param stage the Stage to host the Client
+     * @param addressOfHost the Address of the host server
+     * @param consumerOfUnknownResponses the ResponseConsumer of responses that cannot be associated with a given consumer
+     * @param keepAlive the boolean indicating whether or not the connection is kept alive over multiple requests-responses
+     * @param probeInterval the long number of milliseconds between each consumer channel probe
+     * @param writeBufferSize the int size of the ByteBuffer used for writes/sends
+     * @param readBufferPoolSize the int number of read buffers in the pool
+     * @param readBufferSize the int size of the ByteBuffer used for reads/receives
+     * @return Configuration
+     */
+    public static Configuration secure(
+            final Stage stage,
+            final Address addressOfHost,
+            final ResponseConsumer consumerOfUnknownResponses,
+            final boolean keepAlive,
+            final long probeInterval,
+            final int writeBufferSize,
+            final int readBufferPoolSize,
+            final int readBufferSize) {
+      return new Configuration(
+              stage,
+              addressOfHost,
+              consumerOfUnknownResponses,
+              keepAlive,
+              probeInterval,
+              writeBufferSize,
+              readBufferPoolSize,
+              readBufferSize,
+              true);
     }
 
     /**
@@ -269,6 +309,7 @@ public class Client {
      * @param writeBufferSize the int size of the ByteBuffer used for writes/sends
      * @param readBufferPoolSize the int number of read buffers in the pool
      * @param readBufferSize the int size of the ByteBuffer used for reads/receives
+     * @param secure the boolean indicating whether the connection should be secure
      */
     public Configuration(
             final Stage stage,
@@ -278,7 +319,8 @@ public class Client {
             final long probeInterval,
             final int writeBufferSize,
             final int readBufferPoolSize,
-            final int readBufferSize) {
+            final int readBufferSize,
+            final boolean secure) {
 
       this.stage = stage;
       this.addressOfHost = addressOfHost;
@@ -288,6 +330,7 @@ public class Client {
       this.writeBufferSize = writeBufferSize;
       this.readBufferPoolSize = readBufferPoolSize;
       this.readBufferSize = readBufferSize;
+      this.secure = secure;
     }
 
     /**
