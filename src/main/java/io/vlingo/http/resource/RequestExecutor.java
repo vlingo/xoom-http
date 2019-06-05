@@ -11,13 +11,13 @@ abstract class RequestExecutor {
   static Completes<Response> executeRequest(final Supplier<Completes<Response>> executeAction,
                                             final ErrorHandler errorHandler,
                                             final Logger logger) {
-    Completes<Response> responseCompletes;
+
     try {
-      responseCompletes = executeAction.get();
-    } catch (Exception exception) {
-      responseCompletes = ResourceErrorProcessor.resourceHandlerError(errorHandler, logger, exception);
+      return executeAction.get()
+        .recoverFrom(ex -> ResourceErrorProcessor.resourceHandlerError(errorHandler, logger, ex));
+    } catch(Exception ex) {
+      return Completes.withFailure(ResourceErrorProcessor.resourceHandlerError(errorHandler, logger, ex));
     }
-    return responseCompletes;
   }
 
 }

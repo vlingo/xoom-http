@@ -95,25 +95,6 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
   }
 
   @Test
-  public void errorHandlerInvoked() {
-    final RequestHandler5<String, String, String, Integer, Integer> handler = createRequestHandler(
-      Method.GET,
-      "/posts/{postId}/comment/{commentId}/user/{userId}",
-      path(0, String.class),
-      path(1, String.class),
-      path(2, String.class),
-      query("page", Integer.class, 10),
-      query("pageSize", Integer.class, 10))
-      .handle((Handler5<String, String, String, Integer, Integer>) (param1, param2, param3, param4, param5)
-        -> { throw new RuntimeException("Test Handler exception"); })
-      .onError(
-        (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
-      );
-    Completes<Response> responseCompletes = handler.execute(Request.method(Method.GET), "idVal1", "idVal2", "idVal3", 1, 2, logger);
-    assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
-  }
-
-  @Test
   public void actionSignature() {
     final RequestHandler5<String, String, String, Integer, Integer> handler = createRequestHandler(
       Method.GET,

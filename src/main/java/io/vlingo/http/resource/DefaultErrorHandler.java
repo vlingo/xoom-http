@@ -7,12 +7,12 @@ public class DefaultErrorHandler {
 
   private static ErrorHandler instance = (ex) ->  {
     if (ex instanceof MediaTypeNotSupportedException) {
-      return Completes.withSuccess(Response.of(Response.Status.UnsupportedMediaType));
+      return Response.of(Response.Status.UnsupportedMediaType);
     } else if (ex instanceof IllegalArgumentException) {
-      return Completes.withSuccess(Response.of(Response.Status.BadRequest));
+      return Response.of(Response.Status.BadRequest);
     }
     else {
-      return Completes.withSuccess(Response.of(Response.Status.InternalServerError));
+      return Response.of(Response.Status.InternalServerError);
     }
   };
 

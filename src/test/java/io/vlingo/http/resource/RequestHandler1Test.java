@@ -73,19 +73,6 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
   }
 
   @Test
-  public void customErrorHandlerAppliedWhenExecutionFails() {
-    final RequestHandler1<String> handler = createRequestHandler(Method.GET, "/posts/{postId}", path(0, String.class))
-      .handle((Handler1<String>) (param) -> {
-        throw new RuntimeException("Test Handler exception");
-      })
-      .onError(
-        (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
-      );
-    Completes<Response> responseCompletes = handler.execute(Request.method(Method.GET), "idVal1", logger);
-    assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
-  }
-
-  @Test
   public void actionSignature() {
     final RequestHandler1<String> handler = createRequestHandler(Method.GET, "/posts/{postId}", path(0, String.class))
       .handle((Handler1<String>)(postId) -> withSuccess(of(Ok, serialized(postId))));

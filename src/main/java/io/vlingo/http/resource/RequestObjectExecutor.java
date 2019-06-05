@@ -2,6 +2,7 @@ package io.vlingo.http.resource;
 
 import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
+import io.vlingo.common.Success;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
@@ -16,15 +17,23 @@ abstract class RequestObjectExecutor {
                                             final Logger logger) {
 
     try {
-      // todo: the current recoverFrom does not support a signature of Completes<T>
-      // this means that on exceptions inside this code block the custom error handling is not
       return executeAction.get()
-        .andThen(objResponseCompletes -> objResponseCompletes.responseFrom(request, mediaTypeMapper))
-        .recoverFrom(exception -> Response.of(Response.Status.InternalServerError));
-    } catch (Throwable throwable) {
-      return ResourceErrorProcessor.resourceHandlerError(errorHandler,
-                                                         logger,
-                                                         (Exception) throwable);
+        .andThen(objectResponse -> toResponse(objectResponse, request, mediaTypeMapper, errorHandler, logger));
+    } catch(Exception ex) {
+      return Completes.withFailure( ResourceErrorProcessor.resourceHandlerError(errorHandler, logger, ex));
     }
+  }
+
+  static Response toResponse(
+                                          final ObjectResponse<?> objectResponse,
+                                          final Request request,
+                                          final MediaTypeMapper mediaTypeMapper,
+                                          final ErrorHandler errorHandler,
+                                          final Logger logger) {
+
+      return Success.of(objectResponse.responseFrom(request, mediaTypeMapper))
+        .resolve( ex -> ResourceErrorProcessor.resourceHandlerError(errorHandler, logger, (Exception) ex),
+                  response -> response);
+
   }
 }

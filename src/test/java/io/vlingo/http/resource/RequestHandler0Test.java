@@ -56,19 +56,6 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
   }
 
   @Test
-  public void customErrorHandlerAppliedWhenExecutionFails() {
-    final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      .handle((RequestHandler0.Handler0)() -> {
-        throw new RuntimeException("Test Handler exception");
-      })
-      .onError(
-        (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
-    );
-    Completes<Response> responseCompletes = handler.execute(Request.method(Method.GET), logger);
-    assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
-  }
-
-  @Test
   public void actionSignatureIsEmpty() {
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
       .handle(() -> withSuccess(of(Created)));

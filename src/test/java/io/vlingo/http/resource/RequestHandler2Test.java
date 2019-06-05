@@ -80,21 +80,6 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
   }
 
   @Test
-  public void errorHandlerInvoked() {
-    final RequestHandler2<String, String> handler = createRequestHandler(
-      Method.GET,
-      "/posts/{postId}/comment/{commentId}",
-      path(0, String.class),
-      path(1, String.class))
-      .handle((Handler2<String, String>) (param1, param2) -> { throw new RuntimeException("Test Handler exception"); })
-      .onError(
-        (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
-    );
-    Completes<Response> responseCompletes = handler.execute(Request.method(Method.GET), "idVal1", "idVal2", logger);
-    assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
-  }
-
-  @Test
   public void actionSignature() {
     final RequestHandler2<String, String> handler = createRequestHandler(
       Method.GET,

@@ -84,23 +84,6 @@ public class RequestHandler3Test extends RequestHandlerTestBase {
   }
 
   @Test
-  public void errorHandlerInvoked() {
-    final RequestHandler3<String, String, Integer> handler = createRequestHandler(
-      Method.GET,
-      "/posts/{postId}/comment/{commentId}",
-      path(0, String.class),
-      path(1, String.class),
-      query("page", Integer.class, 10))
-      .handle((Handler3<String, String, Integer>) (param1, param2, param3)
-        -> { throw new RuntimeException("Test Handler exception"); })
-      .onError(
-        (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
-      );
-    Completes<Response> responseCompletes = handler.execute(Request.method(Method.GET), "idVal1", "idVal2", 1, logger);
-    assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
-  }
-
-  @Test
   public void actionSignature() {
     final RequestHandler3<String, String, Integer> handler = createRequestHandler(
       Method.GET,

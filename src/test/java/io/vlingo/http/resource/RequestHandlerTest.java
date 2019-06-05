@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static io.vlingo.http.Response.Status.*;
-import static io.vlingo.http.Response.of;
 import static io.vlingo.http.resource.RequestHandler0.*;
 import static org.junit.Assert.assertEquals;
 
@@ -37,11 +36,11 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
 
     ErrorHandler customHandler = (exception) -> {
       Assert.assertTrue( exception instanceof RuntimeException);
-      return Completes.withSuccess(of(testStatus));
+      return Response.of(testStatus);
     };
 
     Response response = handler.execute(Request.method(Method.GET), customHandler, logger).await();
-    assertResponsesAreEquals(of(testStatus), response);
+    assertResponsesAreEquals(Response.of(testStatus), response);
   }
 
   @Test
@@ -49,7 +48,7 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
     final Response.Status testStatus = Response.Status.BadRequest;
     final ErrorHandler validHandler = (exception) -> {
       Assert.assertTrue( exception instanceof RuntimeException);
-      return Completes.withSuccess(of(testStatus));
+      return Response.of(testStatus);
     };
 
     final RequestObjectHandlerFake handler = new RequestObjectHandlerFake(Method.GET,
@@ -59,7 +58,7 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
     );
 
     Response response = handler.execute(Request.method(Method.GET), null, logger).await();
-    assertResponsesAreEquals(of(testStatus), response);
+    assertResponsesAreEquals(Response.of(testStatus), response);
   }
 
   @Test
@@ -75,7 +74,7 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
     };
 
     Response response = handler.execute(Request.method(Method.GET), badHandler, logger).await();
-    assertResponsesAreEquals(of(InternalServerError), response);
+    assertResponsesAreEquals(Response.of(InternalServerError), response);
   }
 
   @Test
@@ -87,7 +86,7 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
     );
 
     Response response = handler.execute(Request.method(Method.GET), (ErrorHandler) null, logger).await();
-    assertResponsesAreEquals(of(InternalServerError), response);
+    assertResponsesAreEquals(Response.of(InternalServerError), response);
   }
 
   @Test
@@ -99,7 +98,7 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
     );
 
     Response response = handler.execute(Request.method(Method.GET), (ErrorHandler)null, logger).await();
-    assertResponsesAreEquals(of(UnsupportedMediaType), response);
+    assertResponsesAreEquals(Response.of(UnsupportedMediaType), response);
   }
 
   @Test
@@ -113,9 +112,9 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
     Response response = handler.execute(Request.method(Method.GET), null, logger).await();
     String nameAsJson = JsonSerialization.serialized(name);
     assertResponsesAreEquals(
-      of(Ok,
-        ResponseHeader.headers(ResponseHeader.ContentType, ContentMediaType.Json().toString()),
-        nameAsJson),
+      Response.of(Ok,
+                  ResponseHeader.headers(ResponseHeader.ContentType, ContentMediaType.Json().toString()),
+                  nameAsJson),
       response);
   }
 
