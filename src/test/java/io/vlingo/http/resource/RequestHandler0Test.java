@@ -11,7 +11,10 @@ package io.vlingo.http.resource;
 
 import io.vlingo.common.Completes;
 import io.vlingo.http.*;
+import io.vlingo.http.media.ContentMediaType;
+import io.vlingo.http.resource.serialization.JsonSerialization;
 import io.vlingo.http.sample.user.NameData;
+import io.vlingo.http.sample.user.model.Name;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -20,8 +23,7 @@ import java.net.URI;
 import java.util.Collections;
 
 import static io.vlingo.common.Completes.withSuccess;
-import static io.vlingo.http.Response.Status.Created;
-import static io.vlingo.http.Response.Status.Imateapot;
+import static io.vlingo.http.Response.Status.*;
 import static io.vlingo.http.Response.of;
 import static io.vlingo.http.resource.ParameterResolver.*;
 import static org.junit.Assert.assertEquals;
@@ -36,7 +38,7 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
   public void simpleHandler() {
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
       .handle(() -> withSuccess(of(Created)));
-    final Response response = handler.execute(logger).outcome();
+    final Response response = handler.execute(Request.method(Method.GET), logger).outcome();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
@@ -44,17 +46,13 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
     assertResponsesAreEquals(of(Created), response);
   }
 
-  @Test
-  public void errorHandlerInvoked() {
-    final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
-      .handle(() -> {
-        throw new RuntimeException("Test Handler exception");
-      })
-      .onError(
-        (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
-    );
-    Completes<Response> responseCompletes = handler.execute(logger);
-    assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
+  @Test()
+  public void throwExceptionWhenNoHandlerIsDefined() {
+    thrown.expect(HandlerMissingException.class);
+    thrown.expectMessage("No handler defined for GET /helloworld");
+
+    final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld");
+    handler.execute(Request.method(Method.GET), logger);
   }
 
   @Test
@@ -72,7 +70,6 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
       .and(Version.Http1_1);
     final Action.MappedParameters mappedParameters =
       new Action.MappedParameters(1, Method.GET, "ignored", Collections.emptyList());
-
     final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
       .handle(() -> withSuccess(of(Created)));
     final Response response = handler.execute(request, mappedParameters, logger).outcome();
@@ -121,6 +118,7 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
   }
 
   @Test
+  @SuppressWarnings( "deprecation" )
   public void addingHandlerBodyWithMapper() {
     final Request request = Request.has(Method.POST)
                                    .and(URI.create("/user/admin/name"))
@@ -133,6 +131,26 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
 
     final RequestHandler1<NameData> handler1 = new RequestHandler0(Method.GET, "/user/admin/name")
       .body(NameData.class, TestMapper.class);
+
+    assertResolvesAreEquals(body(NameData.class, new TestMapper()), handler1.resolver);
+    assertEquals(new NameData("John", "Doe"), handler1.resolver.apply(request, mappedParameters));
+  }
+
+
+  @Test
+  public void addingHandlerBodyWithMediaTypeMapper() {
+    final Request request = Request.has(Method.POST)
+                                   .and(URI.create("/user/admin/name"))
+                                   .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"))
+                                   .and(RequestHeader.of(RequestHeader.ContentType, "application/json"))
+                                   .and(Version.Http1_1);
+    final Action.MappedParameters mappedParameters =
+      new Action.MappedParameters(1, Method.POST, "ignored", Collections.singletonList(
+        new Action.MappedParameter("String", "admin"))
+      );
+
+    final RequestHandler1<NameData> handler1 = new RequestHandler0(Method.GET, "/user/admin/name")
+      .body(NameData.class);
 
     assertResolvesAreEquals(body(NameData.class, new TestMapper()), handler1.resolver);
     assertEquals(new NameData("John", "Doe"), handler1.resolver.apply(request, mappedParameters));

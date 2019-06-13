@@ -33,7 +33,7 @@ public class ResourceBuilderTest extends ResourceTestFixtures {
         post("/post/{postId}")
           .param(String.class)
           .body(UserData.class)
-          .handle((postId, userData) -> Completes.withSuccess(Response.of(Ok, serialized(postId))))
+          .handle((RequestHandler2.Handler2<String, UserData>) (postId, userData) -> Completes.withSuccess(Response.of(Ok, serialized(postId))))
       );
 
     assertNotNull(resource);
@@ -48,11 +48,11 @@ public class ResourceBuilderTest extends ResourceTestFixtures {
       get("/customers/{customerId}/accounts/{accountId}")
         .param(String.class)
         .param(String.class)
-        .handle((customerId, accountID) -> Completes.withSuccess((Response.of(Ok, serialized("users"))))),
+        .handle((RequestHandler2.Handler2<String, String>) (customerId, accountID) -> Completes.withSuccess((Response.of(Ok, serialized("users"))))),
       get("/customers/{customerId}/accounts/{accountId}/withdraw")
         .param(String.class)
         .param(String.class)
-        .handle((customerId, accountID) -> Completes.withSuccess((Response.of(Ok, serialized("user admin")))))
+        .handle((RequestHandler2.Handler2<String, String>) (customerId, accountID) -> Completes.withSuccess((Response.of(Ok, serialized("user admin")))))
     );
 
     final Action.MatchResults matchWithdrawResource = resource.matchWith(

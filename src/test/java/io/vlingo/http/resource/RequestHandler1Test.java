@@ -11,6 +11,7 @@ package io.vlingo.http.resource;
 
 import io.vlingo.common.Completes;
 import io.vlingo.http.*;
+import io.vlingo.http.resource.RequestHandler1.Handler1;
 import io.vlingo.http.sample.user.NameData;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,7 +38,8 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
     return new RequestHandler1<>(Method.GET,
       path,
       parameterResolver,
-      ErrorHandler.handleAllWith(InternalServerError));
+      ErrorHandler.handleAllWith(InternalServerError),
+      DefaultMediaTypeMapper.instance());
   }
   
   @Test
@@ -46,9 +48,9 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
       Method.GET,
       "/posts/{postId}",
       path(0, String.class)
-    ).handle((postId) -> withSuccess(of(Ok, serialized(postId))));
+    ).handle((Handler1<String>)(postId) -> withSuccess(of(Ok, serialized(postId))));
 
-    final Response response = handler.execute("my-post", logger).outcome();
+    final Response response = handler.execute(Request.method(Method.GET), "my-post", logger).outcome();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
@@ -56,37 +58,24 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
     assertEquals(String.class, handler.resolver.paramClass);
     assertResponsesAreEquals(of(Ok, serialized("my-post")), response);
   }
-  
+
   @Test()
   public void throwExceptionWhenNoHandlerIsDefined() {
     thrown.expect(HandlerMissingException.class);
-    thrown.expectMessage("No handle defined for GET /posts/{postId}");
+    thrown.expectMessage("No handler defined for GET /posts/{postId}");
 
     final RequestHandler1<String> handler = createRequestHandler(
       Method.GET,
       "/posts/{postId}",
       path(0, String.class)
-    ).handle(null);
-    handler.execute("my-post", logger);
-  }
-
-  @Test
-  public void errorHandlerInvoked() {
-    final RequestHandler1<String> handler = createRequestHandler(Method.GET, "/posts/{postId}", path(0, String.class))
-      .handle((param) -> {
-        throw new RuntimeException("Test Handler exception");
-      })
-      .onError(
-        (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
-      );
-    Completes<Response> responseCompletes = handler.execute("idVal1", logger);
-    assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
+    );
+    handler.execute(Request.method(Method.GET), "my-post", logger);
   }
 
   @Test
   public void actionSignature() {
     final RequestHandler1<String> handler = createRequestHandler(Method.GET, "/posts/{postId}", path(0, String.class))
-      .handle((postId) -> withSuccess(of(Ok, serialized(postId))));
+      .handle((Handler1<String>)(postId) -> withSuccess(of(Ok, serialized(postId))));
 
     assertEquals("String postId", handler.actionSignature);
   }
@@ -97,7 +86,7 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
     thrown.expectMessage("Empty path parameter name for GET /posts/{}");
 
     createRequestHandler(Method.GET, "/posts/{}", path(0, String.class))
-      .handle((postId) -> withSuccess(of(Ok, serialized(postId))));
+      .handle((Handler1<String>)(postId) -> withSuccess(of(Ok, serialized(postId))));
   }
 
   @Test
@@ -106,13 +95,13 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
     thrown.expectMessage("Empty path parameter name for GET /posts/{ }");
 
     createRequestHandler(Method.GET, "/posts/{ }", path(0, String.class))
-      .handle((postId) -> withSuccess(of(Ok, serialized(postId))));
+      .handle(((Handler1<String>) (postId) -> withSuccess(of(Ok, serialized(postId)))));
   }
 
   @Test
   public void actionWithoutParamNameShouldNotThrowException() {
     final RequestHandler1<String> handler = createRequestHandler(Method.POST, "/posts", ParameterResolver.body(String.class))
-      .handle((postId) -> withSuccess(of(Ok, serialized(postId))));
+      .handle(((Handler1<String>)(postId) -> withSuccess(of(Ok, serialized(postId)))));
 
     assertEquals("", handler.actionSignature);
   }
@@ -127,7 +116,7 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
         new Action.MappedParameter("String", "my-post"))
       );
     final RequestHandler1<String> handler = createRequestHandler(Method.GET, "/posts/{postId}", path(0, String.class))
-      .handle((postId) -> withSuccess(of(Ok, serialized("it is " + postId))));
+      .handle(((Handler1<String>)(postId) -> withSuccess(of(Ok, serialized("it is " + postId)))));
     final Response response = handler.execute(request, mappedParameters, logger).outcome();
 
     assertResponsesAreEquals(of(Ok, serialized("it is my-post")), response);
@@ -136,7 +125,7 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
   @Test
   public void executeWithRequestAndMappedParametersWithWrongSignatureType() {
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Value my-post is of type String instead of Integer");
+    thrown.expectMessage("Value my-post is of mimeType String instead of Integer");
 
     final Request request = Request.has(Method.GET)
       .and(URI.create("/posts/my-post"))
@@ -147,7 +136,7 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
       );
     final RequestHandler1<Integer> handler =
       createRequestHandler(Method.GET, "/posts/{postId}", path(0, Integer.class))
-        .handle((postId) -> withSuccess(of(Ok, serialized("it is my-post"))));
+        .handle((Handler1<Integer>)(postId) -> withSuccess(of(Ok, serialized("it is my-post"))));
 
     handler.execute(request, mappedParameters, logger);
   }
@@ -193,6 +182,7 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
     assertEquals(new NameData("John", "Doe"), handler.resolverParam2.apply(request, mappedParameters));
   }
 
+  @SuppressWarnings("deprecation")
   @Test
   public void addingHandlerBodyWithMapper() {
     final Request request = Request.has(Method.POST)
@@ -210,6 +200,25 @@ public class RequestHandler1Test extends RequestHandlerTestBase {
 
     assertResolvesAreEquals(body(NameData.class), handler.resolverParam2);
     assertEquals(new NameData("John", "Doe"), handler.resolverParam2.apply(request, mappedParameters));
+  }
+
+  @Test
+  public void addingHandlerBodyWithMediaTypeMapper() {
+    final Request request = Request.has(Method.POST)
+                                    .and(URI.create("/user/admin/name"))
+                                    .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"))
+                                    .and(RequestHeader.of(RequestHeader.ContentType, "application/json"))
+                                    .and(Version.Http1_1);
+    final Action.MappedParameters mappedParameters =
+      new Action.MappedParameters(1, Method.POST, "ignored", Collections.singletonList(
+        new Action.MappedParameter("String", "admin"))
+      );
+
+    final RequestHandler1<NameData> handler1 = new RequestHandler0(Method.GET, "/user/admin/name")
+      .body(NameData.class);
+
+    assertResolvesAreEquals(body(NameData.class, DefaultMediaTypeMapper.instance()), handler1.resolver);
+    assertEquals(new NameData("John", "Doe"), handler1.resolver.apply(request, mappedParameters));
   }
 
   @Test

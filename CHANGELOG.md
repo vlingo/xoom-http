@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.3 (0.8.4 snapshot)
+
+### Merged pull requests: 
+- Added support for MIME-type sensitive serialization of ResourceHandler results and POST body #35 by [bwehrle](https://github.com/bwehrle)
+
+
 ## 0.8.0
 
 ### Merged pull requests: 

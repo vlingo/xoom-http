@@ -1,7 +1,9 @@
 package io.vlingo.http.resource;
 
+import io.vlingo.http.media.ContentMediaType;
 import io.vlingo.http.Header;
 import io.vlingo.http.Request;
+import io.vlingo.http.RequestHeader;
 
 import java.util.function.BiFunction;
 
@@ -23,17 +25,26 @@ class ParameterResolver<T> {
       if (paramClass.isInstance(value)) {
         return (T) value;
       }
-      throw new IllegalArgumentException("Value " + value + " is of type " + mappedParameters.mapped.get(position).type + " instead of " + paramClass.getSimpleName());
+      throw new IllegalArgumentException("Value " + value + " is of mimeType " + mappedParameters.mapped.get(position).type + " instead of " + paramClass.getSimpleName());
     });
   }
 
   public static <T> ParameterResolver<T> body(final Class<T> bodyClass) {
-      return body(bodyClass, DefaultMapper.instance);
+      return body(bodyClass, DefaultMediaTypeMapper.instance());
   }
 
   public static <T> ParameterResolver<T> body(final Class<T> bodyClass, final Mapper mapper) {
     return new ParameterResolver<>(Type.BODY, bodyClass, ((request, mappedParameters) ->
       mapper.from(request.body.toString(), bodyClass)));
+  }
+
+  public static <T> ParameterResolver<T> body(final Class<T> bodyClass, final MediaTypeMapper mediaTypeMapper) {
+    return new ParameterResolver<T>(Type.BODY, bodyClass, ((request, mappedParameters) -> {
+      // This is a fall-back when content-type not provided for backwards compat for curl/cmd line users
+      String assumedBodyContentType = ContentMediaType.Json().toString();
+      String bodyMediaType = request.headerValueOr(RequestHeader.ContentType, assumedBodyContentType);
+      return mediaTypeMapper.from(request.body.toString(), ContentMediaType.parseFromDescriptor(bodyMediaType), bodyClass);
+    }));
   }
 
   public static ParameterResolver<Header> header(final String headerName) {
@@ -72,7 +83,7 @@ class ParameterResolver<T> {
       } else if (type == Byte.class) {
         return type.cast(Byte.valueOf(value));
       }
-      throw new IllegalArgumentException("unknown type " + type.getSimpleName());
+      throw new IllegalArgumentException("unknown mimeType " + type.getSimpleName());
     })));
   }
 

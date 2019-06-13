@@ -11,6 +11,7 @@ package io.vlingo.http.resource;
 
 import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
+import io.vlingo.common.Outcome;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
@@ -20,55 +21,44 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class RequestHandler {
-  final private Pattern pattern = Pattern.compile("\\{(.*?)\\}");
-
+abstract class RequestHandler {
   public final Method method;
   public final String path;
   public final String actionSignature;
+  private final Pattern pattern = Pattern.compile("\\{(.*?)\\}");
+  protected MediaTypeMapper mediaTypeMapper;
+  protected ErrorHandler errorHandler;
 
   RequestHandler(final Method method, final String path, final List<ParameterResolver<?>> parameterResolvers) {
     this.method = method;
     this.path = path;
     this.actionSignature = generateActionSignature(parameterResolvers);
+    this.errorHandler = DefaultErrorHandler.instance();
+    this.mediaTypeMapper = DefaultMediaTypeMapper.instance();
   }
 
-  Completes<Response> defaultErrorResponse() {
-    return Completes.withSuccess(Response.of(Response.Status.InternalServerError));
+  RequestHandler(final Method method,
+                 final String path,
+                 final List<ParameterResolver<?>> parameterResolvers,
+                 final ErrorHandler errorHandler,
+                 final MediaTypeMapper mediaTypeMapper) {
+    this.method = method;
+    this.path = path;
+    this.actionSignature = generateActionSignature(parameterResolvers);
+    this.errorHandler = errorHandler;
+    this.mediaTypeMapper = mediaTypeMapper;
   }
 
-  void checkHandlerOrThrowException(Object handler) {
-    if (handler == null) {
-      throw new HandlerMissingException("No handle defined for " + method.toString() + " " + path);
+  protected Completes<Response> runParamExecutor(Object paramExecutor, Supplier<Completes<Response>> executeRequest) {
+    if (paramExecutor == null) {
+      throw new HandlerMissingException("No handler defined for " + method.toString() + " " + path);
     }
+    return executeRequest.get();
   }
 
   abstract Completes<Response> execute(final Request request,
                                        final Action.MappedParameters mappedParameters,
                                        final Logger logger);
-
-
-  Completes<Response> executeRequest(Supplier<Completes<Response>> executeAction,
-                                     ErrorHandler errorHandler,
-                                     Logger logger) {
-    Completes<Response> responseCompletes;
-    try {
-      responseCompletes = executeAction.get();
-    } catch(Exception exception) {
-      if (errorHandler != null) {
-        try {
-          responseCompletes = errorHandler.handle(exception);
-        } catch (Exception errorHandlerException) {
-          logger.log("Exception thrown by error handler when handling error", exception);
-          responseCompletes = defaultErrorResponse();
-        }
-      } else {
-        logger.log("Exception thrown by Resource execution", exception);
-        responseCompletes = defaultErrorResponse();
-      }
-    }
-    return responseCompletes;
-  }
 
 
   private String generateActionSignature(final List<ParameterResolver<?>> parameterResolvers) {
@@ -81,8 +71,8 @@ public abstract class RequestHandler {
     final StringBuilder result = new StringBuilder();
     final Matcher matcher = pattern.matcher(path);
     boolean first = true;
-    for (ParameterResolver<?> resolver: parameterResolvers) {
-      if(resolver.type == ParameterResolver.Type.PATH) {
+    for (ParameterResolver<?> resolver : parameterResolvers) {
+      if (resolver.type == ParameterResolver.Type.PATH) {
         matcher.find();
         if (first) {
           first = false;
@@ -97,11 +87,11 @@ public abstract class RequestHandler {
 
   private void checkOrder(final List<ParameterResolver<?>> parameterResolvers) {
     boolean firstNonPathResolver = false;
-    for(ParameterResolver<?> resolver: parameterResolvers) {
-      if(resolver.type != ParameterResolver.Type.PATH) {
+    for (ParameterResolver<?> resolver : parameterResolvers) {
+      if (resolver.type != ParameterResolver.Type.PATH) {
         firstNonPathResolver = true;
       }
-      if(firstNonPathResolver && resolver.type == ParameterResolver.Type.PATH) {
+      if (firstNonPathResolver && resolver.type == ParameterResolver.Type.PATH) {
         throw new IllegalArgumentException("Path parameters are unsorted");
       }
     }
