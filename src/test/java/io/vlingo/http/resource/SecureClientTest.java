@@ -27,7 +27,7 @@ public class SecureClientTest {
 //    final Configuration config =
 //            Client.Configuration.secure(
 //                    world.stage(),
-//                    Address.from(Host.of("googleapis.com"), 443, AddressType.NONE),
+//                    Address.from(Host.of("google.com"), 443, AddressType.NONE),
 //                    unknown,
 //                    false,
 //                    1000,
@@ -46,9 +46,9 @@ public class SecureClientTest {
 //    final Request request =
 //            Request
 //              .has(GET)
-//              .and(URI.create("/customsearch/v1"))
-//              .and(host("googleapis.com"))
-//              .and(contentType("application/json"));
+//              .and(URI.create("/"))
+//              .and(host("google.com"))
+//              .and(contentType("text/html"));
 //
 //    final Completes<Response> response = client.requestWith(request);
 //
