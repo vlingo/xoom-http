@@ -1,6 +1,7 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.http.*;
+import io.vlingo.http.media.ContentMediaType;
 import io.vlingo.http.sample.user.NameData;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +41,21 @@ public class ParameterResolverTest {
   @Test
   public void body() {
     final ParameterResolver<NameData> resolver = ParameterResolver.body(NameData.class);
+
+    final NameData result = resolver.apply(request, mappedParameters);
+    final NameData expected = new NameData("John", "Doe");
+
+    assertEquals(expected.toString(), result.toString());
+    assertEquals(ParameterResolver.Type.BODY, resolver.type);
+  }
+
+  @Test
+  public void bodyWithContentTypeMapper() {
+    final MediaTypeMapper mediaTypeMapper = new MediaTypeMapper.Builder()
+      .addMapperFor(ContentMediaType.Json(), DefaultJsonMapper.instance)
+      .build();
+
+    final ParameterResolver<NameData> resolver = ParameterResolver.body(NameData.class, mediaTypeMapper);
 
     final NameData result = resolver.apply(request, mappedParameters);
     final NameData expected = new NameData("John", "Doe");

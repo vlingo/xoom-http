@@ -51,7 +51,7 @@ public abstract class ConfigurationResource<T> extends Resource<T> {
 
       Class<ConfigurationResource<?>> resourceClass = null;
       try {
-        // this check is done primarily for testing to prevent duplicate class type in class loader
+        // this check is done primarily for testing to prevent duplicate class mimeType in class loader
         resourceClass = (Class<ConfigurationResource<?>>) Class.forName(targetClassname);
       } catch (Exception e) {
         resourceClass = tryGenerateCompile(resourceHandlerClass, targetClassname, actions);

@@ -17,21 +17,42 @@ import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
 import java.util.Collections;
+import java.util.function.Supplier;
 
 public class RequestHandler0 extends RequestHandler {
-  private Handler0 handler;
-  private ErrorHandler errorHandler;
+  private ParamExecutor0 executor;
+
+  @FunctionalInterface
+  public interface Handler0 {
+    Completes<Response> execute();
+  }
+
+  @FunctionalInterface
+  public interface ObjectHandler0 {
+    Completes<ObjectResponse<?>> execute();
+  }
+
+  @FunctionalInterface
+  interface ParamExecutor0 {
+    Completes<Response> execute(Request request,
+                                MediaTypeMapper mediaTypeMapper,
+                                ErrorHandler errorHandler,
+                                Logger logger);
+  }
 
   RequestHandler0(final Method method, final String path) {
     super(method, path, Collections.emptyList());
   }
 
-  Completes<Response> defaultErrorResponse() {
-    return Completes.withSuccess(Response.of(Response.Status.InternalServerError));
+  public RequestHandler0 handle(final Handler0 handler) {
+    this.executor = ((request, mediaTypeMapper1, errorHandler1, logger) ->
+      RequestExecutor.executeRequest(() -> handler.execute(), errorHandler1, logger));
+    return this;
   }
 
-  public RequestHandler0 handle(final Handler0 handler) {
-    this.handler = handler;
+  public RequestHandler0 handle(final ObjectHandler0 handler) {
+    this.executor = ((request, mediaTypeMapper1, errorHandler1, logger) ->
+      RequestObjectExecutor.executeRequest(request, mediaTypeMapper1, () -> handler.execute(), errorHandler1, logger));
     return this;
   }
 
@@ -40,38 +61,63 @@ public class RequestHandler0 extends RequestHandler {
     return this;
   }
 
-  Completes<Response> execute(final Logger logger) {
-    return executeRequest(() -> handler.execute(), errorHandler, logger);
+  public RequestHandler0 mapper(final MediaTypeMapper mediaTypeMapper) {
+    this.mediaTypeMapper = mediaTypeMapper;
+    return this;
+  }
+
+  Completes<Response> execute(final Request request, final Logger logger) {
+    final Supplier<Completes<Response>> exec = () ->
+      executor.execute(request, mediaTypeMapper, errorHandler, logger);
+
+    return runParamExecutor(executor, () -> RequestExecutor.executeRequest(exec, errorHandler, logger));
   }
 
   @Override
   Completes<Response> execute(final Request request,
                               final Action.MappedParameters mappedParameters,
                               final Logger logger) {
-    checkHandlerOrThrowException(handler);
-    return executeRequest(() -> handler.execute(), errorHandler, logger);
-  }
-
-  @FunctionalInterface
-  public interface Handler0 {
-    Completes<Response> execute();
+    return execute(request, logger);
   }
 
   // region FluentAPI
   public <T> RequestHandler1<T> param(final Class<T> paramClass) {
-    return new RequestHandler1<>(method, path, ParameterResolver.path(0, paramClass), errorHandler);
+    return new RequestHandler1<>(method, path, ParameterResolver.path(0, paramClass), errorHandler, mediaTypeMapper);
   }
 
   public <T> RequestHandler1<T> body(final Class<T> paramClass) {
-    return new RequestHandler1<>(method, path, ParameterResolver.body(paramClass), errorHandler);
+    return new RequestHandler1<>(method, path, ParameterResolver.body(paramClass, mediaTypeMapper), errorHandler, mediaTypeMapper);
   }
 
-  public <T> RequestHandler1<T> body(final Class<T> paramClass, final Class<? extends Mapper> mapperClass ) {
+  /**
+   * Specify the class that represents the body of the request for all requests using the specified mapper for all
+   * MIME types regardless of the Content-Type header.
+   *
+   * @deprecated Deprecated in favor of using the ContentMediaType method, which handles media types appropriately.
+   * {@link RequestHandler0#body(java.lang.Class, io.vlingo.http.resource.MediaTypeMapper)} instead, or via
+   * {@link RequestHandler0#body(java.lang.Class)}
+   */
+  @Deprecated
+  public <T> RequestHandler1<T> body(final Class<T> paramClass, final Class<? extends Mapper> mapperClass) {
     return body(paramClass, mapperFrom(mapperClass));
   }
 
-  public <T> RequestHandler1<T> body(final Class<T> paramClass, final Mapper mapper ) {
-    return new RequestHandler1<>(method, path, ParameterResolver.body(paramClass, mapper), errorHandler);
+  /**
+   * Specify the class that represents the body of the request for all requests using the specified mapper for all
+   * MIME types regardless of the Content-Type header.
+   *
+   * @deprecated Deprecated in favor of using the ContentMediaType method, which handles media types appropriately.
+   * {@link RequestHandler0#body(java.lang.Class, io.vlingo.http.resource.MediaTypeMapper)} instead, or via
+   * {@link RequestHandler0#body(java.lang.Class)}
+   */
+  @Deprecated
+  public <T> RequestHandler1<T> body(final Class<T> paramClass, final Mapper mapper) {
+    return new RequestHandler1<>(method, path, ParameterResolver.body(paramClass, mapper), errorHandler, mediaTypeMapper);
+  }
+
+  public <T> RequestHandler1<T> body(final Class<T> paramClass, final MediaTypeMapper mediaTypeMapper) {
+    this.mediaTypeMapper = mediaTypeMapper;
+    return new RequestHandler1<>(method, path, ParameterResolver.body(paramClass, mediaTypeMapper), errorHandler, mediaTypeMapper);
   }
 
   public RequestHandler1<String> query(final String name) {
@@ -83,11 +129,11 @@ public class RequestHandler0 extends RequestHandler {
   }
 
   public <T> RequestHandler1<T> query(final String name, final Class<T> type, final T defaultValue) {
-    return new RequestHandler1<>(method, path, ParameterResolver.query(name, type, defaultValue), errorHandler);
+    return new RequestHandler1<>(method, path, ParameterResolver.query(name, type, defaultValue), errorHandler, mediaTypeMapper);
   }
 
   public RequestHandler1<Header> header(final String name) {
-    return new RequestHandler1<>(method, path, ParameterResolver.header(name), errorHandler);
+    return new RequestHandler1<>(method, path, ParameterResolver.header(name), errorHandler, mediaTypeMapper);
   }
   // endregion
 }

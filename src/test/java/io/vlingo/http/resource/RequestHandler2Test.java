@@ -11,6 +11,7 @@ package io.vlingo.http.resource;
 
 import io.vlingo.common.Completes;
 import io.vlingo.http.*;
+import io.vlingo.http.resource.RequestHandler2.Handler2;
 import io.vlingo.http.sample.user.NameData;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,7 +41,8 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
       path,
       parameterResolver1,
       parameterResolver2,
-      ErrorHandler.handleAllWith(InternalServerError));
+      ErrorHandler.handleAllWith(InternalServerError),
+      DefaultMediaTypeMapper.instance());
   }
 
   @Test
@@ -50,9 +52,10 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
       "/posts/{postId}/comment/{commentId}",
       path(0, String.class),
       path(1, String.class)
-    ).handle((postId, commentId) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
+    ).handle((Handler2<String, String>) (postId, commentId)
+      -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
 
-    final Response response = handler.execute("my-post", "my-comment", logger).outcome();
+    final Response response = handler.execute(Request.method(Method.GET), "my-post", "my-comment", logger).outcome();
 
     assertNotNull(handler);
     assertEquals(Method.GET, handler.method);
@@ -65,7 +68,7 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
   @Test()
   public void throwExceptionWhenNoHandlerIsDefined() {
     thrown.expect(HandlerMissingException.class);
-    thrown.expectMessage("No handle defined for GET /posts/{postId}");
+    thrown.expectMessage("No handler defined for GET /posts/{postId}/comment/{commentId}");
 
     final RequestHandler2<String, String> handler = createRequestHandler(
       Method.GET,
@@ -73,22 +76,7 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
       path(0, String.class),
       path(1, String.class)
     );
-    handler.execute("my-post", "my-comment", logger);
-  }
-
-  @Test
-  public void errorHandlerInvoked() {
-    final RequestHandler2<String, String> handler = createRequestHandler(
-      Method.GET,
-      "/posts/{postId}/comment/{commentId}",
-      path(0, String.class),
-      path(1, String.class))
-      .handle((param1, param2) -> { throw new RuntimeException("Test Handler exception"); })
-      .onError(
-        (error) -> Completes.withSuccess(Response.of(Response.Status.Imateapot))
-    );
-    Completes<Response> responseCompletes = handler.execute("idVal1", "idVal2", logger);
-    assertResponsesAreEquals(Response.of(Imateapot), responseCompletes.await());
+    handler.execute(Request.method(Method.GET), "my-post", "my-comment", logger);
   }
 
   @Test
@@ -118,8 +106,9 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
       "/posts/{postId}/comment/{commentId}",
       path(0, String.class),
       path(1, String.class)
-    )
-      .handle((postId, commentId) -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
+    ).handle((Handler2<String, String>) (postId, commentId)
+      -> withSuccess(of(Ok, serialized(postId + " " + commentId))));
+
     final Response response = handler.execute(request, mappedParameters, logger).outcome();
 
     assertResponsesAreEquals(of(Ok, serialized("my-post my-comment")), response);
@@ -177,6 +166,7 @@ public class RequestHandler2Test extends RequestHandlerTestBase {
     assertEquals(new NameData("John", "Doe"), handler.resolverParam3.apply(request, mappedParameters));
   }
 
+  @SuppressWarnings("deprecation")
   @Test
   public void addingHandlerBodyWithMapper() {
     final Request request = Request.has(Method.POST)
