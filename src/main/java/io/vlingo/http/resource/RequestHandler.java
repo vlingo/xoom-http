@@ -20,7 +20,7 @@ import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 
-abstract class RequestHandler {
+public abstract class RequestHandler {
   public final Method method;
   public final String path;
   public final String actionSignature;
