@@ -7,11 +7,11 @@
 
 package io.vlingo.http.resource;
 
-import java.util.function.Consumer;
-
 import io.vlingo.actors.Actor;
 import io.vlingo.http.Context;
 import io.vlingo.http.Response;
+
+import java.util.function.Consumer;
 
 public class ResourceRequestHandlerActor extends Actor implements ResourceRequestHandler {
   private final ResourceHandler resourceHandler;
@@ -27,10 +27,10 @@ public class ResourceRequestHandlerActor extends Actor implements ResourceReques
       resourceHandler.stage = stage();
       consumer.accept(resourceHandler);
     }catch (Error throwable) {
-      logger().log("Error thrown by resource dispatcher", throwable);
+      logger().error("Error thrown by resource dispatcher", throwable);
       context.completes.with(Response.of(Response.Status.InternalServerError));
     }catch (RuntimeException exception) {
-      logger().log("Runtime thrown by resource dispatcher", exception);
+      logger().error("Runtime thrown by resource dispatcher", exception);
       context.completes.with(Response.of(Response.Status.InternalServerError));
     }
   }

@@ -7,15 +7,15 @@
 
 package io.vlingo.http.resource;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import io.vlingo.actors.Logger;
 import io.vlingo.http.Context;
 import io.vlingo.http.Response;
 import io.vlingo.http.resource.Action.MappedParameters;
 import io.vlingo.http.resource.Action.MatchResults;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Resources {
   final Map<String, Resource<?>> namedResources;
@@ -72,10 +72,10 @@ public class Resources {
         }
       }
       message = "No matching resource for method " + context.request.method + " and URI " + context.request.uri;
-      logger.log(message);
+      logger.warn(message);
     } catch (Exception e) {
       message = "Problem dispatching request for method " + context.request.method + " and URI " + context.request.uri + " because: " + e.getMessage();
-      logger.log(message, e);
+      logger.error(message, e);
     }
 
     context.completes.with(Response.of(Response.Status.NotFound, message));

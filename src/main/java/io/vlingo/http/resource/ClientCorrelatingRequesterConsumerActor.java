@@ -7,10 +7,6 @@
 
 package io.vlingo.http.resource;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.CompletesEventually;
 import io.vlingo.common.Completes;
@@ -25,6 +21,10 @@ import io.vlingo.wire.channel.ResponseChannelConsumer;
 import io.vlingo.wire.message.ByteBufferAllocator;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 import io.vlingo.wire.message.Converters;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * The client requester-consumer that handles request-responses using {@code X-Correlation-ID},
@@ -63,14 +63,14 @@ public class ClientCorrelatingRequesterConsumerActor extends Actor implements Cl
       final Response response = state.parser.fullResponse();
       final ResponseHeader correlationId = response.headers.headerOf(ResponseHeader.XCorrelationID);
       if (correlationId == null) {
-        logger().log("Client Consumer: Cannot complete response because no correlation id.");
+        logger().warn("Client Consumer: Cannot complete response because no correlation id.");
         state.configuration.consumerOfUnknownResponses.consume(response);
       } else {
         final CompletesEventually completes = state.configuration.keepAlive ?
                 completables.get(correlationId.value) :
                 completables.remove(correlationId.value);
         if (completes == null) {
-          state.configuration.stage.world().defaultLogger().log(
+          state.configuration.stage.world().defaultLogger().warn(
                   "Client Consumer: Cannot complete response because mismatched correlation id: " +
                    correlationId.value);
           state.configuration.consumerOfUnknownResponses.consume(response);

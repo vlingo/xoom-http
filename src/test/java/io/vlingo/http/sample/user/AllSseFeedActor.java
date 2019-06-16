@@ -7,15 +7,15 @@
 
 package io.vlingo.http.sample.user;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import io.vlingo.actors.Actor;
 import io.vlingo.common.Tuple2;
 import io.vlingo.http.resource.sse.SseEvent;
 import io.vlingo.http.resource.sse.SseFeed;
 import io.vlingo.http.resource.sse.SseSubscriber;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class AllSseFeedActor extends Actor implements SseFeed {
   private final int RetryThreshold = 3000;
@@ -32,7 +32,7 @@ public class AllSseFeedActor extends Actor implements SseFeed {
     this.currentStreamId = 1;
     this.defaultId = defaultId(feedDefaultId, currentStreamId);
     this.builder = SseEvent.Builder.instance();
-    logger().log("SseFeed started for stream: " + this.streamName);
+    logger().info("SseFeed started for stream: " + this.streamName);
   }
 
   @Override
