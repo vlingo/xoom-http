@@ -36,6 +36,13 @@ public class ContentMediaType extends MediaTypeDescriptor {
     validate();
   }
 
+  public ContentMediaType toBaseType() {
+    if (parameters.isEmpty()) {
+      return this;
+    }
+    return new ContentMediaType(mimeType, mimeSubType);
+  }
+
   public static ContentMediaType Json() {
     return new ContentMediaType(mimeTypes.application.name(), "json");
   }

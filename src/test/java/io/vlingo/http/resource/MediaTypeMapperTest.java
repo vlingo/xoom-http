@@ -51,4 +51,14 @@ public class MediaTypeMapperTest {
     mediaTypeMapper.from(new Object(), ContentMediaType.Json(), Object.class);
   }
 
+  @Test
+  public void parameters_do_not_affect_mapping() {
+    MediaTypeMapper mediaTypeMapper = new MediaTypeMapper.Builder()
+      .addMapperFor(ContentMediaType.Json(), DefaultJsonMapper.instance)
+      .build();
+    ContentMediaType contentMediaType = ContentMediaType.parseFromDescriptor("application/json; charset=UTF-8");
+
+    mediaTypeMapper.from(new Object(), contentMediaType, Object.class);
+  }
+
 }

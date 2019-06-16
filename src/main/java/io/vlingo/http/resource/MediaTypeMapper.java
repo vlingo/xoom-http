@@ -13,15 +13,17 @@ public class MediaTypeMapper {
   }
 
   public <T> T from(final String data, final ContentMediaType contentMediaType, final Class<T> type) {
-    if (mappersByContentType.containsKey(contentMediaType)) {
-      return mappersByContentType.get(contentMediaType).from(data, type);
+    final ContentMediaType baseType = contentMediaType.toBaseType();
+    if (mappersByContentType.containsKey(baseType)) {
+      return mappersByContentType.get(baseType).from(data, type);
     }
     throw new MediaTypeNotSupportedException(contentMediaType.toString());
   }
 
   public <T> String from(final T data, final ContentMediaType contentMediaType, final Class<T> type) {
-    if (mappersByContentType.containsKey(contentMediaType)) {
-      return  mappersByContentType.get(contentMediaType).from(data);
+    final ContentMediaType baseType = contentMediaType.toBaseType();
+    if (mappersByContentType.containsKey(baseType)) {
+      return  mappersByContentType.get(baseType).from(data);
     }
     throw new MediaTypeNotSupportedException(contentMediaType.toString());
   }
