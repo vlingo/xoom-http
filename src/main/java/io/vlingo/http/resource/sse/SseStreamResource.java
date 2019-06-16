@@ -7,16 +7,6 @@
 
 package io.vlingo.http.resource.sse;
 
-import static io.vlingo.http.Response.Status.Ok;
-import static io.vlingo.http.ResponseHeader.correlationId;
-import static io.vlingo.http.ResponseHeader.headers;
-
-import java.net.URI;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.Stoppable;
@@ -29,6 +19,16 @@ import io.vlingo.http.RequestHeader;
 import io.vlingo.http.Response;
 import io.vlingo.http.resource.ResourceHandler;
 import io.vlingo.wire.channel.RequestResponseContext;
+
+import java.net.URI;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.ResponseHeader.correlationId;
+import static io.vlingo.http.ResponseHeader.headers;
 
 public class SseStreamResource extends ResourceHandler {
   private static final Map<String,SsePublisher> publishers = new ConcurrentHashMap<>();
@@ -107,7 +107,7 @@ public class SseStreamResource extends ResourceHandler {
 
       this.cancellable = stage().scheduler().schedule(selfAs(Scheduled.class), null, 10, feedInterval);
 
-      logger().log("SsePublisher started for: " + this.streamName);
+      logger().info("SsePublisher started for: " + this.streamName);
     }
 
 

@@ -41,7 +41,7 @@ public class RoundRobinClientRequestConsumerActor extends RoundRobinRouter<Clien
   public void consume(final ConsumerByteBuffer buffer) {
     // no-op
     final String message = ErrorMessage + "consume()";
-    logger().log(message, new UnsupportedOperationException(message));
+    logger().error(message, new UnsupportedOperationException(message));
   }
 
   /**
@@ -51,7 +51,7 @@ public class RoundRobinClientRequestConsumerActor extends RoundRobinRouter<Clien
   public void intervalSignal(final Scheduled<Object> scheduled, final Object data) {
     // no-op
     final String message = ErrorMessage + "intervalSignal()";
-    logger().log(message, new UnsupportedOperationException(message));
+    logger().error(message, new UnsupportedOperationException(message));
   }
 
   /**

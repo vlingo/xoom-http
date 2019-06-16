@@ -7,11 +7,6 @@
 
 package io.vlingo.http.resource;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.World;
 import io.vlingo.common.BasicCompletes;
@@ -31,6 +26,11 @@ import io.vlingo.wire.channel.RequestResponseContext;
 import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
 import io.vlingo.wire.message.BasicConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBuffer;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ServerActor extends Actor implements Server, RequestChannelConsumerProvider, Scheduled<Object> {
   static final String ChannelName = "server-request-response-channel";
@@ -78,13 +78,13 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
                       sizing.maxMessageSize,
                       timing.probeInterval);
 
-      logger().log("Server " + ServerName + " is listening on port: " + port);
+      logger().info("Server " + ServerName + " is listening on port: " + port);
 
       this.requestMissingContentTimeout = timing.requestMissingContentTimeout;
 
     } catch (Exception e) {
       final String message = "Failed to start server because: " + e.getMessage();
-      logger().log(message, e);
+      logger().error(message, e);
       throw new IllegalStateException(message);
     }
   }
@@ -135,7 +135,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
   @Override
   public void stop() {
-    logger().log("Server stopping...");
+    logger().info("Server stopping...");
 
     failTimedOutMissingContentRequests();
 
@@ -146,7 +146,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       dispatcher.stop();
     }
 
-    logger().log("Server stopped.");
+    logger().info("Server stopped.");
 
     super.stop();
   }
@@ -248,7 +248,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         }
 
       } catch (Exception e) {
-        logger().log("Request parsing failed.", e);
+        logger().error("Request parsing failed.", e);
         new ResponseCompletes(requestResponseContext, null).with(Response.of(Response.Status.BadRequest, e.getMessage()));
       } finally {
         buffer.release();
