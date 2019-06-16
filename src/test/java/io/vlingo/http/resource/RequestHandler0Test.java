@@ -9,25 +9,31 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.common.Completes;
-import io.vlingo.http.*;
-import io.vlingo.http.media.ContentMediaType;
-import io.vlingo.http.resource.serialization.JsonSerialization;
-import io.vlingo.http.sample.user.NameData;
-import io.vlingo.http.sample.user.model.Name;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import static io.vlingo.common.Completes.withSuccess;
+import static io.vlingo.http.Response.of;
+import static io.vlingo.http.Response.Status.Created;
+import static io.vlingo.http.resource.ParameterResolver.body;
+import static io.vlingo.http.resource.ParameterResolver.header;
+import static io.vlingo.http.resource.ParameterResolver.path;
+import static io.vlingo.http.resource.ParameterResolver.query;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.net.URI;
 import java.util.Collections;
 
-import static io.vlingo.common.Completes.withSuccess;
-import static io.vlingo.http.Response.Status.*;
-import static io.vlingo.http.Response.of;
-import static io.vlingo.http.resource.ParameterResolver.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import io.vlingo.http.Body;
+import io.vlingo.http.Header;
+import io.vlingo.http.Method;
+import io.vlingo.http.Request;
+import io.vlingo.http.RequestHeader;
+import io.vlingo.http.Response;
+import io.vlingo.http.Version;
+import io.vlingo.http.sample.user.NameData;
 
 public class RequestHandler0Test extends RequestHandlerTestBase {
 

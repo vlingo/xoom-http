@@ -15,7 +15,7 @@ import io.vlingo.actors.World;
 
 public class SecureClientTest {
   private Client client;
-  private String responseContent;
+  //private String responseContent;
   private World world;
 
   @Test

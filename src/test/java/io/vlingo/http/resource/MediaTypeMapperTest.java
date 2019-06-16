@@ -1,9 +1,10 @@
 package io.vlingo.http.resource;
 
-import io.vlingo.http.media.ContentMediaType;
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import io.vlingo.http.media.ContentMediaType;
 
 public class MediaTypeMapperTest {
 
@@ -18,11 +19,13 @@ public class MediaTypeMapperTest {
     }
 
     @Override
+    @SuppressWarnings({ "hiding", "unchecked" })
     public <T> T from(String data, Class<T> type) {
       return (T)returnObject;
     }
 
     @Override
+    @SuppressWarnings("hiding")
     public <T> String from(T data) {
       return returnString;
     }

@@ -1,7 +1,6 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.actors.Logger;
-import io.vlingo.common.Completes;
 import io.vlingo.http.Response;
 
 public class ResourceErrorProcessor {

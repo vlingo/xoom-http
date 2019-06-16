@@ -9,17 +9,16 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.Logger;
-import io.vlingo.common.Completes;
-import io.vlingo.common.Outcome;
-import io.vlingo.http.Method;
-import io.vlingo.http.Request;
-import io.vlingo.http.Response;
-
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import io.vlingo.actors.Logger;
+import io.vlingo.common.Completes;
+import io.vlingo.http.Method;
+import io.vlingo.http.Request;
+import io.vlingo.http.Response;
 
 abstract class RequestHandler {
   public final Method method;

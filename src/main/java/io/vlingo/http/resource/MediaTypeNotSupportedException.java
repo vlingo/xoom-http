@@ -1,6 +1,8 @@
 package io.vlingo.http.resource;
 
 public class MediaTypeNotSupportedException extends RuntimeException {
+  private static final long serialVersionUID = 1L;
+
   public final String mediaType;
 
   public MediaTypeNotSupportedException(String mediaType) {
