@@ -10,7 +10,7 @@ package io.vlingo.http.resource.sse;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.vlingo.actors.testkit.TestUntil;
+import io.vlingo.actors.testkit.AccessSafely;
 import io.vlingo.http.Response;
 import io.vlingo.http.ResponseParser;
 import io.vlingo.wire.channel.RequestResponseContext;
@@ -21,13 +21,15 @@ public class MockResponseSenderChannel implements ResponseSenderChannel {
   public AtomicInteger abandonCount = new AtomicInteger(0);
   public AtomicInteger respondWithCount = new AtomicInteger(0);
   public AtomicReference<Response> response = new AtomicReference<>();
-  public TestUntil untilAbandon;
-  public TestUntil untilRespondWith;
+  private AccessSafely abandonSafely;
+  private AccessSafely respondWithSafely;
 
   @Override
   public void abandon(final RequestResponseContext<?> context) {
     abandonCount.incrementAndGet();
-    if (untilAbandon != null) untilAbandon.happened();
+    if (abandonSafely != null) {
+      abandonSafely.writeUsing("foo", "bar");
+    }
   }
 
   @Override
@@ -35,6 +37,35 @@ public class MockResponseSenderChannel implements ResponseSenderChannel {
     final ResponseParser parser = ResponseParser.parserFor(buffer.asByteBuffer());
     response.set(parser.fullResponse());
     respondWithCount.incrementAndGet();
-    if (untilRespondWith != null) untilRespondWith.happened();
+    if (respondWithSafely != null) {
+      respondWithSafely.writeUsing("foo", "bar");
+    }
   }
+
+  public void expectAbandon(int n) {
+    if (abandonSafely != null) {
+      throw new IllegalStateException("call to untilAbandon without corresponding call to completes");
+    }
+    abandonSafely = AccessSafely.afterCompleting(n).writingWith("foo", (x) -> {}).readingWith("foo", () -> "bar");
+  }
+  
+
+  public void expectRespondWith(int n) {
+    if (respondWithSafely != null) {
+      throw new IllegalStateException("call to untilRespondWithTimes without corresponding call to completes");
+    }
+    respondWithSafely = AccessSafely.afterCompleting(n).writingWith("foo", (x) -> {}).readingWith("foo", () -> "bar");
+  }
+  
+  public void untilCompletes() {
+    if (abandonSafely != null) {
+      abandonSafely.readFrom("foo");
+      abandonSafely = null;
+    }
+    if (respondWithSafely != null) {
+      respondWithSafely.readFrom("foo");
+      respondWithSafely = null;
+    }
+  }
+
 }
