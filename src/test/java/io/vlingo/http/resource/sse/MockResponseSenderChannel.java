@@ -21,51 +21,49 @@ public class MockResponseSenderChannel implements ResponseSenderChannel {
   public AtomicInteger abandonCount = new AtomicInteger(0);
   public AtomicInteger respondWithCount = new AtomicInteger(0);
   public AtomicReference<Response> response = new AtomicReference<>();
-  private AccessSafely abandonSafely;
-  private AccessSafely respondWithSafely;
+  private AccessSafely abandonSafely = AccessSafely.afterCompleting(0);
+  private AccessSafely respondWithSafely = AccessSafely.afterCompleting(0);
 
   @Override
   public void abandon(final RequestResponseContext<?> context) {
-    abandonCount.incrementAndGet();
-    if (abandonSafely != null) {
-      abandonSafely.writeUsing("foo", "bar");
-    }
+    final int count = abandonCount.incrementAndGet();
+    abandonSafely.writeUsing("count", count);
   }
 
   @Override
   public void respondWith(final RequestResponseContext<?> context, final ConsumerByteBuffer buffer) {
     final ResponseParser parser = ResponseParser.parserFor(buffer.asByteBuffer());
     response.set(parser.fullResponse());
-    respondWithCount.incrementAndGet();
-    if (respondWithSafely != null) {
-      respondWithSafely.writeUsing("foo", "bar");
-    }
+    final int count = respondWithCount.incrementAndGet();
+    respondWithSafely.writeUsing("count", count);
   }
 
-  public void expectAbandon(int n) {
-    if (abandonSafely != null) {
-      throw new IllegalStateException("call to untilAbandon without corresponding call to completes");
-    }
-    abandonSafely = AccessSafely.afterCompleting(n).writingWith("foo", (x) -> {}).readingWith("foo", () -> "bar");
+  /**
+   * Answer with an AccessSafely which
+   *  writes the abandon call count using "count" every time abandon(...) is called, and
+   *  reads the abandon call count using "count".
+   * @param n Number of times abandon must be called before readFrom will return.
+   * @return
+   */
+  public AccessSafely expectAbandon(int n) {
+    abandonSafely = AccessSafely.afterCompleting(n)
+        .writingWith("count", (x) -> {})
+        .readingWith("count", () -> abandonCount.get());
+    return abandonSafely;
   }
-  
 
-  public void expectRespondWith(int n) {
-    if (respondWithSafely != null) {
-      throw new IllegalStateException("call to untilRespondWithTimes without corresponding call to completes");
-    }
-    respondWithSafely = AccessSafely.afterCompleting(n).writingWith("foo", (x) -> {}).readingWith("foo", () -> "bar");
-  }
-  
-  public void untilCompletes() {
-    if (abandonSafely != null) {
-      abandonSafely.readFrom("foo");
-      abandonSafely = null;
-    }
-    if (respondWithSafely != null) {
-      respondWithSafely.readFrom("foo");
-      respondWithSafely = null;
-    }
+  /**
+   * Answer with an AccessSafely which
+   *  writes the respondWith call count using "count" every time respondWith(...) is called, and
+   *  reads the respondWith call count using "count".
+   * @param n Number of times respondWith must be called before readFrom will return.
+   * @return
+   */
+  public AccessSafely expectRespondWith(int n) {
+    respondWithSafely = AccessSafely.afterCompleting(n)
+        .writingWith("count", (x) -> {})
+        .readingWith("count", () -> respondWithCount.get());
+    return respondWithSafely;
   }
 
 }

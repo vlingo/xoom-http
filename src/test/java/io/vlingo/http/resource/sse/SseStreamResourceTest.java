@@ -14,6 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.vlingo.actors.World;
+import io.vlingo.actors.testkit.AccessSafely;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.RequestHeader;
@@ -33,13 +34,13 @@ public class SseStreamResourceTest {
               .and(RequestHeader.host("StreamsRUs.co"))
               .and(RequestHeader.accept("text/event-stream"));
 
-    resource.requestResponseContext.channel.expectRespondWith(10);
+    final AccessSafely respondWithSafely = resource.requestResponseContext.channel.expectRespondWith(10);
 
     resource.nextRequest(request);
 
     resource.subscribeToStream("all", AllSseFeedActor.class, 10, 10, "1");
     
-    resource.requestResponseContext.channel.untilCompletes();
+    assertEquals(10, (int) respondWithSafely.readFrom("count"));
 
     assertEquals(10, resource.requestResponseContext.channel.respondWithCount.get());
   }
@@ -53,14 +54,13 @@ public class SseStreamResourceTest {
               .and(RequestHeader.host("StreamsRUs.co"))
               .and(RequestHeader.accept("text/event-stream"));
 
-    resource.requestResponseContext.channel.expectRespondWith(10);
+    final AccessSafely respondWithSafely = resource.requestResponseContext.channel.expectRespondWith(10);
 
     resource.nextRequest(subscribe);
 
     resource.subscribeToStream("all", AllSseFeedActor.class, 1, 10, "1");
     
-    resource.requestResponseContext.channel.untilCompletes();
-
+    assertTrue(1 <= (int) respondWithSafely.readFrom("count"));
     assertTrue(1 <= resource.requestResponseContext.channel.respondWithCount.get());
 
     final String clientId = resource.requestResponseContext.id();
@@ -72,14 +72,13 @@ public class SseStreamResourceTest {
               .and(RequestHeader.host("StreamsRUs.co"))
               .and(RequestHeader.accept("text/event-stream"));
 
-    resource.requestResponseContext.channel.expectAbandon(1);
+    final AccessSafely abandonSafely = resource.requestResponseContext.channel.expectAbandon(1);
 
     resource.nextRequest(unsubscribe);
 
     resource.unsubscribeFromStream("all", clientId);
     
-    resource.requestResponseContext.channel.untilCompletes();
-
+    assertEquals(1, (int) abandonSafely.readFrom("count"));
     assertEquals(1, resource.requestResponseContext.channel.abandonCount.get());
   }
 
