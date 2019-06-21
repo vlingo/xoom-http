@@ -8,16 +8,15 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.actors.Logger;
-import io.vlingo.actors.plugin.logging.jdk.JDKLogger;
 import io.vlingo.http.Context;
 
 public class TestDispatcher implements Dispatcher {
   private final Logger logger;
   private final Resources resources;
 
-  public TestDispatcher(final Resources resources) {
+  public TestDispatcher(final Resources resources, final Logger logger) {
     this.resources = resources;
-    this.logger = JDKLogger.testInstance();
+    this.logger = logger;
   }
 
   @Override
