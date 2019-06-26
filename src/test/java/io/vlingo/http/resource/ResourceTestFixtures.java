@@ -170,7 +170,7 @@ public abstract class ResourceTestFixtures {
     oneResource.put(resource.name, resource);
 
     resources = new Resources(oneResource);
-    dispatcher = new TestDispatcher(resources);
+    dispatcher = new TestDispatcher(resources, world.defaultLogger());
   }
 
   @After

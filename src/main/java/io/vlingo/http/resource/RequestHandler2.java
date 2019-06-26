@@ -9,15 +9,15 @@
 
 package io.vlingo.http.resource;
 
+import java.util.Arrays;
+import java.util.function.Supplier;
+
 import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Header;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
-
-import java.util.Arrays;
-import java.util.function.Supplier;
 
 public class RequestHandler2<T, R> extends RequestHandler {
   final ParameterResolver<T> resolverParam1;
@@ -108,7 +108,13 @@ public class RequestHandler2<T, R> extends RequestHandler {
    * @deprecated Deprecated in favor of using the ContentMediaType method, which handles media types appropriately.
    * {@link RequestHandler2#body(java.lang.Class, io.vlingo.http.resource.MediaTypeMapper)} instead, or via
    * {@link RequestHandler2#body(java.lang.Class)}
+   *
+   * @param bodyClass the {@code Class<U>} of the body
+   * @param mapperClass the Mapper
+   * @param <U> the body type
+   * @return {@code RequestHandler3<T, R, U>}
    */
+  @Deprecated
   public <U> RequestHandler3<T, R, U> body(final Class<U> bodyClass, final Class<? extends Mapper> mapperClass) {
     return body(bodyClass, mapperFrom(mapperClass));
   }
@@ -120,7 +126,13 @@ public class RequestHandler2<T, R> extends RequestHandler {
    * @deprecated Deprecated in favor of using the ContentMediaType method, which handles media types appropriately.
    * {@link RequestHandler2#body(java.lang.Class, io.vlingo.http.resource.MediaTypeMapper)} instead, or via
    * {@link RequestHandler2#body(java.lang.Class)}
+   *
+   * @param bodyClass the {@code Class<U>} of the body
+   * @param mapper the Mapper
+   * @param <U> the body type
+   * @return {@code RequestHandler3<T, R, U>}
    */
+  @Deprecated
   public <U> RequestHandler3<T, R, U> body(final Class<U> bodyClass, final Mapper mapper) {
     return new RequestHandler3<>(method, path, resolverParam1, resolverParam2,
       ParameterResolver.body(bodyClass, mapper),
@@ -153,6 +165,7 @@ public class RequestHandler2<T, R> extends RequestHandler {
 
     private RequestExecutor2(Handler2<T,R> handler) { this.handler = handler; }
 
+    @Override
     public Completes<Response> execute(final Request request,
                                        final T param1,
                                        final R param2,
@@ -170,6 +183,7 @@ public class RequestHandler2<T, R> extends RequestHandler {
     private final ObjectHandler2<T,R> handler;
     private RequestObjectExecutor2(ObjectHandler2<T,R> handler) { this.handler = handler;}
 
+    @Override
     public Completes<Response> execute(final Request request,
                                        final T param1,
                                        final R param2,

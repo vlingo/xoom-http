@@ -17,6 +17,15 @@ public abstract class ResourceHandler {
   Context context;
   Stage stage;
 
+  /**
+   * Answer the {@code Resource<?>} fluently defined by the {@code ResourceBuilder} DSL.
+   * Must be overridden to use.
+   * @return {@code Resource<?>}
+   */
+  public Resource<?> routes() {
+    throw new UnsupportedOperationException("Undefined resource; must override.");
+  }
+
   protected ResourceHandler() {
   }
 
