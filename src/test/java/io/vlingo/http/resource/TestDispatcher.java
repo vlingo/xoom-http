@@ -14,9 +14,9 @@ public class TestDispatcher implements Dispatcher {
   private final Logger logger;
   private final Resources resources;
 
-  public TestDispatcher(final Resources resources) {
+  public TestDispatcher(final Resources resources, final Logger logger) {
     this.resources = resources;
-    this.logger = Logger.noOpLogger();
+    this.logger = logger;
   }
 
   @Override

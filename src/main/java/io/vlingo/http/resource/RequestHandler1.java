@@ -9,15 +9,15 @@
 
 package io.vlingo.http.resource;
 
+import java.util.Collections;
+import java.util.function.Supplier;
+
 import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Header;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
-
-import java.util.Collections;
-import java.util.function.Supplier;
 
 public class RequestHandler1<T> extends RequestHandler {
 
@@ -106,6 +106,11 @@ public class RequestHandler1<T> extends RequestHandler {
    * @deprecated Deprecated in favor of using the ContentMediaType method, which handles media types appropriately.
    * {@link RequestHandler1#body(java.lang.Class, io.vlingo.http.resource.MediaTypeMapper)} instead, or via
    * {@link RequestHandler1#body(java.lang.Class)}
+   *
+   * @param bodyClass the R typed {@code Class<R>} of the parameter
+   * @param mapperClass the Mapper
+   * @param <R> the body type
+   * @return {@code RequestHandler2<T, R>}
    */
   @Deprecated
   public <R> RequestHandler2<T, R> body(final Class<R> bodyClass, final Class<? extends Mapper> mapperClass) {
@@ -119,6 +124,11 @@ public class RequestHandler1<T> extends RequestHandler {
    * @deprecated Deprecated in favor of using the ContentMediaType method, which handles media types appropriately.
    * {@link RequestHandler1#body(java.lang.Class, io.vlingo.http.resource.MediaTypeMapper)}instead, or via
    * {@link RequestHandler1#body(java.lang.Class)}
+   *
+   * @param bodyClass the R typed {@code Class<R>} of the parameter
+   * @param mapper the Mapper
+   * @param <R> the body type
+   * @return {@code RequestHandler2<T,R>}
    */
   @Deprecated
   public <R> RequestHandler2<T, R> body(final Class<R> bodyClass, final Mapper mapper) {
