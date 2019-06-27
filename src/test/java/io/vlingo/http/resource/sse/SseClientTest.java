@@ -16,6 +16,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import io.vlingo.actors.testkit.AccessSafely;
 import io.vlingo.http.Response;
 import io.vlingo.http.ResponseHeader;
 import io.vlingo.http.resource.Configuration;
@@ -26,8 +27,11 @@ public class SseClientTest {
 
   @Test
   public void testThatClientCloses() {
+    final AccessSafely abandonSafely = context.channel.expectAbandon(1);
+
     client.close();
 
+    assertEquals(1, (int) abandonSafely.readFrom("count"));
     assertEquals(1, context.channel.abandonCount.get());
   }
 
@@ -38,6 +42,8 @@ public class SseClientTest {
 
   @Test
   public void testThatSingleEventSends() {
+    final AccessSafely respondWithSafely = context.channel.expectRespondWith(1);
+
     final SseEvent event =
             SseEvent.Builder.instance()
               .comment("I like events.")
@@ -49,6 +55,7 @@ public class SseClientTest {
 
     client.send(event);
 
+    assertEquals(1, (int) respondWithSafely.readFrom("count"));
     assertEquals(1, context.channel.respondWithCount.get());
 
     final Response response = context.channel.response.get();
@@ -72,6 +79,8 @@ public class SseClientTest {
 
   @Test
   public void testThatMultipleEventsSends() {
+    final AccessSafely respondWithSafely = context.channel.expectRespondWith(1);
+
     final SseEvent event1 =
             SseEvent.Builder.instance()
               .comment("I like events.")
@@ -99,6 +108,7 @@ public class SseClientTest {
 
     client.send(event1, event2, event3);
 
+    assertEquals(1, (int) respondWithSafely.readFrom("count"));
     assertEquals(1, context.channel.respondWithCount.get());
 
     final Response response = context.channel.response.get();
@@ -135,10 +145,13 @@ public class SseClientTest {
 
   @Test
   public void testThatEndOfStreamSends() {
+    final AccessSafely respondWithSafely = context.channel.expectRespondWith(1);
+
     final SseEvent event = SseEvent.Builder.instance().endOfStream().toEvent();
 
     client.send(event);
 
+    assertEquals(1, (int) respondWithSafely.readFrom("count"));
     assertEquals(1, context.channel.respondWithCount.get());
 
     final Response response = context.channel.response.get();

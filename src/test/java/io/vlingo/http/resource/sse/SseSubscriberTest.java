@@ -15,6 +15,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
+import io.vlingo.actors.testkit.AccessSafely;
 import io.vlingo.http.resource.Configuration;
 
 public class SseSubscriberTest {
@@ -35,7 +36,9 @@ public class SseSubscriberTest {
     assertTrue(subscriber.isCompatibleWith("all"));
     assertFalse(subscriber.isCompatibleWith("amm"));
     assertEquals(0, context.channel.abandonCount.get());
+    final AccessSafely abandonSafely = context.channel.expectAbandon(1);
     subscriber.close();
+    assertEquals(1, (int) abandonSafely.readFrom("count"));
     assertEquals(1, context.channel.abandonCount.get());
   }
 
