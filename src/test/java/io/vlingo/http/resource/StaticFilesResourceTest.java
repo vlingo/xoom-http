@@ -22,7 +22,7 @@ import org.junit.Test;
 
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.World;
-import io.vlingo.actors.testkit.TestUntil;
+import io.vlingo.actors.testkit.AccessSafely;
 import io.vlingo.http.Response;
 import io.vlingo.http.resource.TestResponseChannelConsumer.Progress;
 import io.vlingo.wire.channel.ResponseChannelConsumer;
@@ -54,11 +54,11 @@ public class StaticFilesResourceTest {
     final String request = getRequest(resource);
     client.requestWith(toByteBuffer(request));
 
-    progress.untilConsumed = TestUntil.happenings(1);
-    while (progress.untilConsumed.remaining() > 0) {
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+    while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
-    progress.untilConsumed.completes();
+    consumeCalls.readFrom("completed");
 
     final Response contentResponse = progress.responses.poll();
 
@@ -74,11 +74,11 @@ public class StaticFilesResourceTest {
     final String request = getRequest(resource);
     client.requestWith(toByteBuffer(request));
 
-    progress.untilConsumed = TestUntil.happenings(1);
-    while (progress.untilConsumed.remaining() > 0) {
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+    while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
-    progress.untilConsumed.completes();
+    consumeCalls.readFrom("completed");
 
     final Response contentResponse = progress.responses.poll();
 
@@ -94,11 +94,11 @@ public class StaticFilesResourceTest {
     final String request = getRequest(resource);
     client.requestWith(toByteBuffer(request));
 
-    progress.untilConsumed = TestUntil.happenings(1);
-    while (progress.untilConsumed.remaining() > 0) {
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+    while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
-    progress.untilConsumed.completes();
+    consumeCalls.readFrom("completed");
 
     final Response contentResponse = progress.responses.poll();
 
@@ -114,11 +114,11 @@ public class StaticFilesResourceTest {
     final String request = getRequest(resource);
     client.requestWith(toByteBuffer(request));
 
-    progress.untilConsumed = TestUntil.happenings(1);
-    while (progress.untilConsumed.remaining() > 0) {
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+    while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
-    progress.untilConsumed.completes();
+    consumeCalls.readFrom("completed");
 
     final Response contentResponse = progress.responses.poll();
 

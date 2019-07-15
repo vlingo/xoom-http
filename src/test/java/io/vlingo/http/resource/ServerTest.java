@@ -19,7 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.vlingo.actors.Definition;
-import io.vlingo.actors.testkit.TestUntil;
+import io.vlingo.actors.testkit.AccessSafely;
 import io.vlingo.http.Response;
 import io.vlingo.http.ResponseHeader;
 import io.vlingo.http.resource.Configuration.Sizing;
@@ -50,11 +50,11 @@ public class ServerTest extends ResourceTestFixtures {
     final String request = getExceptionRequest("1");
     client.requestWith(toByteBuffer(request));
 
-    progress.untilConsumed = TestUntil.happenings(1);
-    while (progress.untilConsumed.remaining() > 0) {
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+    while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
-    progress.untilConsumed.completes();
+    consumeCalls.readFrom("completed");
 
     final Response createdResponse = progress.responses.poll();
 
@@ -67,11 +67,11 @@ public class ServerTest extends ResourceTestFixtures {
     final String request = postRequest(uniqueJohnDoe());
     client.requestWith(toByteBuffer(request));
 
-    progress.untilConsumed = TestUntil.happenings(1);
-    while (progress.untilConsumed.remaining() > 0) {
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+    while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
-    progress.untilConsumed.completes();
+    consumeCalls.readFrom("completed");
 
     final Response createdResponse = progress.responses.poll();
 
@@ -82,11 +82,11 @@ public class ServerTest extends ResourceTestFixtures {
 
     client.requestWith(toByteBuffer(getUserMessage));
 
-    progress.untilConsumed = TestUntil.happenings(1);
-    while (progress.untilConsumed.remaining() > 0) {
+    final AccessSafely moreConsumeCalls = progress.expectConsumeTimes(1);
+    while (moreConsumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
-    progress.untilConsumed.completes();
+    moreConsumeCalls.readFrom("completed");
 
     final Response getResponse = progress.responses.poll();
 
@@ -101,22 +101,24 @@ public class ServerTest extends ResourceTestFixtures {
   public void testThatServerDispatchesManyRequests() throws Exception {
     final long startTime = System.currentTimeMillis();
 
-    progress.untilConsumed = TestUntil.happenings(TOTAL_REQUESTS_RESPONSES);
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(TOTAL_REQUESTS_RESPONSES);
     final int totalPairs = TOTAL_REQUESTS_RESPONSES / 2;
     int currentConsumeCount = 0;
     for (int idx = 0; idx < totalPairs; ++idx) {
       client.requestWith(toByteBuffer(postRequest(uniqueJohnDoe())));
       client.requestWith(toByteBuffer(postRequest(uniqueJaneDoe())));
       final int expected = currentConsumeCount + 2;
-      while (progress.consumeCount.get() < expected) {
+      while (consumeCalls.totalWrites() < expected) {
         client.probeChannel();
       }
       currentConsumeCount = expected;
     }
 
-    while (progress.untilConsumed.remaining() > 0) {
+    while (consumeCalls.totalWrites() < TOTAL_REQUESTS_RESPONSES) {
       client.probeChannel();
     }
+
+    consumeCalls.readFrom("completed");
 
     System.out.println("TOTAL REQUESTS-RESPONSES: " + TOTAL_REQUESTS_RESPONSES + " TIME: " + (System.currentTimeMillis() - startTime) + " ms");
 
