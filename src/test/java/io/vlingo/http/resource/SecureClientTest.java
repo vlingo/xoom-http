@@ -17,6 +17,7 @@ import java.net.URI;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
 import io.vlingo.actors.World;
 import io.vlingo.actors.testkit.AccessSafely;
@@ -33,7 +34,7 @@ public class SecureClientTest {
   private String responseContent;
   private World world;
 
-//  @Test
+  @Test
   public void testThatSecureClientReceivesResponse() throws Exception {
     final TestResponseConsumer responseConsumer = new TestResponseConsumer();
     final AccessSafely access = responseConsumer.afterCompleting(1);
@@ -42,7 +43,7 @@ public class SecureClientTest {
     final Client.Configuration config =
             Client.Configuration.secure(
                     world.stage(),
-                    Address.from(Host.of("www.google.com"), 443, AddressType.NONE),
+                    Address.from(Host.of("webhook.site"), 443, AddressType.NONE),
                     unknown,
                     false,
                     10,
@@ -61,24 +62,27 @@ public class SecureClientTest {
     final Request request =
             Request
               .has(GET)
-              .and(URI.create("/"))
-              .and(host("www.google.com"))
+              .and(URI.create("/0636eab0-1cd0-42b7-a9ea-70cc32ce14bf"))
+              .and(host("webhook.site"))
               .and(connection("close"))
               .and(contentType("text/html"));
 
-System.out.println("0: " + request);
     final Completes<Response> response = client.requestWith(request);
-System.out.println("1: " + response);
-    response.andThen(r -> { responseContent = r.entity.content; System.out.println("1.5"); return r;} );
-System.out.println("2");
+
+    response.andThen(r -> {
+      responseContent = r.entity.content;
+      access.writeUsing("response", r);
+      System.out.println("1.5");
+      return r;
+    });
+
     assertEquals(1, (int) access.readFrom("responseCount"));
-System.out.println("3");
-    final String accessResponseContent = access.readFrom("response");
-System.out.println("4");
-    assertEquals(accessResponseContent, responseContent);
-System.out.println("5");
+
+    final Response accessResponse = access.readFrom("response");
+
+    assertEquals(responseContent, accessResponse.entity.content);
     System.out.println("RESPONSE CONTENT (1): " + responseContent);
-    System.out.println("RESPONSE CONTENT (2): " + accessResponseContent);
+    System.out.println("RESPONSE CONTENT (2): " + accessResponse);
   }
 
   @Before
