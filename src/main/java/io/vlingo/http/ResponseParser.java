@@ -67,6 +67,7 @@ public class ResponseParser {
     private int position;
     private String responseText;
     private int currentResponseTextLength;
+    private boolean transferEncodingChunked;
 
     // DO NOT RESET: (1) headers, (2) fullResponses
 
@@ -153,14 +154,20 @@ public class ResponseParser {
       while (!hasCompleted()) {
         try {
           if (isNotStarted()) {
+//            System.out.println("NOT STARTED: ");
             nextStep();
           } else if (isStatusLineStep()) {
+//            System.out.println("STATUS LINE");
             parseStatusLine();
           } else if (isHeadersStep()) {
+//            System.out.println("HEADERS");
             parseHeaders();
           } else if (isBodyStep()) {
+//            System.out.println("BODY");
             parseBody();
+//            System.out.println("BODY: " + body);
           } else if (isCompletedStep()) {
+//            System.out.println("COMPLETED: REMAINING: " + responseText.substring(position));
             continuation = false;
             newResponse();
           }
@@ -250,10 +257,42 @@ public class ResponseParser {
         }
         body = Body.from(responseText.substring(position, endIndex));
         position += contentLength;
+      } else if (transferEncodingChunked) {
+        body = Body.from(parseChunks());
       } else {
         body = Body.from("");
       }
       nextStep();
+    }
+
+    private String parseBodyChunk(final int chunkLength) {
+      final int endIndex = position + chunkLength;
+      if (currentResponseTextLength < endIndex) {
+        if (contentQueue.isEmpty()) {
+          responseText = compact();
+          throw new OutOfContentException();
+        }
+        responseText = compact() + contentQueue.poll();
+      }
+      final String chunk = responseText.substring(position, endIndex);
+      position += chunk.length();
+//      System.out.println("CHUNK: " + chunk);
+      return chunk;
+    }
+
+    private String parseChunks() {
+      final StringBuilder builder = new StringBuilder();
+
+      int chunkLength = chunkLength();
+//      System.out.println("CHUNK LENGTH: " + chunkLength);
+      while (chunkLength > 0) {
+        final String chunk = parseBodyChunk(chunkLength);
+        builder.append(chunk);
+        chunkLength = chunkLength();
+//        System.out.println("CHUNK LENGTH: " + chunkLength);
+      }
+
+      return builder.toString();
     }
 
     private void parseHeaders() {
@@ -270,8 +309,10 @@ public class ResponseParser {
         headers.add(header);
         if (contentLength == 0) {
           final int maybeContentLength = header.ifContentLength();
-          if (maybeContentLength > 0) {
+          if (maybeContentLength >= 0) {
             contentLength = maybeContentLength;
+          } else if (header.isTransferEncodingChunked()) {
+            transferEncodingChunked = true;
           }
         }
       }
@@ -282,11 +323,11 @@ public class ResponseParser {
       continuation = false;
       final String line = nextLine(false, "Response status line is required.");
       final int spaceIndex = line.indexOf(' ');
-      
+
       try {
         version = Version.from(line.substring(0, spaceIndex).trim());
         status = Response.Status.valueOfRawState(line.substring(spaceIndex + 1).trim());
-        
+
         nextStep();
       } catch (Throwable e) {
         throw new IllegalArgumentException("Response status line parsing exception: " + e.getMessage(), e);
@@ -309,6 +350,16 @@ public class ResponseParser {
       this.outOfContentTime = 0;
       this.status = null;
       this.version = null;
+      this.transferEncodingChunked = false;
+    }
+
+    private int chunkLength() {
+      String line = nextLine(false, "Missing chunk length.");
+      if (line.isEmpty())  {
+        line = nextLine(false, "Missing chunk length.");
+      }
+//      System.out.println("CHUNK LENGTH TEXT: " + line);
+      return Integer.parseInt(line, 16);
     }
   }
 }
