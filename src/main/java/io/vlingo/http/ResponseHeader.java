@@ -52,7 +52,7 @@ public class ResponseHeader extends Header {
   public static final String Warning = "Warning";
   public static final String WWWAuthenticate = "WWW-Authenticate";
   public static final String XFrameOptions = "X-Frame-Options";
-  
+
   // Common non-standard response header names
   public static final String ContentSecurityPolicy = "Content-Security-Policy";
   public static final String XContentSecurityPolicy = "X-Content-Security-Policy";
@@ -71,11 +71,11 @@ public class ResponseHeader extends Header {
 
   public static ResponseHeader from(final String textLine) {
     final int colonIndex = textLine.indexOf(":");
-    
+
     if (colonIndex == -1) {
       throw new IllegalArgumentException("Not a header: " + textLine);
     }
-    
+
     return new ResponseHeader(textLine.substring(0, colonIndex).trim(), textLine.substring(colonIndex+1).trim());
   }
 
@@ -123,7 +123,11 @@ public class ResponseHeader extends Header {
     if (name.equalsIgnoreCase(ContentLength)) {
       return Integer.parseInt(value);
     }
-    return 0;
+    return -1;
+  }
+
+  boolean isTransferEncodingChunked() {
+    return name.equalsIgnoreCase(TransferEncoding) && value.equalsIgnoreCase("chunked");
   }
 
   private ResponseHeader(final String name, final String value) {
