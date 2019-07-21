@@ -10,11 +10,13 @@ package io.vlingo.http.resource;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.vlingo.actors.testkit.AccessSafely;
 import io.vlingo.http.Response;
 
 public class TestResponseConsumer {
+  public final AtomicReference<Response> responseHolder = new AtomicReference<>();
   public final AtomicInteger responseCount = new AtomicInteger(0);
   public final AtomicInteger unknownResponseCount = new AtomicInteger(0);
   private AccessSafely access = afterCompleting(0);
@@ -37,10 +39,13 @@ public class TestResponseConsumer {
 
       final Integer existingCount = clientCounts.getOrDefault(testId, 0);
 
+      responseHolder.set(response);
+
       clientCounts.put(testId, existingCount + 1);
 
       responseCount.incrementAndGet();
     });
+    access.readingWith("response", () -> responseHolder.get());
     access.readingWith("responseCount", () -> responseCount.get());
     access.readingWith("responseClientCounts", () -> clientCounts);
 
