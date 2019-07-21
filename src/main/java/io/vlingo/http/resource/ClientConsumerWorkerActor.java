@@ -7,6 +7,7 @@
 
 package io.vlingo.http.resource;
 
+import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.vlingo.actors.Actor;
@@ -55,32 +56,41 @@ public class ClientConsumerWorkerActor extends Actor implements ClientConsumer {
    */
   @Override
   public void consume(final ConsumerByteBuffer buffer) {
-    if (parser == null) {
-      parser = ResponseParser.parserFor(buffer.asByteBuffer());
-    } else {
-      parser.parseNext(buffer.asByteBuffer());
-    }
-    buffer.release();
-
-    // don't disperse stowed messages unless a full response has arrived
-    if (parser.hasFullResponse()) {
-      final Response response = parser.fullResponse();
-
-      if (testId != EmptyTestId) {
-        response.headers.add(ResponseHeader.of(Client.ClientIdCustomHeader, testId));
-        //logger().log("Client Worker: " + testId + " Consuming");
-        //logger().log("Client Worker: " + testId + "\nConsuming:\n" + response);
+    try {
+      final ByteBuffer parsable = buffer.asByteBuffer();
+      if (!parsable.hasRemaining()) {
+        logger().debug("CONSUMER: NO CONTENT");
+        return;
+      }
+      logger().debug("CONSUMER:\n" + new String(parsable.array(), 0, parsable.remaining()));
+      if (parser == null) {
+        parser = ResponseParser.parserFor(parsable);
+      } else {
+        parser.parseNext(parsable);
       }
 
-      completesEventually.with(response);
+      // don't disperse stowed messages unless a full response has arrived
+      if (parser.hasFullResponse()) {
+        final Response response = parser.fullResponse();
 
-      completesEventually = null;
+        if (testId != EmptyTestId) {
+          response.headers.add(ResponseHeader.of(Client.ClientIdCustomHeader, testId));
+          logger().debug("Client Worker: " + testId + " Consuming");
+          logger().debug("Client Worker: " + testId + "\nConsuming:\n" + response);
+        }
 
-      disperseStowedMessages();
-    }
+        completesEventually.with(response);
 
-    if (!parser.isMissingContent()) {
-      parser = null;
+        completesEventually = null;
+
+        disperseStowedMessages();
+      }
+
+      if (!parser.isMissingContent()) {
+        parser = null;
+      }
+    } finally {
+      buffer.release();
     }
   }
 
@@ -94,8 +104,8 @@ public class ClientConsumerWorkerActor extends Actor implements ClientConsumer {
     if (testId != EmptyTestId) {
       request.headers.add(RequestHeader.of(Client.ClientIdCustomHeader, testId));
       request.headers.add(RequestHeader.of(RequestHeader.XCorrelationID, testId));
-      //logger().log("Client Worker: " + testId + " Requesting");
-      //logger().log("Client Worker: " + testId + "\nRequesting:\n" + request);
+      logger().debug("Client Worker: " + testId + " Requesting");
+      logger().debug("Client Worker: " + testId + "\nRequesting:\n" + request);
     }
 
     requestSender.sendRequest(request);
