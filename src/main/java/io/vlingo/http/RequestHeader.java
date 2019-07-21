@@ -44,7 +44,7 @@ public class RequestHeader extends Header {
   public static final String Upgrade = "Upgrade";
   public static final String Via = "Via";
   public static final String Warning = "Warning";
-  
+
   // Common non-standard request header names
   public static final String XRequestedWith = "X-Requested-With";
   public static final String DNT = "DNT";
@@ -63,11 +63,11 @@ public class RequestHeader extends Header {
 
   public static RequestHeader from(final String textLine) {
     final int colonIndex = textLine.indexOf(":");
-    
+
     if (colonIndex == -1) {
       throw new IllegalArgumentException("Not a header: " + textLine);
     }
-    
+
     return new RequestHeader(textLine.substring(0, colonIndex).trim(), textLine.substring(colonIndex+1).trim());
   }
 
@@ -77,6 +77,10 @@ public class RequestHeader extends Header {
 
   public static RequestHeader cacheControl(final String option) {
     return new RequestHeader(CacheControl, option);
+  }
+
+  public static RequestHeader connection(final String value) {
+    return new RequestHeader(Connection, value);
   }
 
   public static RequestHeader contentLength(final int length) {
