@@ -17,7 +17,7 @@ public class VersionTest {
   @Test
   public void testVersion1Dot1() {
     final Version version = Version.from("HTTP/1.1");
-    
+
     assertTrue(version.isHttp1_1());
     assertFalse(version.isHttp2_0());
   }
@@ -25,14 +25,14 @@ public class VersionTest {
   @Test
   public void testVersion2Dot0() {
     final Version version = Version.from("HTTP/2.0");
-    
+
     assertTrue(version.isHttp2_0());
     assertFalse(version.isHttp1_1());
   }
 
   @Test(expected=IllegalArgumentException.class)
-  public void testUnsupportedVersion1Dot0() {
-    Version.from("HTTP/1.0");
+  public void testUnsupportedVersion0Dot1() {
+    Version.from("HTTP/0.1");
   }
 
   @Test(expected=IllegalArgumentException.class)
