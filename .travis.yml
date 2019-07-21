@@ -11,7 +11,7 @@ before_install:
 - cd vlingo-wire && mvn install -DskipTests=true
 - cd ${TRAVIS_BUILD_DIR}
 script:
-- mvn install
+- mvn install -Dtest=\!SecureClientTest
 deploy:
   provider: bintray
   file: bintray.json
