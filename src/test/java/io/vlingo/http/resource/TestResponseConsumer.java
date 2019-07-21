@@ -28,6 +28,8 @@ public class TestResponseConsumer {
     access.writingWith("response", (Response response) -> {
       final String testId = response.headerValueOr(Client.ClientIdCustomHeader, "");
 
+      System.out.println("ID: " + testId);
+
       if (testId.isEmpty()) {
         System.out.println("Expected header missing: " + Client.ClientIdCustomHeader);
         //throw new IllegalStateException("Expected header missing: " + Client.ClientIdCustomHeader);
