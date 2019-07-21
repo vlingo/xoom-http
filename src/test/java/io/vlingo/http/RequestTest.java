@@ -7,12 +7,13 @@
 
 package io.vlingo.http;
 
+import static io.vlingo.http.Method.GET;
+import static io.vlingo.http.Method.POST;
+import static io.vlingo.http.Method.PUT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-
-import static io.vlingo.http.Method.*;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -31,11 +32,11 @@ public class RequestTest {
   private String requestMultiHeaders;
   private String requestMultiHeadersWithBody;
   private String requestQueryParameters;
-  
+
   @Test
   public void testThatRequestCanHaveOneHeader() throws Exception {
     final Request request = Request.from(toByteBuffer(requestOneHeader));
-    
+
     assertNotNull(request);
     assertTrue(request.method.isGET());
     assertEquals(new URI("/"), request.uri);
@@ -43,11 +44,11 @@ public class RequestTest {
     assertEquals(1, request.headers.size());
     assertFalse(request.body.hasContent());
   }
-  
+
   @Test
   public void testThatRequestCanHaveOneHeaderWithBody() throws Exception {
     final Request request = Request.from(toByteBuffer(requestTwoHeadersWithBody));
-    
+
     assertNotNull(request);
     assertTrue(request.method.isPUT());
     assertEquals(new URI("/one/two/three"), request.uri);
@@ -57,11 +58,11 @@ public class RequestTest {
     assertNotNull(request.body.content);
     assertFalse(request.body.content.isEmpty());
   }
-  
+
   @Test
   public void testThatRequestCanHaveMutipleHeaders() throws Exception {
     final Request request = Request.from(toByteBuffer(requestMultiHeaders));
-    
+
     assertNotNull(request);
     assertTrue(request.method.isGET());
     assertEquals(new URI("/one"), request.uri);
@@ -77,11 +78,11 @@ public class RequestTest {
 
     assertEquals(exampleContent.length() + "", request.headerOf("Content-Length").value);
   }
-  
+
   @Test
   public void testThatRequestCanHaveMutipleHeadersAndBody() throws Exception {
     final Request request = Request.from(toByteBuffer(requestMultiHeadersWithBody));
-    
+
     assertNotNull(request);
     assertTrue(request.method.isPOST());
     assertEquals(new URI("/one/two/"), request.uri);
@@ -96,49 +97,49 @@ public class RequestTest {
     assertFalse(request.body.content.isEmpty());
     assertEquals(request.body.toString(), "{ text:\"some text\"}");
   }
-  
+
   @Test(expected=IllegalArgumentException.class)
   public void testRejectBogusMethodRequest() {
     Request.from(toByteBuffer("BOGUS / HTTP/1.1\nHost: test.com\n\n"));
   }
-  
+
   @Test(expected=IllegalArgumentException.class)
   public void testRejectUnsupportedVersionRequest() {
-    Request.from(toByteBuffer("GET / HTTP/1.0\nHost: test.com\n\n"));
+    Request.from(toByteBuffer("GET / HTTP/0.1\nHost: test.com\n\n"));
   }
-  
+
   @Test(expected=IllegalArgumentException.class)
   public void testRejectBadRequestNoHeader() {
     Request.from(toByteBuffer("GET / HTTP/1.1\n\n"));
   }
-  
+
   @Test(expected=IllegalStateException.class)
   public void testRejectBadRequestMissingLine() {
     Request.from(toByteBuffer("GET / HTTP/1.1\nHost: test.com\n"));
   }
-  
+
   @Test
   public void testFindHeader() {
     final Request request = Request.from(toByteBuffer(requestTwoHeadersWithBody));
-    
+
     assertNotNull(request.headerOf(RequestHeader.Host));
     assertEquals(RequestHeader.Host, request.headerOf(RequestHeader.Host).name);
     assertEquals(RequestHeader.ContentLength, request.headerOf(RequestHeader.ContentLength).name);
     assertEquals("test.com", request.headerOf(RequestHeader.Host).value);
   }
-  
+
   @Test
   public void testFindHeaders() {
     final Request request = Request.from(toByteBuffer(requestMultiHeaders));
-    
+
     assertNotNull(request.headerOf(RequestHeader.Host));
     assertEquals(RequestHeader.Host, request.headerOf(RequestHeader.Host).name);
     assertEquals("test.com", request.headerOf(RequestHeader.Host).value);
-    
+
     assertNotNull(request.headerOf(RequestHeader.Accept));
     assertEquals(RequestHeader.Accept, request.headerOf(RequestHeader.Accept).name);
     assertEquals("text/plain", request.headerOf(RequestHeader.Accept).value);
-    
+
     assertNotNull(request.headerOf(RequestHeader.CacheControl));
     assertEquals(RequestHeader.CacheControl, request.headerOf(RequestHeader.CacheControl).name);
     assertEquals("no-cache", request.headerOf(RequestHeader.CacheControl).value);
@@ -234,16 +235,16 @@ public class RequestTest {
   @Before
   public void setUp() {
     requestOneHeader = "GET / HTTP/1.1\nHost: test.com\n\n";
-    
+
     requestTwoHeadersWithBody = "PUT /one/two/three HTTP/1.1\nHost: test.com\nContent-Length: 19\n\n{ text:\"some text\"}";
-    
+
     requestMultiHeaders = "GET /one HTTP/1.1\nHost: test.com\nAccept: text/plain\nCache-Control: no-cache\n\n";
-    
+
     requestMultiHeadersWithBody = "POST /one/two/ HTTP/1.1\nHost: test.com\nContent-Length: 19\nAccept: text/plain\nCache-Control: no-cache\n\n{ text:\"some text\"}";
-    
+
     requestQueryParameters = "GET /one/param1?one=1&two=2&three=3&state=NY&state=CO HTTP/1.1\nHost: test.com\n\n";
   }
-  
+
   private ByteBuffer toByteBuffer(final String requestContent) {
     buffer.clear();
     buffer.put(Converters.textToBytes(requestContent));
