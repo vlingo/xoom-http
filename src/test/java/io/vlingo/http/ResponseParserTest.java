@@ -26,17 +26,17 @@ public class ResponseParserTest extends ResourceTestFixtures {
   @Test
   public void testThatSingleResponseParses() {
     final ResponseParser parser = ResponseParser.parserFor(toByteBuffer(johnDoeCreated()));
-    
+
     assertTrue(parser.hasCompleted());
     assertTrue(parser.hasFullResponse());
     assertFalse(parser.isMissingContent());
     assertFalse(parser.hasMissingContentTimeExpired(System.currentTimeMillis() + 100));
-    
+
     final Response response = parser.fullResponse();
-    
+
     assertNotNull(response);
     assertTrue(response.version.isHttp1_1());
-    assertEquals(johnDoeUserSerialized, response.entity.content);
+    assertEquals(johnDoeUserSerialized, response.entity.content());
   }
 
   @Test
@@ -53,12 +53,12 @@ public class ResponseParserTest extends ResourceTestFixtures {
     while (parser.hasFullResponse()) {
       ++count;
       final Response response = parser.fullResponse();
-      
+
       assertNotNull(response);
       assertTrue(response.version.isHttp1_1());
       assertTrue(bodyIterator.hasNext());
       final String body = bodyIterator.next();
-      assertEquals(body, response.entity.content);
+      assertEquals(body, response.entity.content());
     }
 
     assertEquals(10, count);
@@ -78,12 +78,12 @@ public class ResponseParserTest extends ResourceTestFixtures {
     while (parser.hasFullResponse()) {
       ++count;
       final Response response = parser.fullResponse();
-      
+
       assertNotNull(response);
       assertTrue(response.version.isHttp1_1());
       assertTrue(bodyIterator.hasNext());
       final String body = bodyIterator.next();
-      assertEquals(body, response.entity.content);
+      assertEquals(body, response.entity.content());
     }
 
     assertEquals(200, count);
@@ -117,12 +117,12 @@ public class ResponseParserTest extends ResourceTestFixtures {
     while (parser.hasFullResponse()) {
       ++count;
       final Response response = parser.fullResponse();
-      
+
       assertNotNull(response);
       assertTrue(response.version.isHttp1_1());
       assertTrue(bodyIterator.hasNext());
       final String body = bodyIterator.next();
-      assertEquals(body, response.entity.content);
+      assertEquals(body, response.entity.content());
     }
 
     assertEquals(200, count);
@@ -130,7 +130,7 @@ public class ResponseParserTest extends ResourceTestFixtures {
 
   private String multipleResponseBuilder(final int amount) {
     final StringBuilder builder = new StringBuilder();
-    
+
     for (int idx = 1; idx <= amount; ++idx) {
       final String body = (idx % 2 == 0) ? uniqueJaneDoe() : uniqueJohnDoe();
       uniqueBodies.add(body);
