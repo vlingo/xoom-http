@@ -37,6 +37,10 @@ public class Request {
     return new Request(this.method, this.uri, this.version, this.headers, body);
   }
 
+  public Request and(final ChunkedBody body) {
+    return new Request(this.method, this.uri, this.version, this.headers, body.asPlainBody());
+  }
+
   public Request and(final RequestHeader header) {
     final Headers<RequestHeader> headers = Headers.empty();
     return new Request(this.method, this.uri, this.version, headers.and(this.headers).and(header), this.body);
@@ -117,7 +121,7 @@ public class Request {
     this.body = body;
 
     if (body != null && body.hasContent() && headers.headerOf("Content-Length") == null) {
-      this.headers = headers.and("Content-Length", body.content.length() + "");
+      this.headers = headers.and("Content-Length", body.content().length() + "");
     } else {
       this.headers = headers;
     }
