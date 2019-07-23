@@ -45,7 +45,7 @@ public class StaticFilesResource extends ResourceHandler {
 
     try {
       final byte[] fileContent = readFile(contentPath);
-      completes().with(Response.of(Ok, Body.from(fileContent, Body.Encoding.UTF8).content));
+      completes().with(Response.of(Ok, Body.from(fileContent, Body.Encoding.UTF8).content()));
     } catch (IOException e) {
       completes().with(Response.of(InternalServerError));
     } catch (IllegalArgumentException e) {
