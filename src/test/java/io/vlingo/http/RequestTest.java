@@ -55,8 +55,8 @@ public class RequestTest {
     assertTrue(request.version.isHttp1_1());
     assertEquals(2, request.headers.size());
     assertTrue(request.body.hasContent());
-    assertNotNull(request.body.content);
-    assertFalse(request.body.content.isEmpty());
+    assertNotNull(request.body.content());
+    assertTrue(request.body.hasContent());
   }
 
   @Test
@@ -93,8 +93,8 @@ public class RequestTest {
     assertEquals(RequestHeader.Accept, request.headerOf(RequestHeader.Accept).name);
     assertEquals(RequestHeader.CacheControl, request.headerOf(RequestHeader.CacheControl).name);
     assertTrue(request.body.hasContent());
-    assertNotNull(request.body.content);
-    assertFalse(request.body.content.isEmpty());
+    assertNotNull(request.body.content());
+    assertTrue(request.body.hasContent());
     assertEquals(request.body.toString(), "{ text:\"some text\"}");
   }
 
