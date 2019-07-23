@@ -40,20 +40,20 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
   public void testThatPostRegisterUserDispatches() {
     final Request request = Request.from(toByteBuffer(postJohnDoeUserMessage));
     final MockCompletesEventuallyResponse completes = new MockCompletesEventuallyResponse();
-    
+
     final AccessSafely withCalls = completes.expectWithTimes(1);
     dispatcher.dispatchFor(new Context(request, completes));
     withCalls.readFrom("completed");
-    
+
     assertNotNull(completes.response);
-    
+
     assertEquals(Created, completes.response.status);
     assertEquals(2, completes.response.headers.size());
     assertEquals(Location, completes.response.headers.get(0).name);
     assertTrue(Location, completes.response.headerOf(Location).value.startsWith("/users/"));
     assertNotNull(completes.response.entity);
-    
-    final UserData createdUserData = deserialized(completes.response.entity.content, UserData.class);
+
+    final UserData createdUserData = deserialized(completes.response.entity.content(), UserData.class);
     assertNotNull(createdUserData);
     assertEquals(johnDoeUserData.nameData.given, createdUserData.nameData.given);
     assertEquals(johnDoeUserData.nameData.family, createdUserData.nameData.family);
@@ -69,7 +69,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     dispatcher.dispatchFor(new Context(postRequest, postCompletes));
     postCompletesWithCalls.readFrom("completed");
     assertNotNull(postCompletes.response);
-    
+
     final String getUserMessage = "GET " + postCompletes.response.headerOf(Location).value + " HTTP/1.1\nHost: vlingo.io\n\n";
     final Request getRequest = Request.from(toByteBuffer(getUserMessage));
     final MockCompletesEventuallyResponse getCompletes = new MockCompletesEventuallyResponse();
@@ -78,7 +78,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     getCompletesWithCalls.readFrom("completed");
     assertNotNull(getCompletes.response);
     assertEquals(Ok, getCompletes.response.status);
-    final UserData getUserData = deserialized(getCompletes.response.entity.content, UserData.class);
+    final UserData getUserData = deserialized(getCompletes.response.entity.content(), UserData.class);
     assertNotNull(getUserData);
     assertEquals(johnDoeUserData.nameData.given, getUserData.nameData.given);
     assertEquals(johnDoeUserData.nameData.family, getUserData.nameData.family);
@@ -90,7 +90,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
   public void testThatGetAllUsersDispatches() {
     final Request postRequest1 = Request.from(toByteBuffer(postJohnDoeUserMessage));
     final MockCompletesEventuallyResponse postCompletes1 = new MockCompletesEventuallyResponse();
-    
+
     final AccessSafely postCompletes1WithCalls = postCompletes1.expectWithTimes(1);
     dispatcher.dispatchFor(new Context(postRequest1, postCompletes1));
     postCompletes1WithCalls.readFrom("completed");
@@ -104,7 +104,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     postCompletes2WithCalls.readFrom("completed");
 
     assertNotNull(postCompletes2.response);
-    
+
     final String getUserMessage = "GET /users HTTP/1.1\nHost: vlingo.io\n\n";
     final Request getRequest = Request.from(toByteBuffer(getUserMessage));
     final MockCompletesEventuallyResponse getCompletes = new MockCompletesEventuallyResponse();
@@ -112,28 +112,28 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     final AccessSafely getCompletesWithCalls = getCompletes.expectWithTimes(1);
     dispatcher.dispatchFor(new Context(getRequest, getCompletes));
     getCompletesWithCalls.readFrom("completed");
-    
+
     assertNotNull(getCompletes.response);
     assertEquals(Ok, getCompletes.response.status);
     final Type listOfUserData = new TypeToken<List<UserData>>(){}.getType();
-    final List<UserData> getUserData = deserializedList(getCompletes.response.entity.content, listOfUserData);
+    final List<UserData> getUserData = deserializedList(getCompletes.response.entity.content(), listOfUserData);
     assertNotNull(getUserData);
-    
+
     final UserData johnUserData = UserData.userAt(postCompletes1.response.headerOf(Location).value, getUserData);
-    
+
     assertEquals(johnDoeUserData.nameData.given, johnUserData.nameData.given);
     assertEquals(johnDoeUserData.nameData.family, johnUserData.nameData.family);
     assertEquals(johnDoeUserData.contactData.emailAddress, johnUserData.contactData.emailAddress);
     assertEquals(johnDoeUserData.contactData.telephoneNumber, johnUserData.contactData.telephoneNumber);
-    
+
     final UserData janeUserData = UserData.userAt(postCompletes2.response.headerOf(Location).value, getUserData);
-    
+
     assertEquals(janeDoeUserData.nameData.given, janeUserData.nameData.given);
     assertEquals(janeDoeUserData.nameData.family, janeUserData.nameData.family);
     assertEquals(janeDoeUserData.contactData.emailAddress, janeUserData.contactData.emailAddress);
     assertEquals(janeDoeUserData.contactData.telephoneNumber, janeUserData.contactData.telephoneNumber);
   }
-  
+
   @Test
   public void testThatPatchNameWorks() {
     final Request postRequest1 = Request.from(toByteBuffer(postJohnDoeUserMessage));
@@ -143,16 +143,16 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     postCompletes1WithCalls.readFrom("completed");
 
     assertNotNull(postCompletes1.response);
-    
+
     final Request postRequest2 = Request.from(toByteBuffer(postJaneDoeUserMessage));
     final MockCompletesEventuallyResponse postCompletes2 = new MockCompletesEventuallyResponse();
-    
+
     final AccessSafely postCompletes2WithCalls = postCompletes2.expectWithTimes(1);
     dispatcher.dispatchFor(new Context(postRequest2, postCompletes2));
     postCompletes2WithCalls.readFrom("completed");
 
     assertNotNull(postCompletes2.response);
-    
+
     // John Doe and Jane Doe marry and change their family name to, of course, Doe-Doe
     final NameData johnNameData = NameData.from("John", "Doe-Doe");
     final String johnNameSerialized = serialized(johnNameData);
@@ -160,7 +160,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
             "PATCH " + postCompletes1.response.headerOf(Location).value
             + "/name HTTP/1.1\nHost: vlingo.io\nContent-Length: " + johnNameSerialized.length()
             + "\n\n" + johnNameSerialized;
-    
+
     final Request patchRequest1 = Request.from(toByteBuffer(patchJohnDoeUserMessage));
     final MockCompletesEventuallyResponse patchCompletes1 = new MockCompletesEventuallyResponse();
 
@@ -170,7 +170,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
 
     assertNotNull(patchCompletes1.response);
     assertEquals(Ok, patchCompletes1.response.status);
-    final UserData getJohnDoeDoeUserData = deserialized(patchCompletes1.response.entity.content, UserData.class);
+    final UserData getJohnDoeDoeUserData = deserialized(patchCompletes1.response.entity.content(), UserData.class);
     assertEquals(johnNameData.given, getJohnDoeDoeUserData.nameData.given);
     assertEquals(johnNameData.family, getJohnDoeDoeUserData.nameData.family);
     assertEquals(johnDoeUserData.contactData.emailAddress, getJohnDoeDoeUserData.contactData.emailAddress);
@@ -185,20 +185,20 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
 
     final Request patchRequest2 = Request.from(toByteBuffer(patchJaneDoeUserMessage));
     final MockCompletesEventuallyResponse patchCompletes2 = new MockCompletesEventuallyResponse();
-    
+
     final AccessSafely patchCompletes2WithCalls = patchCompletes2.expectWithTimes(1);
     dispatcher.dispatchFor(new Context(patchRequest2, patchCompletes2));
     patchCompletes2WithCalls.readFrom("completed");
 
     assertNotNull(patchCompletes2.response);
     assertEquals(Ok, patchCompletes2.response.status);
-    final UserData getJaneDoeDoeUserData = deserialized(patchCompletes2.response.entity.content, UserData.class);
+    final UserData getJaneDoeDoeUserData = deserialized(patchCompletes2.response.entity.content(), UserData.class);
     assertEquals(janeNameData.given, getJaneDoeDoeUserData.nameData.given);
     assertEquals(janeNameData.family, getJaneDoeDoeUserData.nameData.family);
     assertEquals(janeDoeUserData.contactData.emailAddress, getJaneDoeDoeUserData.contactData.emailAddress);
     assertEquals(janeDoeUserData.contactData.telephoneNumber, getJaneDoeDoeUserData.contactData.telephoneNumber);
   }
-  
+
   @Test
   public void testThatAllWellOrderedActionHaveMatches() throws Exception {
     final MatchResults actionGetUsersMatch = resource.matchWith(Method.GET, new URI("/users"));
@@ -240,7 +240,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     // See also: vlingo-http.properties
     //   userResource.NAME.disallowPathParametersWithSlash = true/false
     //=============================================================
-    
+
     final List<Action> actions =
             Arrays.asList(
                     actionPostUser,
@@ -249,7 +249,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
                     actionGetUsers, // order is problematic unless parameter matching short circuit used
                     actionGetUser,
                     actionGetUserEmailAddress);
-    
+
     final ConfigurationResource<?> resource = ConfigurationResource.newResourceFor("user", resourceHandlerClass, 5, actions);
 
     final MatchResults actionGetUsersMatch = resource.matchWith(Method.GET, new URI("/users"));
