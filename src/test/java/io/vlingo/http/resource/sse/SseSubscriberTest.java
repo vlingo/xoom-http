@@ -24,6 +24,8 @@ public class SseSubscriberTest {
 
   @Test
   public void testSubscriberPropertiesBehavior() {
+    context.channel.expectRespondWith(1);
+
     final SseSubscriber subscriber = new SseSubscriber("all", client, "123ABC", "42");
 
     assertNotNull(subscriber.client());
