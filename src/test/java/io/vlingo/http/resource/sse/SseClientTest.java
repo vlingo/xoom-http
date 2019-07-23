@@ -62,9 +62,11 @@ public class SseClientTest {
     assertNotNull(response);
     assertNotNull(response.headerOf(ResponseHeader.Connection));
     assertNotNull(response.headerOf(ResponseHeader.ContentType));
-    assertNotNull(response.headerOf(ResponseHeader.TransferEncoding));
+    assertNotNull(response.headerOf(ResponseHeader.CacheControl));
 
-    final List<MessageEvent> messageEvents = MessageEvent.from(response);
+    final Response eventsResponse = respondWithSafely.readFrom("eventsResponse");
+
+    final List<MessageEvent> messageEvents = MessageEvent.from(eventsResponse);
 
     assertEquals(1, messageEvents.size());
 
@@ -115,9 +117,11 @@ public class SseClientTest {
     assertNotNull(response);
     assertNotNull(response.headerOf(ResponseHeader.Connection));
     assertNotNull(response.headerOf(ResponseHeader.ContentType));
-    assertNotNull(response.headerOf(ResponseHeader.TransferEncoding));
+    assertNotNull(response.headerOf(ResponseHeader.CacheControl));
 
-    final List<MessageEvent> messageEvents = MessageEvent.from(response);
+    final Response eventsResponse = respondWithSafely.readFrom("eventsResponse");
+
+    final List<MessageEvent> messageEvents = MessageEvent.from(eventsResponse);
 
     assertEquals(3, messageEvents.size());
 
@@ -157,7 +161,9 @@ public class SseClientTest {
     final Response response = context.channel.response.get();
     assertNotNull(response);
 
-    final List<MessageEvent> messageEvents = MessageEvent.from(response);
+    final Response eventsResponse = respondWithSafely.readFrom("eventsResponse");
+
+    final List<MessageEvent> messageEvents = MessageEvent.from(eventsResponse);
 
     assertEquals(1, messageEvents.size());
 
