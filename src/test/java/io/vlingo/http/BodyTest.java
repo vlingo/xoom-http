@@ -28,9 +28,9 @@ public class BodyTest {
     final Body body = Body.from(content);
 
     assertNotNull(body);
-    assertNotNull(body.content);
+    assertNotNull(body.content());
     assertTrue(body.hasContent());
-    assertEquals(content, body.content);
+    assertEquals(content, body.content());
   }
 
   @Test
@@ -38,9 +38,9 @@ public class BodyTest {
     final Body body = Body.empty();
 
     assertNotNull(body);
-    assertNotNull(body.content);
+    assertNotNull(body.content());
     assertFalse(body.hasContent());
-    assertEquals("", body.content);
+    assertEquals("", body.content());
   }
 
   @Test
@@ -49,10 +49,10 @@ public class BodyTest {
     final Body body = Body.from(bodyBytes);
 
     assertNotNull(body);
-    assertNotNull(body.content);
+    assertNotNull(body.content());
     assertTrue(body.hasContent());
 
-    final String decoded = new String(Base64.getDecoder().decode(body.content.getBytes()));
+    final String decoded = new String(Base64.getDecoder().decode(body.content().getBytes()));
     assertEquals(BinaryTextBodyText, decoded);
   }
 
@@ -64,10 +64,10 @@ public class BodyTest {
     final Body body = Body.from(buffer);
 
     assertNotNull(body);
-    assertNotNull(body.content);
+    assertNotNull(body.content());
     assertTrue(body.hasContent());
 
-    final String decoded = new String(Base64.getDecoder().decode(body.content.getBytes()));
+    final String decoded = new String(Base64.getDecoder().decode(body.content().getBytes()));
     assertEquals(BinaryTextBodyText, decoded);
   }
 
@@ -78,10 +78,10 @@ public class BodyTest {
     final Body body = Body.from(buffer);
 
     assertNotNull(body);
-    assertNotNull(body.content);
+    assertNotNull(body.content());
     assertTrue(body.hasContent());
 
-    final String decoded = new String(Base64.getDecoder().decode(body.content.getBytes()));
+    final String decoded = new String(Base64.getDecoder().decode(body.content().getBytes()));
     assertEquals(BinaryTextBodyText, decoded);
   }
 
@@ -91,10 +91,10 @@ public class BodyTest {
     final Body body = Body.from(bodyBytes, Body.Encoding.UTF8);
 
     assertNotNull(body);
-    assertNotNull(body.content);
+    assertNotNull(body.content());
     assertTrue(body.hasContent());
 
-    final String decoded = new String(body.content.getBytes(), Charset.forName("UTF-8"));
+    final String decoded = new String(body.content().getBytes(), Charset.forName("UTF-8"));
     assertEquals(BinaryTextBodyText, decoded);
   }
 
@@ -106,10 +106,10 @@ public class BodyTest {
     final Body body = Body.from(buffer, Body.Encoding.UTF8);
 
     assertNotNull(body);
-    assertNotNull(body.content);
+    assertNotNull(body.content());
     assertTrue(body.hasContent());
 
-    final String decoded = new String(body.content.getBytes(), Charset.forName("UTF-8"));
+    final String decoded = new String(body.content().getBytes(), Charset.forName("UTF-8"));
     assertEquals(BinaryTextBodyText, decoded);
   }
 
@@ -120,10 +120,10 @@ public class BodyTest {
     final Body body = Body.from(buffer, Body.Encoding.UTF8);
 
     assertNotNull(body);
-    assertNotNull(body.content);
+    assertNotNull(body.content());
     assertTrue(body.hasContent());
 
-    final String decoded = new String(body.content.getBytes(), Charset.forName("UTF-8"));
+    final String decoded = new String(body.content().getBytes(), Charset.forName("UTF-8"));
     assertEquals(BinaryTextBodyText, decoded);
   }
 
@@ -134,8 +134,8 @@ public class BodyTest {
     final Body body = Body.from(pdfBytes, Body.Encoding.UTF8);
 
     assertNotNull(body);
-    assertNotNull(body.content);
+    assertNotNull(body.content());
     assertTrue(body.hasContent());
-    assertTrue(body.content.startsWith("%PDF"));
+    assertTrue(body.content().startsWith("%PDF"));
   }
 }
