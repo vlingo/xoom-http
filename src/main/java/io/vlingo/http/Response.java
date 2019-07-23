@@ -87,30 +87,32 @@ public class Response {
   @Override
   public String toString() {
     final StringBuilder builder = new StringBuilder(size());
-    
+
     // TODO: currently supports only HTTP/1.1
-    
+
     builder.append(Version.HTTP_1_1).append(" ").append(status).append("\n");
     appendAllHeadersTo(builder);
     builder.append("\n").append(entity);
-    
+
     return builder.toString();
   }
-  
+
   protected Response(final Version version, final Status status, final Headers<ResponseHeader> headers, final Body entity) {
     this.version = version;
     this.status = status;
     this.statusCode = status.value.substring(0, status.value.indexOf(' '));
     this.headers = headers;
-    this.entity = entity == null ? Body.from("") : entity;
+    this.entity = entityFrom(headers, entity);
     addMissingContentLengthHeader();
   }
 
   private void addMissingContentLengthHeader() {
-    final int contentLength = entity.content.length();
-    final Header header = headers.headerOf(ResponseHeader.ContentLength);
-    if (header == null) {
-      headers.add(ResponseHeader.of(ResponseHeader.ContentLength, Integer.toString(contentLength)));
+    if (!entity.isComplex()) {
+      final int contentLength = entity.content().length();
+      final Header header = headers.headerOf(ResponseHeader.ContentLength);
+      if (header == null && contentLength > 0) {
+        headers.add(ResponseHeader.of(ResponseHeader.ContentLength, Integer.toString(contentLength)));
+      }
     }
   }
 
@@ -121,6 +123,18 @@ public class Response {
     return builder;
   }
 
+  private Body entityFrom(final Headers<ResponseHeader> headers, final Body entity) {
+    final Header header = headers.headerOf(ResponseHeader.TransferEncoding);
+
+    if (header != null && header.value.equals("chunked")) {
+      if (entity.isComplex() && !entity.hasContent()) {
+        return Body.beginChunked();
+      }
+    }
+
+    return entity;
+  }
+
   private int size() {
     int headersSize = 0;
     for (final ResponseHeader header : headers) {
@@ -128,7 +142,7 @@ public class Response {
       headersSize += (header.name.length() + 2 + header.value.length() + 1);
     }
     // HTTP/1.1 + 1 + status code + "\n" + headers + "\n" + entity + just-in-case
-    return 9 + statusCode.length() + 1 + headersSize + 1 + entity.content.length() + 5;
+    return 9 + statusCode.length() + 1 + headersSize + 1 + entity.content().length() + 5;
   }
 
   public enum Status {
