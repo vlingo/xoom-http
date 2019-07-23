@@ -8,7 +8,6 @@
 package io.vlingo.http.resource;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -93,8 +92,8 @@ public class ServerTest extends ResourceTestFixtures {
     assertEquals(2, progress.consumeCount.get());
     assertEquals(Response.Status.Ok, getResponse.status);
     assertNotNull(getResponse.entity);
-    assertNotNull(getResponse.entity.content);
-    assertFalse(getResponse.entity.content.isEmpty());
+    assertNotNull(getResponse.entity.content());
+    assertTrue(getResponse.entity.hasContent());
   }
 
   @Test
