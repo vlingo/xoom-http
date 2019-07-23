@@ -64,7 +64,7 @@ public class StaticFilesResourceTest {
 
     assertEquals(1, progress.consumeCount.get());
     assertEquals(Response.Status.Ok, contentResponse.status);
-    assertEquals(content, contentResponse.entity.content);
+    assertEquals(content, contentResponse.entity.content());
   }
 
   @Test
@@ -84,7 +84,7 @@ public class StaticFilesResourceTest {
 
     assertEquals(1, progress.consumeCount.get());
     assertEquals(Response.Status.Ok, contentResponse.status);
-    assertEquals(content, contentResponse.entity.content);
+    assertEquals(content, contentResponse.entity.content());
   }
 
   @Test
@@ -104,7 +104,7 @@ public class StaticFilesResourceTest {
 
     assertEquals(1, progress.consumeCount.get());
     assertEquals(Response.Status.Ok, contentResponse.status);
-    assertEquals(content, contentResponse.entity.content);
+    assertEquals(content, contentResponse.entity.content());
   }
 
   @Test
@@ -124,7 +124,7 @@ public class StaticFilesResourceTest {
 
     assertEquals(1, progress.consumeCount.get());
     assertEquals(Response.Status.Ok, contentResponse.status);
-    assertEquals(content, contentResponse.entity.content);
+    assertEquals(content, contentResponse.entity.content());
   }
 
   @Before
