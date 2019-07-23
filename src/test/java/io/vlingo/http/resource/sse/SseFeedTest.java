@@ -18,6 +18,7 @@ import org.junit.Test;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.World;
 import io.vlingo.actors.testkit.AccessSafely;
+import io.vlingo.http.Response;
 import io.vlingo.http.resource.Configuration;
 import io.vlingo.http.sample.user.AllSseFeedActor;
 
@@ -29,11 +30,11 @@ public class SseFeedTest {
 
   @Test
   public void testThatFeedFeedsOneSubscriber() {
+    final AccessSafely respondWithSafely = context.channel.expectRespondWith(1);
+
     feed = world.actorFor(SseFeed.class, Definition.has(AllSseFeedActor.class, Definition.parameters("all", 10, "1")));
 
     final SseSubscriber subscriber = new SseSubscriber("all", client, "ABC123", "42");
-
-    final AccessSafely respondWithSafely = context.channel.expectRespondWith(1);
 
     feed.to(Arrays.asList(subscriber));
 
@@ -41,7 +42,9 @@ public class SseFeedTest {
 
     assertEquals(1, context.channel.respondWithCount.get());
 
-    final List<MessageEvent> events = MessageEvent.from(context.channel.response.get());
+    final Response eventsResponse = respondWithSafely.readFrom("eventsResponse");
+
+    final List<MessageEvent> events = MessageEvent.from(eventsResponse);
 
     assertEquals(10, events.size());
   }
