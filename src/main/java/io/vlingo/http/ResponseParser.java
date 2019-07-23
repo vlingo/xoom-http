@@ -24,6 +24,10 @@ public class ResponseParser {
     return new ResponseParser(requestContent);
   }
 
+  public static ResponseParser parserForBodyOnly(final ByteBuffer requestContent) {
+    return new ResponseParser(requestContent, true);
+  }
+
   public boolean hasCompleted() {
     return virtualStateParser.hasCompleted();
   }
@@ -52,6 +56,10 @@ public class ResponseParser {
     this.virtualStateParser = new VirtualStateParser().includes(responseContent).parse();
   }
 
+  private ResponseParser(final ByteBuffer responseContent, final boolean bodyOnly) {
+    this.virtualStateParser = new VirtualStateParser(bodyOnly).includes(responseContent).parse();
+  }
+
   //=========================================
   // VirtualStateParser
   //=========================================
@@ -72,6 +80,7 @@ public class ResponseParser {
     // DO NOT RESET: (1) headers, (2) fullResponses
 
     private Body body;
+    private final boolean bodyOnly;
     private int contentLength;
     private boolean continuation;
     private Step currentStep;
@@ -83,6 +92,11 @@ public class ResponseParser {
     private Version version;
 
     VirtualStateParser() {
+      this(false);
+    }
+
+    VirtualStateParser(final boolean bodyOnly) {
+      this.bodyOnly = bodyOnly;
       this.contentQueue = new LinkedList<>();
       this.currentStep = Step.NotStarted;
       this.responseText = "";
@@ -182,6 +196,12 @@ public class ResponseParser {
       return this;
     }
 
+    private void clearContent() {
+      responseText = "";
+      currentResponseTextLength = 0;
+      position = 0;
+    }
+
     private String compact() {
       final String compact = responseText.substring(position);
       position = 0;
@@ -243,6 +263,10 @@ public class ResponseParser {
     }
 
     private void parseBody() {
+      if (bodyOnly) {
+        contentLength = responseText.length();
+      }
+
       continuation = false;
       if (contentLength > 0) {
         final int endIndex = position + contentLength;
@@ -260,7 +284,7 @@ public class ResponseParser {
       } else if (transferEncodingChunked) {
         body = Body.from(parseChunks());
       } else {
-        body = Body.from("");
+        body = Body.empty();
       }
       nextStep();
     }
@@ -292,10 +316,16 @@ public class ResponseParser {
 //        System.out.println("CHUNK LENGTH: " + chunkLength);
       }
 
+      clearContent();
+
       return builder.toString();
     }
 
     private void parseHeaders() {
+      if (bodyOnly) {
+        nextStep();
+        return;
+      }
       if (!continuation) {
         headers = new Headers<>(2);
       }
@@ -320,6 +350,13 @@ public class ResponseParser {
     }
 
     private void parseStatusLine() {
+      if (bodyOnly) {
+        version = Version.Http1_1;
+        status = Response.Status.Ok;
+        nextStep();
+        return;
+      }
+
       continuation = false;
       final String line = nextLine(false, "Response status line is required.");
       final int spaceIndex = line.indexOf(' ');
@@ -354,12 +391,16 @@ public class ResponseParser {
     }
 
     private int chunkLength() {
-      String line = nextLine(false, "Missing chunk length.");
-      if (line.isEmpty())  {
-        line = nextLine(false, "Missing chunk length.");
+      try {
+        String line = nextLine(false, "Missing chunk length.");
+        if (line.isEmpty())  {
+          line = nextLine(false, "Missing chunk length.");
+        }
+//        System.out.println("CHUNK LENGTH TEXT: " + line);
+        return Integer.parseInt(line, 16);
+      } catch (Exception e) {
+        return 0;
       }
-//      System.out.println("CHUNK LENGTH TEXT: " + line);
-      return Integer.parseInt(line, 16);
     }
   }
 }
