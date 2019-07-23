@@ -19,10 +19,18 @@ import io.vlingo.wire.message.ConsumerByteBuffer;
 
 public class MockResponseSenderChannel implements ResponseSenderChannel {
   public AtomicInteger abandonCount = new AtomicInteger(0);
+  public AtomicReference<Response> eventsResponse = new AtomicReference<>();
   public AtomicInteger respondWithCount = new AtomicInteger(0);
   public AtomicReference<Response> response = new AtomicReference<>();
   private AccessSafely abandonSafely = AccessSafely.afterCompleting(0);
   private AccessSafely respondWithSafely = AccessSafely.afterCompleting(0);
+
+  private boolean receivedStatus;
+
+  public MockResponseSenderChannel() {
+    respondWithSafely = expectRespondWith(0);
+    receivedStatus = false;
+  }
 
   @Override
   public void abandon(final RequestResponseContext<?> context) {
@@ -32,10 +40,16 @@ public class MockResponseSenderChannel implements ResponseSenderChannel {
 
   @Override
   public void respondWith(final RequestResponseContext<?> context, final ConsumerByteBuffer buffer) {
-    final ResponseParser parser = ResponseParser.parserFor(buffer.asByteBuffer());
-    response.set(parser.fullResponse());
-    final int count = respondWithCount.incrementAndGet();
-    respondWithSafely.writeUsing("count", count);
+    final ResponseParser parser = receivedStatus ?
+            ResponseParser.parserForBodyOnly(buffer.asByteBuffer()) :
+            ResponseParser.parserFor(buffer.asByteBuffer());
+
+    if (!receivedStatus) {
+      response.set(parser.fullResponse());
+    } else {
+      respondWithSafely.writeUsing("events", parser.fullResponse());
+    }
+    receivedStatus = true;
   }
 
   /**
@@ -61,8 +75,9 @@ public class MockResponseSenderChannel implements ResponseSenderChannel {
    */
   public AccessSafely expectRespondWith(int n) {
     respondWithSafely = AccessSafely.afterCompleting(n)
-        .writingWith("count", (x) -> {})
-        .readingWith("count", () -> respondWithCount.get());
+        .writingWith("events", (Response response) -> { respondWithCount.incrementAndGet(); eventsResponse.set(response); } )
+        .readingWith("count", () -> respondWithCount.get())
+        .readingWith("eventsResponse", () -> eventsResponse.get());
     return respondWithSafely;
   }
 
