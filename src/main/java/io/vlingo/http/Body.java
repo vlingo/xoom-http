@@ -12,22 +12,45 @@ import java.nio.charset.Charset;
 import java.util.Base64;
 
 /**
- * An HTTP request/response body, with concrete subclasses {@code BinaryBody} and {@code TextBody}.
+ * An HTTP request/response body, with concrete subclass {@code PlainBody} and {@code ChunkedBody}.
  */
-public class Body {
-  public enum Encoding { Base64, UTF8 };
+public interface Body {
+  enum Encoding { Base64, UTF8 };
 
-  /** An empty body. */
-  public static final Body Empty = new Body();
+  /** An empty {@code PlainBody}. */
+  static final Body Empty = new PlainBody();
 
-  /** My content. */
-  public final String content;
+  /**
+   * Answer the {@code ChunkedBody} prepared to receive chunks of content.
+   * @return ChunkedBody
+   */
+  static ChunkedBody beginChunked() {
+    return new ChunkedBody();
+  }
+
+  /**
+   * Answer a new {@code ChunkedBody} with {@code Body} content as the initial chunk.
+   * @param body the Body content to add as a chunk
+   * @return ChunkedBody
+   */
+  static ChunkedBody beginChunkedWith(final Body body) {
+    return Body.beginChunked().appendChunk(body);
+  }
+
+  /**
+   * Answer a new {@code ChunkedBody} with the {@code content} as the initial chunk.
+   * @param content the String content
+   * @return ChunkedBody
+   */
+  static ChunkedBody beginChunkedWith(final String content) {
+    return Body.beginChunked().appendChunk(content);
+  }
 
   /**
    * Answer the {@code Empty} Body.
    * @return Body
    */
-  public static Body empty() {
+  static Body empty() {
     return Empty;
   }
 
@@ -37,12 +60,12 @@ public class Body {
    * @param encoding the Encoding to use
    * @return Body
    */
-  public static Body from(final byte[] body, final Encoding encoding) {
+  static Body from(final byte[] body, final Encoding encoding) {
     switch (encoding) {
     case Base64:
-      return new Body(bytesToBase64(body));
+      return new PlainBody(bytesToBase64(body));
     case UTF8:
-      return new Body(bytesToUTF8(body));
+      return new PlainBody(bytesToUTF8(body));
     }
     throw new IllegalArgumentException("Unmapped encoding: " + encoding);
   }
@@ -53,12 +76,12 @@ public class Body {
    * @param encoding the Encoding to use
    * @return Body
    */
-  public static Body from(final ByteBuffer body, final Encoding encoding) {
+  static Body from(final ByteBuffer body, final Encoding encoding) {
     switch (encoding) {
     case Base64:
-      return new Body(bytesToBase64(bufferToArray(body)));
+      return new PlainBody(bytesToBase64(bufferToArray(body)));
     case UTF8:
-      return new Body(bytesToUTF8(bufferToArray(body)));
+      return new PlainBody(bytesToUTF8(bufferToArray(body)));
     }
     throw new IllegalArgumentException("Unmapped encoding: " + encoding);
   }
@@ -68,7 +91,7 @@ public class Body {
    * @param body the byte[] content
    * @return Body
    */
-  public static Body from(final byte[] body) {
+  static Body from(final byte[] body) {
     return from(body, Encoding.Base64);
   }
 
@@ -77,8 +100,8 @@ public class Body {
    * @param body the ByteBuffer content
    * @return Body
    */
-  public static Body from(final ByteBuffer body) {
-    return new Body(bytesToBase64(bufferToArray(body)));
+  static Body from(final ByteBuffer body) {
+    return new PlainBody(bytesToBase64(bufferToArray(body)));
   }
 
   /**
@@ -86,16 +109,36 @@ public class Body {
    * @param body the String content
    * @return Body
    */
-  public static Body from(final String body) {
-    return new Body(body);
+  static PlainBody from(final String body) {
+    return new PlainBody(body);
   }
+
+  /**
+   * Answer my content as a {@code String}.
+   * @return String
+   */
+  String content();
+
+  /**
+   * Answer whether or not this {@code Body} content is complex.
+   * A {@code PlainBody} is not complex. A {@code ChunkedBody} is complex.
+   * @return boolean
+   */
+  default boolean isComplex() { return false; }
+
+  /**
+   * Answer whether or not I have content.
+   * @return boolean
+   */
+  boolean hasContent();
+
 
   /**
    * Answer a {@code byte[]} from {@code body} bytes.
    * @param body the ByteBuffer
    * @return String
    */
-  private static byte[] bufferToArray(final ByteBuffer body) {
+  static byte[] bufferToArray(final ByteBuffer body) {
     if (body.position() > 0) {
       body.flip();
     }
@@ -110,7 +153,7 @@ public class Body {
    * @param body the byte[]
    * @return String
    */
-  private static String bytesToBase64(final byte[] body) {
+  static String bytesToBase64(final byte[] body) {
     final String encoded = Base64.getEncoder().encodeToString(body);
     return encoded;
   }
@@ -120,39 +163,8 @@ public class Body {
    * @param body the byte[]
    * @return String
    */
-  private static String bytesToUTF8(final byte[] body) {
+  static String bytesToUTF8(final byte[] body) {
     final String encoded = new String(body, Charset.forName("UTF-8"));
     return encoded;
-  }
-
-  /**
-   * Answer whether or not I have content.
-   * @return boolean
-   */
-  public boolean hasContent() {
-    return !content.isEmpty();
-  }
-
-  /**
-   * @see java.lang.Object#toString()
-   */
-  @Override
-  public String toString() {
-    return content;
-  }
-
-  /**
-   * Construct my default state with the {@code body} as content.
-   * @param body the String body content
-   */
-  Body(final String body) {
-    this.content = body;
-  }
-
-  /**
-   * Construct my default state with empty body content.
-   */
-  Body() {
-    this.content = "";
   }
 }
