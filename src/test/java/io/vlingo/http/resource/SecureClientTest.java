@@ -70,7 +70,7 @@ public class SecureClientTest {
     final Completes<Response> response = client.requestWith(request);
 
     response.andThen(r -> {
-      responseContent = r.entity.content;
+      responseContent = r.entity.content();
       access.writeUsing("response", r);
       System.out.println("1.5");
       return r;
@@ -80,7 +80,7 @@ public class SecureClientTest {
 
     final Response accessResponse = access.readFrom("response");
 
-    assertEquals(responseContent, accessResponse.entity.content);
+    assertEquals(responseContent, accessResponse.entity.content());
     System.out.println("RESPONSE CONTENT (1): " + responseContent);
     System.out.println("RESPONSE CONTENT (2): " + accessResponse);
   }
