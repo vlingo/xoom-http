@@ -26,19 +26,19 @@ public class RequestParserTest extends ResourceTestFixtures {
   @Test
   public void testThatSingleRequestParses() {
     final RequestParser parser = RequestParser.parserFor(toByteBuffer(postJohnDoeUserMessage));
-    
+
     assertTrue(parser.hasCompleted());
     assertTrue(parser.hasFullRequest());
     assertFalse(parser.isMissingContent());
     assertFalse(parser.hasMissingContentTimeExpired(System.currentTimeMillis() + 100));
-    
+
     final Request request = parser.fullRequest();
-    
+
     assertNotNull(request);
     assertTrue(request.method.isPOST());
     assertEquals("/users", request.uri.getPath());
     assertTrue(request.version.isHttp1_1());
-    assertEquals(johnDoeUserSerialized, request.body.content);
+    assertEquals(johnDoeUserSerialized, request.body.content());
   }
 
   @Test
@@ -55,14 +55,14 @@ public class RequestParserTest extends ResourceTestFixtures {
     while (parser.hasFullRequest()) {
       ++count;
       final Request request = parser.fullRequest();
-      
+
       assertNotNull(request);
       assertTrue(request.method.isPOST());
       assertEquals("/users", request.uri.getPath());
       assertTrue(request.version.isHttp1_1());
       assertTrue(bodyIterator.hasNext());
       final String body = bodyIterator.next();
-      assertEquals(body, request.body.content);
+      assertEquals(body, request.body.content());
     }
 
     assertEquals(10, count);
@@ -82,14 +82,14 @@ public class RequestParserTest extends ResourceTestFixtures {
     while (parser.hasFullRequest()) {
       ++count;
       final Request request = parser.fullRequest();
-      
+
       assertNotNull(request);
       assertTrue(request.method.isPOST());
       assertEquals("/users", request.uri.getPath());
       assertTrue(request.version.isHttp1_1());
       assertTrue(bodyIterator.hasNext());
       final String body = bodyIterator.next();
-      assertEquals(body, request.body.content);
+      assertEquals(body, request.body.content());
     }
 
     assertEquals(200, count);
@@ -98,13 +98,13 @@ public class RequestParserTest extends ResourceTestFixtures {
   @Test
   public void testThatTwoHundredRequestsParseNextSucceeds() {
     final String manyRequests = multipleRequestBuilder(200);
-    
+
     final int totalLength = manyRequests.length();
-    
+
     int alteringEndIndex = 1024;
     final RequestParser parser = RequestParser.parserFor(toByteBuffer(manyRequests.substring(0, alteringEndIndex)));
     int startingIndex = alteringEndIndex;
-    
+
     while (startingIndex < totalLength) {
       alteringEndIndex = startingIndex + 1024 + (int)(System.currentTimeMillis() % startingIndex);
       if (alteringEndIndex > totalLength) {
@@ -124,14 +124,14 @@ public class RequestParserTest extends ResourceTestFixtures {
     while (parser.hasFullRequest()) {
       ++count;
       final Request request = parser.fullRequest();
-      
+
       assertNotNull(request);
       assertTrue(request.method.isPOST());
       assertEquals("/users", request.uri.getPath());
       assertTrue(request.version.isHttp1_1());
       assertTrue(bodyIterator.hasNext());
       final String body = bodyIterator.next();
-      assertEquals(body, request.body.content);
+      assertEquals(body, request.body.content());
     }
 
     assertEquals(200, count);
@@ -139,7 +139,7 @@ public class RequestParserTest extends ResourceTestFixtures {
 
   private String multipleRequestBuilder(final int amount) {
     final StringBuilder builder = new StringBuilder();
-    
+
     for (int idx = 1; idx <= amount; ++idx) {
       final String body = (idx % 2 == 0) ? uniqueJaneDoe() : uniqueJohnDoe();
       uniqueBodies.add(body);
