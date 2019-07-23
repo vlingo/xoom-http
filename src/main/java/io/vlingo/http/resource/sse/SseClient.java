@@ -12,27 +12,27 @@ import static io.vlingo.http.Response.Status.Ok;
 import java.util.Arrays;
 import java.util.Collection;
 
+import io.vlingo.http.Header.Headers;
 import io.vlingo.http.Response;
 import io.vlingo.http.ResponseHeader;
-import io.vlingo.http.Header.Headers;
 import io.vlingo.http.resource.Configuration;
 import io.vlingo.wire.channel.RequestResponseContext;
 import io.vlingo.wire.message.BasicConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 
 public class SseClient {
+  private static final ResponseHeader CacheControl;
   private static final ResponseHeader Connection;
   private static final ResponseHeader ContentType;
-  private static final ResponseHeader TransferEncoding;
   private static final Headers<ResponseHeader> headers;
 
   static {
+    CacheControl = ResponseHeader.of(ResponseHeader.CacheControl, "no-cache");
     Connection = ResponseHeader.of(ResponseHeader.Connection, "keep-alive");
-    ContentType = ResponseHeader.of(ResponseHeader.ContentType, "text/event-stream");
-    TransferEncoding = ResponseHeader.of(ResponseHeader.TransferEncoding, "chunked");
+    ContentType = ResponseHeader.of(ResponseHeader.ContentType, "text/event-stream;charset=utf-8");
 
     headers = Headers.empty();
-    headers.and(Connection).and(ContentType).and(TransferEncoding);
+    headers.and(Connection).and(ContentType).and(CacheControl);
   }
 
   private final StringBuilder builder;
@@ -43,6 +43,8 @@ public class SseClient {
     this.context = context;
     this.builder = new StringBuilder();
     this.maxMessageSize = Configuration.instance.sizing().maxMessageSize;
+
+    sendInitialResponse();
   }
 
   public void close() {
@@ -54,11 +56,7 @@ public class SseClient {
   }
 
   public void send(final SseEvent event) {
-    final ConsumerByteBuffer buffer = BasicConsumerByteBuffer.allocate(1, maxMessageSize);
-    final String entity = event.sendable();
-    final Headers<ResponseHeader> withContentLength = headers.copy().and(ResponseHeader.contentLength(entity));
-    final Response response = Response.of(Ok, withContentLength, entity);
-    context.respondWith(response.into(buffer));
+    send(event.sendable());
   }
 
   public void send(final SseEvent... events) {
@@ -67,17 +65,17 @@ public class SseClient {
 
   public void send(final Collection<SseEvent> events) {
     final String entity = flatten(events);
-    send(entity, headers.copy().and(ResponseHeader.contentLength(entity)));
+    send(entity);
   }
 
-  public void send(final Collection<SseEvent> events, final String correlationId) {
-    final String entity = flatten(events);
-    send(entity, headers.copy().and(ResponseHeader.contentLength(entity)).and(ResponseHeader.correlationId(correlationId)));
-  }
-
-  private void send(final String entity, Headers<ResponseHeader> headers) {
+  private void send(final String entity) {
     final ConsumerByteBuffer buffer = BasicConsumerByteBuffer.allocate(1, maxMessageSize);
-    final Response response = Response.of(Ok, headers, entity);
+    context.respondWith(buffer.put(entity.getBytes()).flip());
+  }
+
+  private void sendInitialResponse() {
+    final Response response = Response.of(Ok, headers.copy());
+    final ConsumerByteBuffer buffer = BasicConsumerByteBuffer.allocate(1, maxMessageSize);
     context.respondWith(response.into(buffer));
   }
 
