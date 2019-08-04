@@ -22,10 +22,22 @@ import io.vlingo.actors.Actor;
 import io.vlingo.actors.ActorFactory;
 import io.vlingo.http.Method;
 import io.vlingo.http.resource.Action.MappedParameter;
+import io.vlingo.http.resource.feed.FeedProducer;
+import io.vlingo.http.resource.feed.FeedResource;
 import io.vlingo.http.resource.sse.SseFeed;
 import io.vlingo.http.resource.sse.SseStreamResource;
 
 public class Loader {
+
+  private static final String feedProducerNamePrefix = "feed.resource.name.";
+  private static final String feedNamePathParameter = "{feedName}";
+  private static final String feedProductIdPathParameter = "{feedProductId}";
+  private static final String feedProducerClassnameParameter = "Class<? extends Actor> feedProducerClass";
+  private static final String feedProducerProductElementsParameter = "int feedProductElements";
+  private static final String feedProducerFeed =
+          "feed(String feedName, String feedProductId, " +
+                  feedProducerClassnameParameter + ", " +
+                  feedProducerProductElementsParameter + ")";
 
   private static final String resourceNamePrefix = "resource.name.";
   private static final String ssePublisherFeedClassnameParameter = "Class<? extends Actor> feedClass";
@@ -42,6 +54,7 @@ public class Loader {
                   ssePublisherFeedIntervalParameter + ", " +
                   ssePublisherFeedDefaultId + ")";
   private static final String ssePublisherUnsubscribeTo = "unsubscribeFromStream(String streamName, String id)";
+
   private static final String staticFilesResource = "static.files";
   private static final String staticFilesResourcePool = "static.files.resource.pool";
   private static final String staticFilesResourceRoot = "static.files.resource.root";
@@ -59,6 +72,8 @@ public class Loader {
     }
 
     namedResources.putAll(loadSseResources(properties));
+
+    namedResources.putAll(loadFeedResources(properties));
 
     namedResources.putAll(loadStaticFilesResource(properties));
 
@@ -99,6 +114,43 @@ public class Loader {
       System.out.println("vlingo/http: Failed to load resource: " + resourceName + " because: " + e.getMessage());
       throw e;
     }
+  }
+
+  private static Map<String, ConfigurationResource<?>> loadFeedResources(final Properties properties) {
+    final Map<String, ConfigurationResource<?>> feedResourceActions = new HashMap<>();
+
+    for (final String feedResourceName : findResources(properties, feedProducerNamePrefix)) {
+      final String feedURI = properties.getProperty(feedResourceName);
+      final String resourceName = feedResourceName.substring(feedProducerNamePrefix.length());
+      final String feedProducerClassnameKey = "feed.resource." + resourceName + ".producer.class";
+      final String feedProducerClassname = properties.getProperty(feedProducerClassnameKey);
+      final String feedElementsKey = "feed.resource." + resourceName + ".elements";
+      final int maybeFeedElements = Integer.parseInt(properties.getProperty(feedElementsKey, "20"));
+      final int feedElements = maybeFeedElements <= 0 ? 20 : maybeFeedElements;
+      final String poolKey = "feed.resource." + resourceName + ".pool";
+      final int maybePoolSize = Integer.parseInt(properties.getProperty(poolKey, "1"));
+      final int handlerPoolSize = maybePoolSize <= 0 ? 1 : maybePoolSize;
+      final String feedRequestURI = feedURI.replaceAll(resourceName, feedNamePathParameter) + "/" + feedProductIdPathParameter;
+
+      try {
+        final Class<? extends Actor> feedClass = ActorFactory.actorClassWithProtocol(feedProducerClassname, FeedProducer.class);
+        final MappedParameter mappedParameterProducerClass = new MappedParameter("Class<? extends Actor>", feedClass);
+        final MappedParameter mappedParameterProductElements = new MappedParameter("int", feedElements);
+
+        final List<Action> actions = new ArrayList<>(1);
+        final List<MappedParameter> additionalParameters = Arrays.asList(mappedParameterProducerClass, mappedParameterProductElements);
+        actions.add(new Action(0, Method.GET.name, feedRequestURI, feedProducerFeed, null, true, additionalParameters));
+        final ConfigurationResource<?> resource = resourceFor(resourceName, FeedResource.class, handlerPoolSize, actions);
+        feedResourceActions.put(resourceName, resource);
+      } catch (Exception e) {
+        final String message = "vlingo/http: Failed to load feed resource: " + resourceName + " because: " + e.getMessage();
+        System.out.println(message);
+        e.printStackTrace();
+        throw new IllegalArgumentException(message, e);
+      }
+    }
+
+    return feedResourceActions;
   }
 
   private static Map<String, ConfigurationResource<?>> loadSseResources(final Properties properties) {
