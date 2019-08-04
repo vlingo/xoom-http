@@ -9,13 +9,13 @@
 
 package io.vlingo.http.resource;
 
+import java.net.URI;
+import java.util.concurrent.atomic.AtomicLong;
+
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.Stage;
 import io.vlingo.http.Context;
 import io.vlingo.http.Method;
-
-import java.net.URI;
-import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class Resource<T> {
   public final String name;
