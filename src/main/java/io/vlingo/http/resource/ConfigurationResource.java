@@ -136,6 +136,7 @@ public abstract class ConfigurationResource<T> extends Resource<T> {
     }
   }
 
+  @Override
   MatchResults matchWith(final Method method, final URI uri) {
     for (final Action action : actions) {
       final MatchResults matchResults = action.matchWith(method, uri);
@@ -156,6 +157,7 @@ public abstract class ConfigurationResource<T> extends Resource<T> {
     this.actions = Collections.unmodifiableList(actions);
   }
 
+  @Override
   protected ResourceHandler resourceHandlerInstance(final Stage stage) {
     try {
       for (final Constructor<?> ctor : resourceHandlerClass.getConstructors()) {
@@ -163,7 +165,7 @@ public abstract class ConfigurationResource<T> extends Resource<T> {
           return (ResourceHandler) ctor.newInstance(new Object[] { stage.world() } );
         }
       }
-      return (ResourceHandler) resourceHandlerClass.newInstance();
+      return resourceHandlerClass.newInstance();
     } catch (Exception e) {
       throw new IllegalArgumentException("The instance for resource handler '" + resourceHandlerClass.getName() + "' cannot be created.");
     }
