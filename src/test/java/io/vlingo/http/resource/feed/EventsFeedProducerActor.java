@@ -17,8 +17,18 @@ public class EventsFeedProducerActor extends Actor implements FeedProducer {
 
   @Override
   public void produceFeedFor(final FeedProductRequest request) {
-    final String body = request.feedName + ":" + request.feedProductId + ":" + "1 2 3 4 5";
-    final Response response = Response.of(Ok, body);
+    final StringBuilder body =
+            new StringBuilder()
+            .append(request.feedName)
+            .append(":")
+            .append(request.feedProductId)
+            .append(":");
+
+    for (int count = 1; count <= request.feedProductElements; ++count) {
+      body.append(count).append("\n");
+    }
+
+    final Response response = Response.of(Ok, body.toString());
     request.context.completes.with(response);
   }
 }
