@@ -47,7 +47,7 @@ public class FeedResourceTest {
 
   @Test
   public void testThatFeedResourceFeeds() {
-    final String request = requestFor(FeedURI + "/1");
+    final String request = requestFor(FeedURI + "/100");
 
     client.requestWith(toByteBuffer(request));
 
@@ -62,7 +62,7 @@ public class FeedResourceTest {
 
     assertEquals(1, progress.consumeCount.get());
     assertEquals(Response.Status.Ok, contentResponse.status);
-    assertEquals("events:1:1 2 3 4 5", contentResponse.entity.content());
+    assertEquals("events:100:1\n2\n3\n4\n5\n", contentResponse.entity.content());
   }
 
   @Before
