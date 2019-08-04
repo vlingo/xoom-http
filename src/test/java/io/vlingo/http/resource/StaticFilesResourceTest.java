@@ -149,6 +149,11 @@ public class StaticFilesResourceTest {
     properties.setProperty("static.files.resource.root", contentRoot);
     properties.setProperty("static.files.resource.subpaths", "[/, /css, /js, /views]");
 
+    properties.setProperty("feed.producer.name.events", "/feeds/events");
+    properties.setProperty("feed.producer.events.class", "io.vlingo.http.sample.user.EventsFeedProducerActor");
+    properties.setProperty("feed.producer.events.payload", "20");
+    properties.setProperty("feed.producer.events.pool", "10");
+
     properties.setProperty("sse.stream.name.all", "/eventstreams/all");
     properties.setProperty("sse.stream.all.feed.class", "io.vlingo.http.sample.user.AllSseFeedActor");
     properties.setProperty("sse.stream.all.feed.payload", "50");
