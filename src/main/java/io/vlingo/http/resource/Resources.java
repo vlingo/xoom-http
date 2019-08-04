@@ -7,15 +7,15 @@
 
 package io.vlingo.http.resource;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import io.vlingo.actors.Logger;
 import io.vlingo.http.Context;
 import io.vlingo.http.Response;
 import io.vlingo.http.resource.Action.MappedParameters;
 import io.vlingo.http.resource.Action.MatchResults;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Resources {
   final Map<String, Resource<?>> namedResources;
