@@ -49,7 +49,7 @@ public class TestResponseConsumer {
     access.readingWith("responseCount", () -> responseCount.get());
     access.readingWith("responseClientCounts", () -> clientCounts);
 
-    access.writingWith("unknownResponseCount", (Integer increment) -> unknownResponseCount.set(unknownResponseCount.get() + increment));
+    access.writingWith("unknownResponseCount", (Integer increment) -> unknownResponseCount.incrementAndGet());
     access.readingWith("unknownResponseCount", () -> unknownResponseCount.get());
 
     access.readingWith("totalAllResponseCount", () -> responseCount.get() + unknownResponseCount.get());
