@@ -113,7 +113,7 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
   @Test
   public void executeWithRequestAndMappedParameters() {
     final Request request = Request.has(Method.GET)
-      .and(URI.create("/posts/my-post/comments/my-comments"))
+      .and(URI.create("/posts/my-post/comments/my-comment/users/my-user"))
       .and(Version.Http1_1);
     final Action.MappedParameters mappedParameters =
       new Action.MappedParameters(1, Method.GET, "ignored", Arrays.asList(
@@ -123,7 +123,7 @@ public class RequestHandler5Test extends RequestHandlerTestBase {
       );
     final RequestHandler5<String, String, String, Integer, Integer> handler = createRequestHandler(
       Method.GET,
-      "/posts/{postId}/comment/{commentId}/user/{userId}",
+      "/posts/{postId}/comments/{commentId}/users/{userId}",
       path(0, String.class),
       path(1, String.class),
       path(2, String.class),
