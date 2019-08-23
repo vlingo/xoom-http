@@ -7,12 +7,18 @@
 
 package io.vlingo.http.resource;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.World;
 import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
 import io.vlingo.common.Scheduled;
 import io.vlingo.http.Context;
+import io.vlingo.http.Filters;
 import io.vlingo.http.Header;
 import io.vlingo.http.Request;
 import io.vlingo.http.RequestHeader;
@@ -27,11 +33,6 @@ import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
 import io.vlingo.wire.message.BasicConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 public class ServerActor extends Actor implements Server, RequestChannelConsumerProvider, Scheduled<Object> {
   static final String ChannelName = "server-request-response-channel";
   static final String ServerName = "vlingo-http-server";
@@ -39,6 +40,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   private final ServerRequestResponseChannel channel;
   private final Dispatcher[] dispatcherPool;
   private int dispatcherPoolIndex;
+  private final Filters filters;
   private final int maxMessageSize;
   private final Map<String,RequestResponseHttpContext> requestsMissingContent;
   private final long requestMissingContentTimeout;
@@ -47,10 +49,12 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
   public ServerActor(
           final Resources resources,
+          final Filters filters,
           final int port,
           final Sizing sizing,
           final Timing timing)
   throws Exception {
+    this.filters = filters;
     this.dispatcherPoolIndex = 0;
     this.world = stage().world();
     this.requestsMissingContent = new HashMap<>();
@@ -61,7 +65,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
       this.dispatcherPool = new Dispatcher[sizing.dispatcherPoolSize];
 
-      for (int idx = 0; idx < sizing.dispatcherPoolSize; ++idx) { 
+      for (int idx = 0; idx < sizing.dispatcherPoolSize; ++idx) {
         dispatcherPool[idx] = Dispatcher.startWith(stage(), resources);
       }
 
@@ -69,7 +73,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
               ServerRequestResponseChannel.start(
                       stage(),
                       stage().world().addressFactory().withHighId(ChannelName),
-                      "queueMailbox",
+                      "arrayQueueMailbox",
                       this,
                       port,
                       ChannelName,
@@ -146,6 +150,8 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       dispatcher.stop();
     }
 
+    filters.stop();
+
     logger().info("Server stopped.");
 
     super.stop();
@@ -205,7 +211,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     @Override
     public void closeWith(final RequestResponseContext<?> requestResponseContext, final Object data) {
       if (data != null) {
-        final Request request = (Request) data;
+        final Request request = filters.process((Request) data);
         final ResponseCompletes completes = new ResponseCompletes(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
         final Context context = new Context(requestResponseContext, request, world.completesFor(completes));
         dispatcher.dispatchFor(context);
@@ -230,7 +236,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         Context context = null;
 
         while (parser.hasFullRequest()) {
-          final Request request = parser.fullRequest();
+          final Request request = filters.process(parser.fullRequest());
           final ResponseCompletes completes = new ResponseCompletes(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
           context = new Context(requestResponseContext, request, world.completesFor(completes));
           dispatcher.dispatchFor(context);
@@ -263,7 +269,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   private class RequestResponseHttpContext {
     final Context httpContext;
     final RequestResponseContext<?> requestResponseContext;
-    
+
     RequestResponseHttpContext(final RequestResponseContext<?> requestResponseContext, final Context httpContext) {
       this.requestResponseContext = requestResponseContext;
       this.httpContext = httpContext;
@@ -291,8 +297,9 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     @Override
     @SuppressWarnings("unchecked")
     public <O> Completes<O> with(final O response) {
+      final Response filtered = filters.process((Response) response);
       final ConsumerByteBuffer buffer = BasicConsumerByteBuffer.allocate(0, maxMessageSize);
-      requestResponseContext.respondWith(((Response) response).include(correlationId).into(buffer));
+      requestResponseContext.respondWith((filtered).include(correlationId).into(buffer));
       return (Completes<O>) this;
     }
   }
