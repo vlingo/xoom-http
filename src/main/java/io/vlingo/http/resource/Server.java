@@ -11,6 +11,7 @@ import io.vlingo.actors.Definition;
 import io.vlingo.actors.Stage;
 import io.vlingo.actors.Stoppable;
 import io.vlingo.common.Completes;
+import io.vlingo.http.Filters;
 import io.vlingo.http.resource.Configuration.Sizing;
 import io.vlingo.http.resource.Configuration.Timing;
 
@@ -22,9 +23,9 @@ public interface Server extends Stoppable {
 
   public static Server startWith(final Stage stage, java.util.Properties properties) {
     final Configuration configuration = Configuration.defineWith(properties);
-    
+
     final Resources resources = Loader.loadResources(properties);
-    
+
     return startWith(
             stage,
             resources,
@@ -39,13 +40,24 @@ public interface Server extends Stoppable {
           final int port,
           final Sizing sizing,
           final Timing timing) {
-    
+
+    return startWith(stage, resources, Filters.none(), port, sizing, timing);
+  }
+
+  public static Server startWith(
+          final Stage stage,
+          final Resources resources,
+          final Filters filters,
+          final int port,
+          final Sizing sizing,
+          final Timing timing) {
+
     final Server server = stage.actorFor(
             Server.class,
             Definition.has(
                     ServerActor.class,
-                    Definition.parameters(resources, port, sizing, timing),
-                    "queueMailbox",
+                    Definition.parameters(resources, filters, port, sizing, timing),
+                    "arrayQueueMailbox",
                     ServerActor.ServerName),
             stage.world().addressFactory().withHighId(),
             stage.world().defaultLogger());
