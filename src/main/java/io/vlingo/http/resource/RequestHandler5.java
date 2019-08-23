@@ -1,13 +1,21 @@
-package io.vlingo.http.resource;
+// Copyright © 2012-2018 Vaughn Vernon. All rights reserved.
+//
+// This Source Code Form is subject to the terms of the
+// Mozilla Public License, v. 2.0. If a copy of the MPL
+// was not distributed with this file, You can obtain
+// one at https://mozilla.org/MPL/2.0/.
 
-import io.vlingo.actors.Logger;
-import io.vlingo.common.Completes;
-import io.vlingo.http.Method;
-import io.vlingo.http.Request;
-import io.vlingo.http.Response;
+package io.vlingo.http.resource;
 
 import java.util.Arrays;
 import java.util.function.Supplier;
+
+import io.vlingo.actors.Logger;
+import io.vlingo.common.Completes;
+import io.vlingo.http.Header;
+import io.vlingo.http.Method;
+import io.vlingo.http.Request;
+import io.vlingo.http.Response;
 
 public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
   final ParameterResolver<T> resolverParam1;
@@ -69,7 +77,7 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
 
     return runParamExecutor(executor, () -> RequestExecutor.executeRequest(exec, errorHandler, logger));
   }
-  
+
   public RequestHandler5<T, R, U, I, J> handle(final Handler5<T, R, U, I, J> handler) {
     executor = ((request, param1, param2, param3, param4, param5, mediaTypeMapper1, errorHandler1, logger1) ->
       RequestExecutor.executeRequest(() -> handler.execute(param1, param2, param3, param4, param5), errorHandler1, logger1));
@@ -105,4 +113,38 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
     return runParamExecutor(executor, () -> RequestExecutor.executeRequest(exec, errorHandler, logger));
   }
 
+
+  // region FluentAPI
+  public <K> RequestHandler6<T, R, U, I, J, K> param(final Class<K> paramClass) {
+    return new RequestHandler6<>(method, path, resolverParam1, resolverParam2, resolverParam3, resolverParam4, resolverParam5,
+      ParameterResolver.path(5, paramClass),
+      errorHandler,
+      mediaTypeMapper);
+  }
+
+  public <K> RequestHandler6<T, R, U, I, J, K> body(final Class<K> bodyClass) {
+    return new RequestHandler6<>(method, path, resolverParam1, resolverParam2, resolverParam3, resolverParam4, resolverParam5,
+      ParameterResolver.body(bodyClass, mediaTypeMapper),
+      errorHandler,
+      mediaTypeMapper);
+  }
+
+  public RequestHandler6<T, R, U, I, J, String> query(final String name) {
+    return query(name, String.class);
+  }
+
+  public <K> RequestHandler6<T, R, U, I, J, K> query(final String name, final Class<K> queryClass) {
+    return new RequestHandler6<>(method, path, resolverParam1, resolverParam2, resolverParam3, resolverParam4, resolverParam5,
+      ParameterResolver.query(name, queryClass),
+      errorHandler,
+      mediaTypeMapper);
+  }
+
+  public RequestHandler6<T, R, U, I, J, Header> header(final String name) {
+    return new RequestHandler6<>(method, path, resolverParam1, resolverParam2, resolverParam3, resolverParam4, resolverParam5,
+      ParameterResolver.header(name),
+      errorHandler,
+      mediaTypeMapper);
+  }
+  // endregion
 }
