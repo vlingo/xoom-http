@@ -2,6 +2,8 @@
 
 [![Javadocs](http://javadoc.io/badge/io.vlingo/vlingo-http.svg?color=brightgreen)](http://javadoc.io/doc/io.vlingo/vlingo-http) [![Build Status](https://travis-ci.org/vlingo/vlingo-http.svg?branch=master)](https://travis-ci.org/vlingo/vlingo-http) [ ![Download](https://api.bintray.com/packages/vlingo/vlingo-platform-java/vlingo-http/images/download.svg) ](https://bintray.com/vlingo/vlingo-platform-java/vlingo-http/_latestVersion) [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/vlingo-platform-java/http)
 
+The vlingo/PLATFORM reactive, scalable, and resilient HTTP server supporting RESTful services running on vlingo/cluster and vlingo/actors.
+
 ### Bintray
 
 ```xml
