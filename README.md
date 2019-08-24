@@ -37,10 +37,11 @@ repositories {
 
 Reactive, scalable, and resilient HTTP servers and RESTful services running on vlingo/cluster and vlingo/actors.
 
-1. The essential features are completed
+1. Feature complete
   * Fully actor-based asynchronous requests and responses.
-  * The request handling is resource based.
+  * Request handling is resource based.
   * Requests that require message body content are auto-mapped to simple Java objects.
+  * Supports Media Types, Filters, Server-Sent Events
 2. To run the Server:
   * [Use Server#startWith() to start the Server actor](https://github.com/vlingo/vlingo-http/blob/master/src/main/java/io/vlingo/http/resource/Server.java)
   * The light-qualityFactor Server is meant to be run inside vlingo/cluster nodes the require RESTful HTTP support.
