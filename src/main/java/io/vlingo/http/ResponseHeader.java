@@ -119,14 +119,22 @@ public class ResponseHeader extends Header {
     return new ResponseHeader(name, String.valueOf(value));
   }
 
-  int ifContentLength() {
+  public int ifContentLength() {
     if (name.equalsIgnoreCase(ContentLength)) {
       return Integer.parseInt(value);
     }
     return -1;
   }
 
-  boolean isTransferEncodingChunked() {
+  public boolean isKeepAliveConnection() {
+    return name.equalsIgnoreCase(Connection) && value.equalsIgnoreCase("keep-alive");
+  }
+
+  public boolean isStreamContentType() {
+    return name.equalsIgnoreCase(ContentType) && value.toLowerCase().contains("-stream");
+  }
+
+  public boolean isTransferEncodingChunked() {
     return name.equalsIgnoreCase(TransferEncoding) && value.equalsIgnoreCase("chunked");
   }
 
