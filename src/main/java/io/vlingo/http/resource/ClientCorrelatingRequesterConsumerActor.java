@@ -7,6 +7,10 @@
 
 package io.vlingo.http.resource;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.CompletesEventually;
 import io.vlingo.common.Completes;
@@ -21,10 +25,6 @@ import io.vlingo.wire.channel.ResponseChannelConsumer;
 import io.vlingo.wire.message.ByteBufferAllocator;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 import io.vlingo.wire.message.Converters;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * The client requester-consumer that handles request-responses using {@code X-Correlation-ID},
@@ -61,11 +61,14 @@ public class ClientCorrelatingRequesterConsumerActor extends Actor implements Cl
 
     while (state.parser.hasFullResponse()) {
       final Response response = state.parser.fullResponse();
-      final ResponseHeader correlationId = response.headers.headerOf(ResponseHeader.XCorrelationID);
+      final ResponseHeader correlationId = response.headers.headerOfOrDefault(ResponseHeader.XCorrelationID, state.correlationId);
       if (correlationId == null) {
         logger().warn("Client Consumer: Cannot complete response because no correlation id.");
         state.configuration.consumerOfUnknownResponses.consume(response);
       } else {
+        if (state.parser.isKeepAliveConnection() && state.parser.isStreamContentType()) {
+          state.correlationId = correlationId;
+        }
         final CompletesEventually completes = state.configuration.keepAlive ?
                 completables.get(correlationId.value) :
                 completables.remove(correlationId.value);
