@@ -15,6 +15,7 @@ import io.vlingo.common.Completes;
 import io.vlingo.common.Scheduled;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
+import io.vlingo.http.ResponseHeader;
 import io.vlingo.http.ResponseParser;
 import io.vlingo.http.resource.Client.Configuration;
 import io.vlingo.wire.channel.ResponseChannelConsumer;
@@ -47,8 +48,10 @@ public interface ClientConsumer extends ResponseChannelConsumer, Scheduled<Objec
     final ByteBuffer buffer;
     final ClientRequestResponseChannel channel;
     final Configuration configuration;
-    ResponseParser parser;
     final Cancellable probe;
+
+    ResponseHeader correlationId;
+    ResponseParser parser;
 
     State(
             final Configuration configuration,
