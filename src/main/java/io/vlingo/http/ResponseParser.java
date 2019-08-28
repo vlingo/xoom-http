@@ -44,8 +44,16 @@ public class ResponseParser {
     return virtualStateParser.hasMissingContentTimeExpired(timeLimit);
   }
 
+  public boolean isKeepAliveConnection() {
+    return virtualStateParser.isKeepAliveConnection();
+  }
+
   public boolean isMissingContent() {
     return virtualStateParser.isMissingContent();
+  }
+
+  public boolean isStreamContentType() {
+    return virtualStateParser.isStreamContentType();
   }
 
   public void parseNext(final ByteBuffer responseContent) {
@@ -80,15 +88,17 @@ public class ResponseParser {
     // DO NOT RESET: (1) headers, (2) fullResponses
 
     private Body body;
-    private final boolean bodyOnly;
+    private boolean bodyOnly;
     private int contentLength;
     private boolean continuation;
     private Step currentStep;
     private List<Response> fullResponses;
     private ListIterator<Response> fullResponsesIterator;
     private Headers<ResponseHeader> headers;
+    private boolean keepAlive;
     private long outOfContentTime;
     private Response.Status status;
+    private boolean stream;
     private Version version;
 
     VirtualStateParser() {
@@ -102,6 +112,9 @@ public class ResponseParser {
       this.responseText = "";
       this.headers = new Headers<>(2);
       this.fullResponses = new ArrayList<>(2);
+
+      this.keepAlive = false;
+      this.stream = false;
 
       reset();
     }
@@ -160,8 +173,16 @@ public class ResponseParser {
       return this;
     }
 
+    boolean isKeepAliveConnection() {
+      return keepAlive;
+    }
+
     boolean isMissingContent() {
       return outOfContentTime > 0;
+    }
+
+    boolean isStreamContentType() {
+      return stream;
     }
 
     VirtualStateParser parse() {
@@ -193,6 +214,9 @@ public class ResponseParser {
           throw t;
         }
       }
+
+      prepareForStream();
+
       return this;
     }
 
@@ -345,6 +369,11 @@ public class ResponseParser {
             transferEncodingChunked = true;
           }
         }
+        if (!keepAlive && header.isKeepAliveConnection()) {
+          this.keepAlive = true;
+        } else if (!stream && header.isStreamContentType()) {
+          this.stream = true;
+        }
       }
       nextStep();
     }
@@ -368,6 +397,14 @@ public class ResponseParser {
         nextStep();
       } catch (Throwable e) {
         throw new IllegalArgumentException("Response status line parsing exception: " + e.getMessage(), e);
+      }
+    }
+
+    private void prepareForStream() {
+      if (!bodyOnly) {
+        if (keepAlive && stream) {
+          bodyOnly = true;
+        }
       }
     }
 
