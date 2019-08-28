@@ -62,7 +62,7 @@ public class SecureClientTest {
     final Request request =
             Request
               .has(GET)
-              .and(URI.create("/0636eab0-1cd0-42b7-a9ea-70cc32ce14bf"))
+              .and(URI.create("/0275a8ab-503a-47d4-a045-834bce8767d0"))
               .and(host("webhook.site"))
               .and(connection("close"))
               .and(contentType("text/html"));
