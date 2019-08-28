@@ -39,12 +39,17 @@ public class SseClient {
   private final RequestResponseContext<?> context;
   private final int maxMessageSize;
 
-  public SseClient(final RequestResponseContext<?> context) {
+  public SseClient(final RequestResponseContext<?> context, final Headers<ResponseHeader> extraHeaders) {
     this.context = context;
+    headers.and(extraHeaders);
     this.builder = new StringBuilder();
     this.maxMessageSize = Configuration.instance.sizing().maxMessageSize;
 
     sendInitialResponse();
+  }
+
+  public SseClient(final RequestResponseContext<?> context) {
+    this(context, Headers.empty());
   }
 
   public void close() {
