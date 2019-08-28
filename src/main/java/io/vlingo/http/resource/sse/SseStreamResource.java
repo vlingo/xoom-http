@@ -7,18 +7,9 @@
 
 package io.vlingo.http.resource.sse;
 
-import io.vlingo.actors.Actor;
-import io.vlingo.actors.Definition;
-import io.vlingo.actors.Stoppable;
-import io.vlingo.actors.World;
-import io.vlingo.common.Cancellable;
-import io.vlingo.common.Scheduled;
-import io.vlingo.http.Method;
-import io.vlingo.http.Request;
-import io.vlingo.http.RequestHeader;
-import io.vlingo.http.Response;
-import io.vlingo.http.resource.ResourceHandler;
-import io.vlingo.wire.channel.RequestResponseContext;
+import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.ResponseHeader.correlationId;
+import static io.vlingo.http.ResponseHeader.headers;
 
 import java.net.URI;
 import java.util.Collection;
@@ -26,9 +17,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.vlingo.http.Response.Status.Ok;
-import static io.vlingo.http.ResponseHeader.correlationId;
-import static io.vlingo.http.ResponseHeader.headers;
+import io.vlingo.actors.Actor;
+import io.vlingo.actors.Definition;
+import io.vlingo.actors.Stoppable;
+import io.vlingo.actors.World;
+import io.vlingo.common.Cancellable;
+import io.vlingo.common.Scheduled;
+import io.vlingo.http.Header.Headers;
+import io.vlingo.http.Method;
+import io.vlingo.http.Request;
+import io.vlingo.http.RequestHeader;
+import io.vlingo.http.Response;
+import io.vlingo.http.ResponseHeader;
+import io.vlingo.http.resource.ResourceHandler;
+import io.vlingo.wire.channel.RequestResponseContext;
 
 public class SseStreamResource extends ResourceHandler {
   private static final Map<String,SsePublisher> publishers = new ConcurrentHashMap<>();
@@ -44,24 +46,23 @@ public class SseStreamResource extends ResourceHandler {
     clientContext.whenClosing(unsubscribeRequest());
 
     final String correlationId = context().request().headerValueOr(RequestHeader.XCorrelationID, "");
+    final Headers<ResponseHeader> headers = headers(correlationId(correlationId));
 
     final SseSubscriber subscriber =
             new SseSubscriber(
                     streamName,
-                    new SseClient(clientContext),
+                    new SseClient(clientContext, headers),
                     correlationId,
                     context().request().headerValueOr(RequestHeader.LastEventID, ""));
 
     publisherFor(streamName, feedClass, feedPayload, feedInterval, feedDefaultId).subscribe(subscriber);
-
-    completes().with(Response.of(Ok, headers(correlationId(correlationId))));
   }
 
   public void unsubscribeFromStream(final String streamName, final String id) {
     final SsePublisher publisher = publishers.get(streamName);
     if (publisher != null) {
       publisher.unsubscribe(new SseSubscriber(streamName, new SseClient(context().clientContext())));
-    }    
+    }
 
     completes().with(Response.of(Ok));
   }
@@ -115,10 +116,12 @@ public class SseStreamResource extends ResourceHandler {
     // SsePublisher
     //=====================================
 
+    @Override
     public void subscribe(final SseSubscriber subscriber) {
       subscribers.put(subscriber.id(), subscriber);
     }
 
+    @Override
     public void unsubscribe(final SseSubscriber subscriber) {
       subscriber.close();
       subscribers.remove(subscriber.id());
