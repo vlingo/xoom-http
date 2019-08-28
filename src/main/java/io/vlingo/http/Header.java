@@ -17,7 +17,7 @@ import java.util.function.UnaryOperator;
 public class Header {
   public final String name;
   public final String value;
-  
+
   protected Header(final String name, final String value) {
     this.name = name;
     this.value = value;
@@ -50,7 +50,7 @@ public class Header {
 
   public static class Headers<T extends Header> extends ArrayList<T> implements List<T> {
     private static final long serialVersionUID = 1L;
-    
+
     public static Headers<RequestHeader> of(final RequestHeader... requestHeaders) {
       final Headers<RequestHeader> headers = new Headers<>(requestHeaders.length);
       for (final RequestHeader requestHeader : requestHeaders) {
@@ -68,6 +68,10 @@ public class Header {
     }
 
     public T headerOf(final String name) {
+      return headerOfOrDefault(name, null);
+    }
+
+    public T headerOfOrDefault(final String name, final T defaultHeader) {
       final Iterator<T> iter = this.iterator();
       while (iter.hasNext()) {
         final T header = iter.next();
@@ -75,25 +79,25 @@ public class Header {
           return header;
         }
       }
-      return null;
+      return defaultHeader;
     }
 
     public static <T extends Header> Headers<T> empty() {
       return new Headers<T>(0);
     }
-    
+
     @SuppressWarnings("unchecked")
     public Headers<T> and(final Headers<? extends Header> headers) {
       super.addAll((Collection<T>) headers);
       return this;
     }
-    
+
     @SuppressWarnings("unchecked")
     public Headers<T> and(final Header header) {
       add((T) header);
       return this;
     }
-    
+
     @SuppressWarnings("unchecked")
     public Headers<T> and(final String name, final String value) {
       add((T) new Header(name, value));
