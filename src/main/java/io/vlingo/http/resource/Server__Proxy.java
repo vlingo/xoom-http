@@ -43,7 +43,7 @@ public class Server__Proxy implements Server {
     if (!actor.isStopped()) {
       final Consumer<Server> consumer = (actor) -> actor.shutDown();
       final Completes<Boolean> completes = new BasicCompletes<>(actor.scheduler());
-      if (mailbox.isPreallocated()) { mailbox.send(actor, Server.class, consumer, completes, shutDownRepresentation1); }
+      if (mailbox.isPreallocated()) { mailbox.send(actor, Server.class, consumer, Returns.value(completes), shutDownRepresentation1); }
       else { mailbox.send(new LocalMessage<Server>(actor, Server.class, consumer, Returns.value(completes), shutDownRepresentation1)); }
       return completes;
     } else {
@@ -57,7 +57,7 @@ public class Server__Proxy implements Server {
     if (!actor.isStopped()) {
       final Consumer<Server> consumer = (actor) -> actor.startUp();
       final Completes<Boolean> completes = new BasicCompletes<>(actor.scheduler());
-      if (mailbox.isPreallocated()) { mailbox.send(actor, Server.class, consumer, completes, startUpRepresentation2); }
+      if (mailbox.isPreallocated()) { mailbox.send(actor, Server.class, consumer, Returns.value(completes), startUpRepresentation2); }
       else { mailbox.send(new LocalMessage<Server>(actor, Server.class, consumer, Returns.value(completes), startUpRepresentation2)); }
       return completes;
     } else {

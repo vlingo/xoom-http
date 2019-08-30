@@ -40,7 +40,7 @@ public class ClientConsumer__Proxy implements ClientConsumer {
     if (!actor.isStopped()) {
       final Consumer<ClientConsumer> consumer = (actor) -> actor.requestWith(arg0, arg1);
       final Completes<Response> completes = new BasicCompletes<>(actor.scheduler());
-      if (mailbox.isPreallocated()) { mailbox.send(actor, ClientConsumer.class, consumer, completes, requestWithRepresentation1); }
+      if (mailbox.isPreallocated()) { mailbox.send(actor, ClientConsumer.class, consumer, Returns.value(completes), requestWithRepresentation1); }
       else { mailbox.send(new LocalMessage<ClientConsumer>(actor, ClientConsumer.class, consumer, Returns.value(completes), requestWithRepresentation1)); }
       return completes;
     } else {
