@@ -13,6 +13,7 @@ import io.vlingo.actors.Actor;
 import io.vlingo.actors.DeadLetter;
 import io.vlingo.actors.LocalMessage;
 import io.vlingo.actors.Mailbox;
+import io.vlingo.actors.Returns;
 import io.vlingo.actors.Stoppable;
 import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
@@ -43,7 +44,7 @@ public class Server__Proxy implements Server {
       final Consumer<Server> consumer = (actor) -> actor.shutDown();
       final Completes<Boolean> completes = new BasicCompletes<>(actor.scheduler());
       if (mailbox.isPreallocated()) { mailbox.send(actor, Server.class, consumer, completes, shutDownRepresentation1); }
-      else { mailbox.send(new LocalMessage<Server>(actor, Server.class, consumer, completes, shutDownRepresentation1)); }
+      else { mailbox.send(new LocalMessage<Server>(actor, Server.class, consumer, Returns.value(completes), shutDownRepresentation1)); }
       return completes;
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, shutDownRepresentation1));
@@ -57,7 +58,7 @@ public class Server__Proxy implements Server {
       final Consumer<Server> consumer = (actor) -> actor.startUp();
       final Completes<Boolean> completes = new BasicCompletes<>(actor.scheduler());
       if (mailbox.isPreallocated()) { mailbox.send(actor, Server.class, consumer, completes, startUpRepresentation2); }
-      else { mailbox.send(new LocalMessage<Server>(actor, Server.class, consumer, completes, startUpRepresentation2)); }
+      else { mailbox.send(new LocalMessage<Server>(actor, Server.class, consumer, Returns.value(completes), startUpRepresentation2)); }
       return completes;
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, startUpRepresentation2));

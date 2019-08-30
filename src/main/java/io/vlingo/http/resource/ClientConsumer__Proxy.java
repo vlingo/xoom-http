@@ -13,6 +13,7 @@ import io.vlingo.actors.Actor;
 import io.vlingo.actors.DeadLetter;
 import io.vlingo.actors.LocalMessage;
 import io.vlingo.actors.Mailbox;
+import io.vlingo.actors.Returns;
 import io.vlingo.actors.Stoppable;
 import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
@@ -40,7 +41,7 @@ public class ClientConsumer__Proxy implements ClientConsumer {
       final Consumer<ClientConsumer> consumer = (actor) -> actor.requestWith(arg0, arg1);
       final Completes<Response> completes = new BasicCompletes<>(actor.scheduler());
       if (mailbox.isPreallocated()) { mailbox.send(actor, ClientConsumer.class, consumer, completes, requestWithRepresentation1); }
-      else { mailbox.send(new LocalMessage<ClientConsumer>(actor, ClientConsumer.class, consumer, completes, requestWithRepresentation1)); }
+      else { mailbox.send(new LocalMessage<ClientConsumer>(actor, ClientConsumer.class, consumer, Returns.value(completes), requestWithRepresentation1)); }
       return completes;
     } else {
       actor.deadLetters().failedDelivery(new DeadLetter(actor, requestWithRepresentation1));
