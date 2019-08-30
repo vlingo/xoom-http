@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.CompletesEventually;
+import io.vlingo.actors.Returns;
 import io.vlingo.common.Completes;
 import io.vlingo.common.Scheduled;
 import io.vlingo.http.Request;
@@ -108,7 +109,7 @@ public class ClientCorrelatingRequesterConsumerActor extends Actor implements Cl
       readyRequest = request;
     }
 
-    completables.put(correlationId.value, stage().world().completesFor(completes));
+    completables.put(correlationId.value, stage().world().completesFor(Returns.value(completes)));
 
     state.buffer.clear();
     state.buffer.put(Converters.textToBytes(readyRequest.toString()));
