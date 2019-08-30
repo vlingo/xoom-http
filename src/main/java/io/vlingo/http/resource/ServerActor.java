@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.vlingo.actors.Actor;
+import io.vlingo.actors.Returns;
 import io.vlingo.actors.World;
 import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
@@ -213,7 +214,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       if (data != null) {
         final Request request = filters.process((Request) data);
         final ResponseCompletes completes = new ResponseCompletes(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
-        final Context context = new Context(requestResponseContext, request, world.completesFor(completes));
+        final Context context = new Context(requestResponseContext, request, world.completesFor(Returns.value(completes)));
         dispatcher.dispatchFor(context);
       }
     }
@@ -238,7 +239,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         while (parser.hasFullRequest()) {
           final Request request = filters.process(parser.fullRequest());
           final ResponseCompletes completes = new ResponseCompletes(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
-          context = new Context(requestResponseContext, request, world.completesFor(completes));
+          context = new Context(requestResponseContext, request, world.completesFor(Returns.value(completes)));
           dispatcher.dispatchFor(context);
           if (wasIncompleteContent) {
             requestsMissingContent.remove(requestResponseContext.id());
@@ -248,7 +249,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         if (parser.isMissingContent() && !requestsMissingContent.containsKey(requestResponseContext.id())) {
           if (context == null) {
             final ResponseCompletes completes = new ResponseCompletes(requestResponseContext);
-            context = new Context(world.completesFor(completes));
+            context = new Context(world.completesFor(Returns.value(completes)));
           }
           requestsMissingContent.put(requestResponseContext.id(), new RequestResponseHttpContext(requestResponseContext, context));
         }
