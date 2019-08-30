@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.CompletesEventually;
 import io.vlingo.actors.Definition;
+import io.vlingo.actors.Returns;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Request;
 import io.vlingo.http.RequestHeader;
@@ -99,7 +100,7 @@ public class ClientConsumerWorkerActor extends Actor implements ClientConsumer {
    */
   @Override
   public Completes<Response> requestWith(final Request request, final Completes<Response> completes) {
-    completesEventually = stage().world().completesFor(completes);
+    completesEventually = stage().world().completesFor(Returns.value(completes));
 
     if (testId != EmptyTestId) {
       request.headers.add(RequestHeader.of(Client.ClientIdCustomHeader, testId));
