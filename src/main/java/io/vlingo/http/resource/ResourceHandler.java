@@ -41,11 +41,16 @@ public abstract class ResourceHandler {
     return stage.world().defaultLogger();
   }
 
-  public Scheduler scheduler() {
+  protected Scheduler scheduler() {
     return stage.scheduler();
   }
 
   protected Stage stage() {
     return stage;
+  }
+
+  public void __internal__test_set_up(final Context context, final Stage stage) {
+    this.context = context;
+    this.stage = stage;
   }
 }
