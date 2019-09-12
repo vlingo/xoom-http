@@ -57,7 +57,7 @@ public interface Server extends Stoppable {
             Definition.has(
                     ServerActor.class,
                     Definition.parameters(resources, filters, port, sizing, timing),
-                    "arrayQueueMailbox",
+                    "queueMailbox",
                     ServerActor.ServerName),
             stage.world().addressFactory().withHighId(),
             stage.world().defaultLogger());

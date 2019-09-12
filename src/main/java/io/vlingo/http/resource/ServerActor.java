@@ -74,7 +74,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
               ServerRequestResponseChannel.start(
                       stage(),
                       stage().world().addressFactory().withHighId(ChannelName),
-                      "arrayQueueMailbox",
+                      "queueMailbox",
                       this,
                       port,
                       ChannelName,
