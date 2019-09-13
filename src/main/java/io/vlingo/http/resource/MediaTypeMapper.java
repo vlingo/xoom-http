@@ -20,7 +20,7 @@ public class MediaTypeMapper {
     throw new MediaTypeNotSupportedException(contentMediaType.toString());
   }
 
-  public <T> String from(final T data, final ContentMediaType contentMediaType, final Class<T> type) {
+  public <T> String from(final T data, final ContentMediaType contentMediaType) {
     final ContentMediaType baseType = contentMediaType.toBaseType();
     if (mappersByContentType.containsKey(baseType)) {
       return  mappersByContentType.get(baseType).from(data);

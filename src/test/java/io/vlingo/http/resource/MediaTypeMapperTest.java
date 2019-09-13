@@ -41,14 +41,14 @@ public class MediaTypeMapperTest {
       .addMapperFor(ContentMediaType.Json(), testMapper)
       .build();
 
-    assertEquals(mappedToString, mediaTypeMapper.from(new Object(), ContentMediaType.Json(), Object.class));
+    assertEquals(mappedToString, mediaTypeMapper.from(new Object(), ContentMediaType.Json()));
   }
 
   @Test(expected = MediaTypeNotSupportedException.class)
   public void exception_thrown_for_invalid_mapper() {
     MediaTypeMapper mediaTypeMapper = new MediaTypeMapper.Builder()
       .build();
-    mediaTypeMapper.from(new Object(), ContentMediaType.Json(), Object.class);
+    mediaTypeMapper.from(new Object(), ContentMediaType.Json());
   }
 
   @Test
@@ -58,7 +58,7 @@ public class MediaTypeMapperTest {
       .build();
     ContentMediaType contentMediaType = ContentMediaType.parseFromDescriptor("application/json; charset=UTF-8");
 
-    mediaTypeMapper.from(new Object(), contentMediaType, Object.class);
+    mediaTypeMapper.from(new Object(), contentMediaType);
   }
 
 }
