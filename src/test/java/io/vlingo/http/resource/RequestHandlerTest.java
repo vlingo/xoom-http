@@ -106,7 +106,7 @@ public class RequestHandlerTest extends RequestHandlerTestBase {
     final Name name = new Name("first", "last");
     final RequestObjectHandlerFake handler = new RequestObjectHandlerFake(Method.GET,
       "/hello",
-      () -> Completes.withSuccess(ObjectResponse.of(Ok, name, Name.class))
+      () -> Completes.withSuccess(ObjectResponse.of(Ok, name))
     );
 
     Response response = handler.execute(Request.method(Method.GET), null, logger).await();

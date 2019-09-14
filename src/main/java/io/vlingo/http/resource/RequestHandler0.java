@@ -28,8 +28,8 @@ public class RequestHandler0 extends RequestHandler {
   }
 
   @FunctionalInterface
-  public interface ObjectHandler0 {
-    Completes<ObjectResponse<?>> execute();
+  public interface ObjectHandler0<O> {
+    Completes<ObjectResponse<O>> execute();
   }
 
   @FunctionalInterface
@@ -50,7 +50,7 @@ public class RequestHandler0 extends RequestHandler {
     return this;
   }
 
-  public RequestHandler0 handle(final ObjectHandler0 handler) {
+  public <O> RequestHandler0 handle(final ObjectHandler0<O> handler) {
     this.executor = ((request, mediaTypeMapper1, errorHandler1, logger) ->
       RequestObjectExecutor.executeRequest(request, mediaTypeMapper1, () -> handler.execute(), errorHandler1, logger));
     return this;

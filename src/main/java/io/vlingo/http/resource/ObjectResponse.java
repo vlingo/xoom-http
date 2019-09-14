@@ -26,46 +26,43 @@ public class ObjectResponse<T> {
   private final Response.Status status;
   private final Headers<ResponseHeader> headers;
   private T entity;
-  private Class<T> clazz;
 
   private ObjectResponse(final Version version,
                          final Response.Status status,
                          final Header.Headers<ResponseHeader> headers,
-                         final T entity,
-                         final Class<T> clazz) {
+                         final T entity) {
     this.version = version;
     this.status = status;
     this.headers = headers;
     this.entity = entity;
-    this.clazz = clazz;
   }
 
   public static <T> ObjectResponse<T> of(final Version version,
                                          final Response.Status status,
                                          final Header.Headers<ResponseHeader> headers,
-                                         T entity,
-                                         Class<T> classType) {
-    return new ObjectResponse<>(version, status, headers, entity, classType);
+                                         T entity) {
+    return new ObjectResponse<>(version, status, headers, entity);
   }
+
 
   public static <T> ObjectResponse<T> of(final Response.Status status,
                                          final Header.Headers<ResponseHeader> headers,
-                                         final T entity,
-                                         final Class<T> classType) {
-    return new ObjectResponse<T>(Version.Http1_1, status, headers, entity, classType);
+                                         final T entity) {
+    return new ObjectResponse<>(Version.Http1_1, status, headers, entity);
   }
 
+
   public static <T> ObjectResponse<T> of(final Response.Status status,
-                                         final T entity,
-                                         final Class<T> classType) {
-    return new ObjectResponse<>(Version.Http1_1, status, Header.Headers.empty(), entity, classType);
+                                         final T entity) {
+    return new ObjectResponse<>(Version.Http1_1, status, Header.Headers.empty(), entity);
   }
+
 
   public Response responseFrom(Request request, MediaTypeMapper mapper) {
     final String acceptedMediaTypes = request.headerValueOr(RequestHeader.Accept, DEFAULT_MEDIA_TYPE.toString());
     final ResponseMediaTypeSelector responseMediaTypeSelector = new ResponseMediaTypeSelector(acceptedMediaTypes);
     final ContentMediaType responseContentMediaType = responseMediaTypeSelector.selectType(mapper.mappedMediaTypes());
-    final String bodyContent = mapper.from(entity, responseContentMediaType, clazz);
+    final String bodyContent = mapper.from(entity, responseContentMediaType);
     final Body body = Body.from(bodyContent);
     headers.add(ResponseHeader.of(ResponseHeader.ContentType, responseContentMediaType.toString()));
     return Response.of(version, status, headers, body);
