@@ -31,8 +31,8 @@ public class RequestHandler4<T, R, U, I> extends RequestHandler {
   }
 
   @FunctionalInterface
-  public interface ObjectHandler4<T, R, U, I> {
-    Completes<ObjectResponse<?>> execute(T param1, R param2, U param3, I param4);
+  public interface ObjectHandler4<O, T, R, U, I> {
+    Completes<ObjectResponse<O>> execute(T param1, R param2, U param3, I param4);
   }
 
   interface ParamExecutor4<T, R, U, I> {
@@ -79,7 +79,7 @@ public class RequestHandler4<T, R, U, I> extends RequestHandler {
     return this;
   }
 
-  public RequestHandler4<T, R, U, I> handle(final ObjectHandler4<T, R, U, I> handler) {
+  public <O> RequestHandler4<T, R, U, I> handle(final ObjectHandler4<O, T, R, U, I> handler) {
     executor = ((request, param1, param2, param3, param4, mediaTypeMapper1, errorHandler1, logger) ->
       RequestObjectExecutor.executeRequest(request,
         mediaTypeMapper1,

@@ -30,8 +30,8 @@ public class RequestHandler2<T, R> extends RequestHandler {
   }
 
   @FunctionalInterface
-  public interface ObjectHandler2<T, R> {
-    Completes<ObjectResponse<?>> execute(T param1, R param2);
+  public interface ObjectHandler2<O, T, R> {
+    Completes<ObjectResponse<O>> execute(T param1, R param2);
   }
 
   @FunctionalInterface
@@ -68,7 +68,7 @@ public class RequestHandler2<T, R> extends RequestHandler {
     return this;
   }
 
-  public RequestHandler2<T, R> handle(final ObjectHandler2<T, R> handler) {
+  public <O> RequestHandler2<T, R> handle(final ObjectHandler2<O, T, R> handler) {
     executor = ((request, param1, param2, mediaTypeMapper1, errorHandler1, logger) ->
       RequestObjectExecutor.executeRequest(request,
         mediaTypeMapper1,
@@ -179,9 +179,9 @@ public class RequestHandler2<T, R> extends RequestHandler {
       return new RequestExecutor2<>(handler);}
   }
 
-  static class RequestObjectExecutor2<T,R> extends RequestObjectExecutor implements ParamExecutor2<T,R> {
-    private final ObjectHandler2<T,R> handler;
-    private RequestObjectExecutor2(ObjectHandler2<T,R> handler) { this.handler = handler;}
+  static class RequestObjectExecutor2<O, T,R> extends RequestObjectExecutor implements ParamExecutor2<T,R> {
+    private final ObjectHandler2<O,T,R> handler;
+    private RequestObjectExecutor2(ObjectHandler2<O,T,R> handler) { this.handler = handler;}
 
     @Override
     public Completes<Response> execute(final Request request,
@@ -197,7 +197,7 @@ public class RequestHandler2<T, R> extends RequestHandler {
                             logger);
     }
 
-    static <T,R> RequestObjectExecutor2<T,R> from(final ObjectHandler2<T,R> handler) {
+    static <O, T,R> RequestObjectExecutor2<O, T,R> from(final ObjectHandler2<O, T,R> handler) {
       return new RequestObjectExecutor2<>(handler);}
   }
 
