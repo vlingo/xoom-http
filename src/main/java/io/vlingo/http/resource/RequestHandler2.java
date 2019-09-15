@@ -158,47 +158,4 @@ public class RequestHandler2<T, R> extends RequestHandler {
     return new RequestHandler3<>(method, path, resolverParam1, resolverParam2, ParameterResolver.header(name), errorHandler, mediaTypeMapper);
   }
   // endregion
-
-
-  static class RequestExecutor2<T, R> extends RequestExecutor implements ParamExecutor2<T,R> {
-    private final Handler2<T,R> handler;
-
-    private RequestExecutor2(Handler2<T,R> handler) { this.handler = handler; }
-
-    @Override
-    public Completes<Response> execute(final Request request,
-                                       final T param1,
-                                       final R param2,
-                                       final MediaTypeMapper mediaTypeMapper,
-                                       final ErrorHandler errorHandler,
-                                       final Logger logger) {
-      return executeRequest(() -> handler.execute(param1, param2), errorHandler, logger);
-    }
-
-    static <T,R> RequestExecutor2<T,R> from(final Handler2<T,R> handler) {
-      return new RequestExecutor2<>(handler);}
-  }
-
-  static class RequestObjectExecutor2<O, T,R> extends RequestObjectExecutor implements ParamExecutor2<T,R> {
-    private final ObjectHandler2<O,T,R> handler;
-    private RequestObjectExecutor2(ObjectHandler2<O,T,R> handler) { this.handler = handler;}
-
-    @Override
-    public Completes<Response> execute(final Request request,
-                                       final T param1,
-                                       final R param2,
-                                       final MediaTypeMapper mediaTypeMapper,
-                                       final ErrorHandler errorHandler,
-                                       final Logger logger) {
-      return executeRequest(request,
-                            mediaTypeMapper,
-                            () -> handler.execute(param1, param2),
-                            errorHandler,
-                            logger);
-    }
-
-    static <O, T,R> RequestObjectExecutor2<O, T,R> from(final ObjectHandler2<O, T,R> handler) {
-      return new RequestObjectExecutor2<>(handler);}
-  }
-
 }
