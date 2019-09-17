@@ -31,8 +31,8 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
   }
 
   @FunctionalInterface
-  public interface ObjectHandler5<T, R, U, I, J> {
-    Completes<ObjectResponse<?>> execute(T param1, R param2, U param3, I param4, J param5);
+  public interface ObjectHandler5<O, T, R, U, I, J> {
+    Completes<ObjectResponse<O>> execute(T param1, R param2, U param3, I param4, J param5);
   }
 
   @FunctionalInterface
@@ -84,7 +84,7 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
     return this;
   }
 
-  public RequestHandler5<T, R, U, I, J> handle(final ObjectHandler5<T, R, U, I, J> handler) {
+  public <O> RequestHandler5<T, R, U, I, J> handle(final ObjectHandler5<O, T, R, U, I, J> handler) {
     executor = (request, param1, param2, param3, param4, param5, mediaTypeMapper1, errorHandler1, logger) ->
       RequestObjectExecutor.executeRequest(request,
         mediaTypeMapper1,

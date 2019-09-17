@@ -17,9 +17,9 @@ import io.vlingo.http.Response;
 
 abstract class RequestObjectExecutor {
 
-  static Completes<Response> executeRequest(final Request request,
+  static <O> Completes<Response> executeRequest(final Request request,
                                             final MediaTypeMapper mediaTypeMapper,
-                                            final Supplier<Completes<ObjectResponse<?>>> executeAction,
+                                            final Supplier<Completes<ObjectResponse<O>>> executeAction,
                                             final ErrorHandler errorHandler,
                                             final Logger logger) {
 
@@ -31,8 +31,8 @@ abstract class RequestObjectExecutor {
     }
   }
 
-  static Response toResponse(
-                                          final ObjectResponse<?> objectResponse,
+  static <O> Response toResponse(
+                                          final ObjectResponse<O> objectResponse,
                                           final Request request,
                                           final MediaTypeMapper mediaTypeMapper,
                                           final ErrorHandler errorHandler,

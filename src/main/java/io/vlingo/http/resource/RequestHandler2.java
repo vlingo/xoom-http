@@ -30,8 +30,8 @@ public class RequestHandler2<T, R> extends RequestHandler {
   }
 
   @FunctionalInterface
-  public interface ObjectHandler2<T, R> {
-    Completes<ObjectResponse<?>> execute(T param1, R param2);
+  public interface ObjectHandler2<O, T, R> {
+    Completes<ObjectResponse<O>> execute(T param1, R param2);
   }
 
   @FunctionalInterface
@@ -68,7 +68,7 @@ public class RequestHandler2<T, R> extends RequestHandler {
     return this;
   }
 
-  public RequestHandler2<T, R> handle(final ObjectHandler2<T, R> handler) {
+  public <O> RequestHandler2<T, R> handle(final ObjectHandler2<O, T, R> handler) {
     executor = ((request, param1, param2, mediaTypeMapper1, errorHandler1, logger) ->
       RequestObjectExecutor.executeRequest(request,
         mediaTypeMapper1,
@@ -158,47 +158,4 @@ public class RequestHandler2<T, R> extends RequestHandler {
     return new RequestHandler3<>(method, path, resolverParam1, resolverParam2, ParameterResolver.header(name), errorHandler, mediaTypeMapper);
   }
   // endregion
-
-
-  static class RequestExecutor2<T, R> extends RequestExecutor implements ParamExecutor2<T,R> {
-    private final Handler2<T,R> handler;
-
-    private RequestExecutor2(Handler2<T,R> handler) { this.handler = handler; }
-
-    @Override
-    public Completes<Response> execute(final Request request,
-                                       final T param1,
-                                       final R param2,
-                                       final MediaTypeMapper mediaTypeMapper,
-                                       final ErrorHandler errorHandler,
-                                       final Logger logger) {
-      return executeRequest(() -> handler.execute(param1, param2), errorHandler, logger);
-    }
-
-    static <T,R> RequestExecutor2<T,R> from(final Handler2<T,R> handler) {
-      return new RequestExecutor2<>(handler);}
-  }
-
-  static class RequestObjectExecutor2<T,R> extends RequestObjectExecutor implements ParamExecutor2<T,R> {
-    private final ObjectHandler2<T,R> handler;
-    private RequestObjectExecutor2(ObjectHandler2<T,R> handler) { this.handler = handler;}
-
-    @Override
-    public Completes<Response> execute(final Request request,
-                                       final T param1,
-                                       final R param2,
-                                       final MediaTypeMapper mediaTypeMapper,
-                                       final ErrorHandler errorHandler,
-                                       final Logger logger) {
-      return executeRequest(request,
-                            mediaTypeMapper,
-                            () -> handler.execute(param1, param2),
-                            errorHandler,
-                            logger);
-    }
-
-    static <T,R> RequestObjectExecutor2<T,R> from(final ObjectHandler2<T,R> handler) {
-      return new RequestObjectExecutor2<>(handler);}
-  }
-
 }
