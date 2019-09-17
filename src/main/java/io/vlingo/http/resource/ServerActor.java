@@ -53,7 +53,8 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
           final Filters filters,
           final int port,
           final Sizing sizing,
-          final Timing timing)
+          final Timing timing,
+          final String channelMailboxTypeName)
   throws Exception {
     this.filters = filters;
     this.dispatcherPoolIndex = 0;
@@ -74,7 +75,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
               ServerRequestResponseChannel.start(
                       stage(),
                       stage().world().addressFactory().withHighId(ChannelName),
-                      "queueMailbox",
+                      channelMailboxTypeName,
                       this,
                       port,
                       ChannelName,
