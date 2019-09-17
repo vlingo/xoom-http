@@ -21,6 +21,13 @@ public interface Server extends Stoppable {
     return startWith(stage, Properties.properties);
   }
 
+
+  /**
+   * Answer a new {@code Server} with the given configuration and characteristics.
+   * @param stage the Stage in which the Server lives
+   * @param properties the java.util.Properties with properties named per vlingo-http.properties
+   * @return Server
+   */
   public static Server startWith(final Stage stage, java.util.Properties properties) {
     final Configuration configuration = Configuration.defineWith(properties);
 
@@ -34,6 +41,15 @@ public interface Server extends Stoppable {
             configuration.timing());
   }
 
+  /**
+   * Answer a new {@code Server} with the given configuration and characteristics.
+   * @param stage the Stage in which the Server lives
+   * @param resources the Resource with URI descriptions that the Server understands
+   * @param port the int socket port the Server will run on
+   * @param sizing the Sizing such as pool and buffer sizes
+   * @param timing the Timing such as probe interval and missing content timeout
+   * @return Server
+   */
   public static Server startWith(
           final Stage stage,
           final Resources resources,
@@ -44,6 +60,16 @@ public interface Server extends Stoppable {
     return startWith(stage, resources, Filters.none(), port, sizing, timing);
   }
 
+  /**
+   * Answer a new {@code Server} with the given configuration and characteristics.
+   * @param stage the Stage in which the Server lives
+   * @param resources the Resource with URI descriptions that the Server understands
+   * @param filters the Filters used to process requests before dispatching to a resource
+   * @param port the int socket port the Server will run on
+   * @param sizing the Sizing such as pool and buffer sizes
+   * @param timing the Timing such as probe interval and missing content timeout
+   * @return Server
+   */
   public static Server startWith(
           final Stage stage,
           final Resources resources,
@@ -52,12 +78,42 @@ public interface Server extends Stoppable {
           final Sizing sizing,
           final Timing timing) {
 
+    return startWith(stage, resources, Filters.none(), port, sizing, timing, "queueMailbox", "queueMailbox");
+  }
+
+  /**
+   * Answer a new {@code Server} with the given configuration and characteristics.
+   * <p>
+   * WARNING: The Server has been tested with the {@code "queueMailbox"} mailbox type.
+   * This factory method enables you to change that default to another type. If you do
+   * change the mailbox type you do so at your own risk.
+   *
+   * @param stage the Stage in which the Server lives
+   * @param resources the Resource with URI descriptions that the Server understands
+   * @param filters the Filters used to process requests before dispatching to a resource
+   * @param port the int socket port the Server will run on
+   * @param sizing the Sizing such as pool and buffer sizes
+   * @param timing the Timing such as probe interval and missing content timeout
+   * @param severMailboxTypeName the String name of the mailbox to used by the Server
+   * @param channelMailboxTypeName the String name of the mailbox to use by the socket channel
+   * @return Server
+   */
+  public static Server startWith(
+          final Stage stage,
+          final Resources resources,
+          final Filters filters,
+          final int port,
+          final Sizing sizing,
+          final Timing timing,
+          final String severMailboxTypeName,
+          final String channelMailboxTypeName) {
+
     final Server server = stage.actorFor(
             Server.class,
             Definition.has(
                     ServerActor.class,
-                    Definition.parameters(resources, filters, port, sizing, timing),
-                    "queueMailbox",
+                    Definition.parameters(resources, filters, port, sizing, timing, channelMailboxTypeName),
+                    severMailboxTypeName,
                     ServerActor.ServerName),
             stage.world().addressFactory().withHighId(),
             stage.world().defaultLogger());
