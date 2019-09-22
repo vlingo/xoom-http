@@ -69,7 +69,7 @@ public class SecureClientTest {
 
     final Completes<Response> response = client.requestWith(request);
 
-    response.andThenConsume(r -> {
+    response.andFinallyConsume(r -> {
       responseContent = r.entity.content();
       access.writeUsing("response", r);
       System.out.println("1.5");
