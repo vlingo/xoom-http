@@ -63,7 +63,7 @@ public class ClientTest extends ResourceTestFixtures {
           .andThenConsume(5000, Response.of(RequestTimeout), response -> expectedResponse = response)
           .andThenConsume(response -> expectedHeaderCount = response.headers.size())
           .andThenConsume(response -> location = response.headers.headerOf(Location))
-          .andThenConsume(response -> known.consume(response));
+          .andFinallyConsume(known::consume);
 
     final int responseCount = access.readFrom("responseCount");
     final int unknownResponseCount = access.readFrom("unknownResponseCount");
@@ -101,7 +101,7 @@ public class ClientTest extends ResourceTestFixtures {
                 .and(host("localhost"))
                 .and(contentLength(user))
                 .and(Body.from(user)))
-            .andThenConsume(response -> known.consume(response) );
+            .andFinallyConsume(response -> known.consume(response) );
     }
 
     final int responseCount = access.readFromExpecting("responseCount", 100, 2000);
@@ -144,7 +144,7 @@ public class ClientTest extends ResourceTestFixtures {
                 .and(host("localhost"))
                 .and(contentLength(user))
                 .and(Body.from(user)))
-            .andThenConsume(response -> known.consume(response) );
+            .andFinallyConsume(known::consume);
     }
 
     final int responseCount = access.readFromExpecting("responseCount", 100, 2000);
