@@ -1,5 +1,18 @@
 package io.vlingo.http.resource;
 
+import static io.vlingo.http.Response.Status.InternalServerError;
+import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.Response.Status.UnsupportedMediaType;
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Method;
@@ -7,20 +20,12 @@ import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 import io.vlingo.http.ResponseHeader;
 import io.vlingo.http.media.ContentMediaType;
+import io.vlingo.http.resource.RequestHandler0.Handler0;
+import io.vlingo.http.resource.RequestHandler0.ObjectHandler0;
+import io.vlingo.http.resource.RequestHandler0.ParamExecutor0;
 import io.vlingo.http.resource.serialization.JsonSerialization;
 import io.vlingo.http.sample.user.NameData;
 import io.vlingo.http.sample.user.model.Name;
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import static io.vlingo.http.Response.Status.*;
-import static io.vlingo.http.resource.RequestHandler0.*;
-import static org.junit.Assert.assertEquals;
 
 public class RequestHandlerTest extends RequestHandlerTestBase {
 
@@ -173,6 +178,7 @@ class RequestObjectHandlerFake extends RequestHandler {
   private ParamExecutor0 executor;
   private ErrorHandler errorHandler;
 
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   RequestObjectHandlerFake(Method method, String path, ObjectHandler0 handler) {
     super(method, path, new ArrayList<>());
     this.executor = (request, mediaTypeMapper1, errorHandler1, logger) ->
@@ -180,6 +186,7 @@ class RequestObjectHandlerFake extends RequestHandler {
     this.errorHandler = null;
   }
 
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   RequestObjectHandlerFake(Method method, String path, ErrorHandler errorHandler, ObjectHandler0 handler) {
     super(method, path, new ArrayList<>());
     executor = ((request, mediaTypeMapper1, errorHandler1, logger1) ->

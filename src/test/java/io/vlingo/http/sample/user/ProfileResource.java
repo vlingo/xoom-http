@@ -34,9 +34,10 @@ public class ProfileResource extends ResourceHandler {
 
   public void define(final String userId, final ProfileData profileData) {
     stage.actorOf(Profile.class, stage.world().addressFactory().findableBy(Integer.parseInt(userId)))
-      .andThenConsume(profile -> {
+      .andFinally(profile -> {
         final Profile.State profileState = repository.profileOf(userId);
         completes().with(Response.of(Ok, headers(of(Location, profileLocation(userId))), serialized(ProfileData.from(profileState))));
+        return profile;
       })
       .otherwiseConsume(noProfile -> {
         final Profile.State profileState =
@@ -45,9 +46,9 @@ public class ProfileResource extends ResourceHandler {
                         profileData.twitterAccount,
                         profileData.linkedInAccount,
                         profileData.website);
-  
+
         stage().actorFor(Profile.class, Definition.has(ProfileActor.class, Definition.parameters(profileState)));
-  
+
         repository.save(profileState);
         completes().with(Response.of(Created, serialized(ProfileData.from(profileState))));
       });

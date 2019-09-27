@@ -57,14 +57,14 @@ public class UserResource extends ResourceHandler {
     stage.actorOf(User.class, stage().world().addressFactory().from(userId))
       .andThenTo(user -> user.withContact(new Contact(contactData.emailAddress, contactData.telephoneNumber)))
       .otherwiseConsume(noUser -> completes().with(Response.of(NotFound, userLocation(userId))))
-      .andThenConsume(userState -> Response.of(Ok, serialized(UserData.from(userState))));
+      .andFinallyConsume(userState -> Response.of(Ok, serialized(UserData.from(userState))));
   }
 
   public void changeName(final String userId, final NameData nameData) {
     stage.actorOf(User.class, stage().world().addressFactory().from(userId))
       .andThenTo(user -> user.withName(new Name(nameData.given, nameData.family)))
       .otherwiseConsume(noUser -> completes().with(Response.of(NotFound, userLocation(userId))))
-      .andThenConsume(userState -> {
+      .andFinallyConsume(userState -> {
             repository.save(userState);
             completes().with(Response.of(Ok, serialized(UserData.from(userState))));
       });

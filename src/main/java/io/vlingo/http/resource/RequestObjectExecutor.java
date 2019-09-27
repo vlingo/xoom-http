@@ -25,7 +25,7 @@ abstract class RequestObjectExecutor {
 
     try {
       return executeAction.get()
-        .andThen(objectResponse -> toResponse(objectResponse, request, mediaTypeMapper, errorHandler, logger));
+        .andFinally(objectResponse -> toResponse(objectResponse, request, mediaTypeMapper, errorHandler, logger));
     } catch(Exception ex) {
       return Completes.withFailure( ResourceErrorProcessor.resourceHandlerError(errorHandler, logger, ex));
     }

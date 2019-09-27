@@ -9,15 +9,15 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.Stage;
-import io.vlingo.http.Context;
-import io.vlingo.http.Method;
-
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
+import io.vlingo.actors.Stage;
+import io.vlingo.http.Context;
+import io.vlingo.http.Method;
 
 public class DynamicResource extends Resource<ResourceHandler> {
   final List<RequestHandler> handlers;
@@ -37,18 +37,20 @@ public class DynamicResource extends Resource<ResourceHandler> {
     }
   }
 
+  @Override
   public void dispatchToHandlerWith(final Context context, final Action.MappedParameters mappedParameters) {
     try {
       Consumer<ResourceHandler> consumer = (resource) ->
         handlers.get(mappedParameters.actionId)
                 .execute(context.request, mappedParameters, resource.logger())
-        .andThenConsume(context.completes::with);
+        .andFinallyConsume(context.completes::with);
       pooledHandler().handleFor(context, consumer);
     } catch (Exception e) {
       throw new IllegalArgumentException("Action mismatch: Request: " + context.request + "Parameters: " + mappedParameters);
     }
   }
 
+  @Override
   Action.MatchResults matchWith(final Method method, final URI uri) {
     for (final Action action : actions) {
       final Action.MatchResults matchResults = action.matchWith(method, uri);
@@ -59,6 +61,7 @@ public class DynamicResource extends Resource<ResourceHandler> {
     return Action.unmatchedResults;
   }
 
+  @Override
   protected ResourceHandler resourceHandlerInstance(final Stage stage) {
     return new SpecificResourceHandler(stage);
   }
