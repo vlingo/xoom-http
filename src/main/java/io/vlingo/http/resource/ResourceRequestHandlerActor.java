@@ -39,8 +39,6 @@ public class ResourceRequestHandlerActor extends Actor implements ResourceReques
 
   @Override
   public void handleFor(final Context context, final MappedParameters mappedParameters, final RequestHandler handler) {
-    context.__internal__resourceHandlerId = resourceHandler.resourceHandlerId();
-
     final Consumer<ResourceHandler> consumer = (resource) ->
       handler
         .execute(context.request, mappedParameters, resource.logger())
