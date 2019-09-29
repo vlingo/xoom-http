@@ -7,11 +7,12 @@
 
 package io.vlingo.http.resource;
 
+import java.util.function.Consumer;
+
 import io.vlingo.actors.Actor;
 import io.vlingo.http.Context;
 import io.vlingo.http.Response;
-
-import java.util.function.Consumer;
+import io.vlingo.http.resource.Action.MappedParameters;
 
 public class ResourceRequestHandlerActor extends Actor implements ResourceRequestHandler {
   private final ResourceHandler resourceHandler;
@@ -20,6 +21,7 @@ public class ResourceRequestHandlerActor extends Actor implements ResourceReques
     this.resourceHandler = resourceHandler;
   }
 
+  @Override
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public void handleFor(final Context context, final Consumer consumer) {
     try {
@@ -33,5 +35,17 @@ public class ResourceRequestHandlerActor extends Actor implements ResourceReques
       logger().error("Runtime thrown by resource dispatcher", exception);
       context.completes.with(Response.of(Response.Status.InternalServerError));
     }
+  }
+
+  @Override
+  public void handleFor(final Context context, final MappedParameters mappedParameters, final RequestHandler handler) {
+    context.__internal__resourceHandlerId = resourceHandler.resourceHandlerId();
+
+    final Consumer<ResourceHandler> consumer = (resource) ->
+      handler
+        .execute(context.request, mappedParameters, resource.logger())
+        .andFinallyConsume(context.completes::with);
+
+    handleFor(context, consumer);
   }
 }
