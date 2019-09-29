@@ -46,15 +46,15 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     dispatcher.dispatchFor(new Context(request, completes));
     withCalls.readFrom("completed");
 
-    assertNotNull(completes.response);
+    assertNotNull(completes.response.get());
 
-    assertEquals(Created, completes.response.status);
-    assertEquals(2, completes.response.headers.size());
-    assertEquals(Location, completes.response.headers.get(0).name);
-    assertTrue(Location, completes.response.headerOf(Location).value.startsWith("/users/"));
-    assertNotNull(completes.response.entity);
+    assertEquals(Created, completes.response.get().status);
+    assertEquals(2, completes.response.get().headers.size());
+    assertEquals(Location, completes.response.get().headers.get(0).name);
+    assertTrue(Location, completes.response.get().headerOf(Location).value.startsWith("/users/"));
+    assertNotNull(completes.response.get().entity);
 
-    final UserData createdUserData = deserialized(completes.response.entity.content(), UserData.class);
+    final UserData createdUserData = deserialized(completes.response.get().entity.content(), UserData.class);
     assertNotNull(createdUserData);
     assertEquals(johnDoeUserData.nameData.given, createdUserData.nameData.given);
     assertEquals(johnDoeUserData.nameData.family, createdUserData.nameData.family);
@@ -72,15 +72,15 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     postCompletesWithCalls.readFrom("completed");
     assertNotNull(postCompletes.response);
 
-    final String getUserMessage = "GET " + postCompletes.response.headerOf(Location).value + " HTTP/1.1\nHost: vlingo.io\n\n";
+    final String getUserMessage = "GET " + postCompletes.response.get().headerOf(Location).value + " HTTP/1.1\nHost: vlingo.io\n\n";
     final Request getRequest = Request.from(toByteBuffer(getUserMessage));
     final MockCompletesEventuallyResponse getCompletes = new MockCompletesEventuallyResponse();
     final AccessSafely getCompletesWithCalls = getCompletes.expectWithTimes(1);
     dispatcher.dispatchFor(new Context(getRequest, getCompletes));
     getCompletesWithCalls.readFrom("completed");
     assertNotNull(getCompletes.response);
-    assertEquals(Ok, getCompletes.response.status);
-    final UserData getUserData = deserialized(getCompletes.response.entity.content(), UserData.class);
+    assertEquals(Ok, getCompletes.response.get().status);
+    final UserData getUserData = deserialized(getCompletes.response.get().entity.content(), UserData.class);
     assertNotNull(getUserData);
     assertEquals(johnDoeUserData.nameData.given, getUserData.nameData.given);
     assertEquals(johnDoeUserData.nameData.family, getUserData.nameData.family);
@@ -117,19 +117,19 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     getCompletesWithCalls.readFrom("completed");
 
     assertNotNull(getCompletes.response);
-    assertEquals(Ok, getCompletes.response.status);
+    assertEquals(Ok, getCompletes.response.get().status);
     final Type listOfUserData = new TypeToken<List<UserData>>(){}.getType();
-    final List<UserData> getUserData = deserializedList(getCompletes.response.entity.content(), listOfUserData);
+    final List<UserData> getUserData = deserializedList(getCompletes.response.get().entity.content(), listOfUserData);
     assertNotNull(getUserData);
 
-    final UserData johnUserData = UserData.userAt(postCompletes1.response.headerOf(Location).value, getUserData);
+    final UserData johnUserData = UserData.userAt(postCompletes1.response.get().headerOf(Location).value, getUserData);
 
     assertEquals(johnDoeUserData.nameData.given, johnUserData.nameData.given);
     assertEquals(johnDoeUserData.nameData.family, johnUserData.nameData.family);
     assertEquals(johnDoeUserData.contactData.emailAddress, johnUserData.contactData.emailAddress);
     assertEquals(johnDoeUserData.contactData.telephoneNumber, johnUserData.contactData.telephoneNumber);
 
-    final UserData janeUserData = UserData.userAt(postCompletes2.response.headerOf(Location).value, getUserData);
+    final UserData janeUserData = UserData.userAt(postCompletes2.response.get().headerOf(Location).value, getUserData);
 
     assertEquals(janeDoeUserData.nameData.given, janeUserData.nameData.given);
     assertEquals(janeDoeUserData.nameData.family, janeUserData.nameData.family);
@@ -163,7 +163,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     final NameData johnNameData = NameData.from("John", "Doe-Doe");
     final String johnNameSerialized = serialized(johnNameData);
     final String patchJohnDoeUserMessage =
-            "PATCH " + postCompletes1.response.headerOf(Location).value
+            "PATCH " + postCompletes1.response.get().headerOf(Location).value
             + "/name HTTP/1.1\nHost: vlingo.io\nContent-Length: " + johnNameSerialized.length()
             + "\n\n" + johnNameSerialized;
 
@@ -181,8 +181,8 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     System.out.println("3");
 
     assertNotNull(patchCompletes1.response);
-    assertEquals(Ok, patchCompletes1.response.status);
-    final UserData getJohnDoeDoeUserData = deserialized(patchCompletes1.response.entity.content(), UserData.class);
+    assertEquals(Ok, patchCompletes1.response.get().status);
+    final UserData getJohnDoeDoeUserData = deserialized(patchCompletes1.response.get().entity.content(), UserData.class);
     assertEquals(johnNameData.given, getJohnDoeDoeUserData.nameData.given);
     assertEquals(johnNameData.family, getJohnDoeDoeUserData.nameData.family);
     assertEquals(johnDoeUserData.contactData.emailAddress, getJohnDoeDoeUserData.contactData.emailAddress);
@@ -192,7 +192,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     final NameData janeNameData = NameData.from("Jane", "Doe-Doe");
     final String janeNameSerialized = serialized(janeNameData);
     final String patchJaneDoeUserMessage =
-            "PATCH " + postCompletes2.response.headerOf(Location).value
+            "PATCH " + postCompletes2.response.get().headerOf(Location).value
             + "/name HTTP/1.1\nHost: vlingo.io\nContent-Length: " + janeNameSerialized.length()
             + "\n\n" + janeNameSerialized;
 
@@ -205,8 +205,8 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     System.out.println("5");
 
     assertNotNull(patchCompletes2.response);
-    assertEquals(Ok, patchCompletes2.response.status);
-    final UserData getJaneDoeDoeUserData = deserialized(patchCompletes2.response.entity.content(), UserData.class);
+    assertEquals(Ok, patchCompletes2.response.get().status);
+    final UserData getJaneDoeDoeUserData = deserialized(patchCompletes2.response.get().entity.content(), UserData.class);
     assertEquals(janeNameData.given, getJaneDoeDoeUserData.nameData.given);
     assertEquals(janeNameData.family, getJaneDoeDoeUserData.nameData.family);
     assertEquals(janeDoeUserData.contactData.emailAddress, getJaneDoeDoeUserData.contactData.emailAddress);
