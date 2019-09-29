@@ -7,6 +7,8 @@
 
 package io.vlingo.http.resource;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import io.vlingo.actors.Address;
 import io.vlingo.actors.CompletesEventually;
 import io.vlingo.actors.testkit.AccessSafely;
@@ -15,20 +17,21 @@ import io.vlingo.http.Response;
 public class MockCompletesEventuallyResponse implements CompletesEventually {
   private AccessSafely withCalls = AccessSafely.afterCompleting(0);
 
-  public Response response;
+  public AtomicReference<Response> response = new AtomicReference<>();
 
   /**
    * Answer with an AccessSafely which writes nulls to "with" and reads the write count from the "completed".
    * <p>
    * Note: Clients can replace the default lambdas with their own via readingWith/writingWith.
-   * 
+   *
    * @param n Number of times with(outcome) must be called before readFrom(...) will return.
    * @return
    */
   public AccessSafely expectWithTimes(int n) {
     withCalls = AccessSafely.afterCompleting(n)
-        .writingWith("with", (x) -> {})
-        .readingWith("completed", () -> withCalls.totalWrites());
+        .writingWith("with", (Response r) -> response.set(r))
+        .readingWith("completed", () -> withCalls.totalWrites())
+        .readingWith("response", () -> response.get());
     return withCalls;
   }
 
@@ -39,7 +42,6 @@ public class MockCompletesEventuallyResponse implements CompletesEventually {
 
   @Override
   public void with(final Object outcome) {
-    this.response = (Response) outcome;
-    withCalls.writeUsing("with", null);
+    withCalls.writeUsing("with", outcome);
   }
 }
