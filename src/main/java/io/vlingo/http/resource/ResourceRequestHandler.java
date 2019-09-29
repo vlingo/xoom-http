@@ -10,8 +10,11 @@ package io.vlingo.http.resource;
 import java.util.function.Consumer;
 
 import io.vlingo.http.Context;
+import io.vlingo.http.resource.Action.MappedParameters;
 
 public interface ResourceRequestHandler {
-  @SuppressWarnings("rawtypes") 
+  @SuppressWarnings("rawtypes")
   void handleFor(final Context context, final Consumer consumer);
+
+  void handleFor(final Context context, final MappedParameters mappedParameters, final RequestHandler handler);
 }
