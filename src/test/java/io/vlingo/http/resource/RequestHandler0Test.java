@@ -9,31 +9,21 @@
 
 package io.vlingo.http.resource;
 
-import static io.vlingo.common.Completes.withSuccess;
-import static io.vlingo.http.Response.of;
-import static io.vlingo.http.Response.Status.Created;
-import static io.vlingo.http.resource.ParameterResolver.body;
-import static io.vlingo.http.resource.ParameterResolver.header;
-import static io.vlingo.http.resource.ParameterResolver.path;
-import static io.vlingo.http.resource.ParameterResolver.query;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.net.URI;
-import java.util.Collections;
-
+import io.vlingo.http.*;
+import io.vlingo.http.sample.user.NameData;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import io.vlingo.http.Body;
-import io.vlingo.http.Header;
-import io.vlingo.http.Method;
-import io.vlingo.http.Request;
-import io.vlingo.http.RequestHeader;
-import io.vlingo.http.Response;
-import io.vlingo.http.Version;
-import io.vlingo.http.sample.user.NameData;
+import java.net.URI;
+import java.util.Collections;
+
+import static io.vlingo.common.Completes.withSuccess;
+import static io.vlingo.http.Response.Status.Created;
+import static io.vlingo.http.Response.of;
+import static io.vlingo.http.resource.ParameterResolver.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class RequestHandler0Test extends RequestHandlerTestBase {
 
@@ -50,6 +40,19 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
     assertEquals(Method.GET, handler.method);
     assertEquals("/helloworld", handler.path);
     assertResponsesAreEquals(of(Created), response);
+  }
+
+  @Test
+  public void simpleHandlerWithBinaryResponse() {
+    byte[] body = {1, 2, 1, 2};
+    final RequestHandler0 handler = new RequestHandler0(Method.GET, "/helloworld")
+      .handle(() -> withSuccess(Response.of(Created, Body.from(body, Body.Encoding.None))));
+    final Response response = handler.execute(Request.method(Method.GET), logger).outcome();
+
+    assertNotNull(handler);
+    assertEquals(Method.GET, handler.method);
+    assertEquals("/helloworld", handler.path);
+    assertEquals(Body.from(body, Body.Encoding.None).binaryContent(), response.entity.binaryContent());
   }
 
   @Test()
@@ -124,12 +127,12 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
   }
 
   @Test
-  @SuppressWarnings( "deprecation" )
+  @SuppressWarnings("deprecation")
   public void addingHandlerBodyWithMapper() {
     final Request request = Request.has(Method.POST)
-                                   .and(URI.create("/user/admin/name"))
-                                   .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"))
-                                   .and(Version.Http1_1);
+      .and(URI.create("/user/admin/name"))
+      .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"))
+      .and(Version.Http1_1);
     final Action.MappedParameters mappedParameters =
       new Action.MappedParameters(1, Method.POST, "ignored", Collections.singletonList(
         new Action.MappedParameter("String", "admin"))
@@ -146,10 +149,10 @@ public class RequestHandler0Test extends RequestHandlerTestBase {
   @Test
   public void addingHandlerBodyWithMediaTypeMapper() {
     final Request request = Request.has(Method.POST)
-                                   .and(URI.create("/user/admin/name"))
-                                   .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"))
-                                   .and(RequestHeader.of(RequestHeader.ContentType, "application/json"))
-                                   .and(Version.Http1_1);
+      .and(URI.create("/user/admin/name"))
+      .and(Body.from("{\"given\":\"John\",\"family\":\"Doe\"}"))
+      .and(RequestHeader.of(RequestHeader.ContentType, "application/json"))
+      .and(Version.Http1_1);
     final Action.MappedParameters mappedParameters =
       new Action.MappedParameters(1, Method.POST, "ignored", Collections.singletonList(
         new Action.MappedParameter("String", "admin"))
