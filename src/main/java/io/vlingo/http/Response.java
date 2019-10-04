@@ -25,7 +25,15 @@ public class Response {
     return new Response(Version.Http1_1, statusCode, Headers.empty(), Body.from(entity));
   }
 
+  public static Response of(final Status statusCode, final byte[] entity) {
+    return new Response(Version.Http1_1, statusCode, Headers.empty(), Body.from(entity));
+  }
+
   public static Response of(final Version version, final Status statusCode, final String entity) {
+    return new Response(version, statusCode, Headers.empty(), Body.from(entity));
+  }
+
+  public static Response of(final Version version, final Status statusCode, final byte[] entity) {
     return new Response(version, statusCode, Headers.empty(), Body.from(entity));
   }
 
@@ -41,7 +49,15 @@ public class Response {
     return new Response(Version.Http1_1, statusCode, headers, Body.from(entity));
   }
 
+  public static Response of(final Status statusCode, final Headers<ResponseHeader> headers, final byte[] entity) {
+    return new Response(Version.Http1_1, statusCode, headers, Body.from(entity));
+  }
+
   public static Response of(final Version version, final Status statusCode, final Headers<ResponseHeader> headers, final String entity) {
+    return new Response(version, statusCode, headers, Body.from(entity));
+  }
+
+  public static Response of(final Version version, final Status statusCode, final Headers<ResponseHeader> headers, final byte[] entity) {
     return new Response(version, statusCode, headers, Body.from(entity));
   }
 
