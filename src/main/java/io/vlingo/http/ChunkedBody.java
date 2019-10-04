@@ -41,6 +41,15 @@ public class ChunkedBody implements Body {
   }
 
   /**
+   * Answer self after appending the {@code byte[]}.
+   * @param chunk the byte[] content to append as the chunk
+   * @return ChunkedBody
+   */
+  public ChunkedBody appendChunk(final byte[] chunk) throws UnsupportedOperationException {
+    throw new UnsupportedOperationException("Adding chunks in the form of byte[] is not yet supported");
+  }
+
+  /**
    * Answer a new {@code Body} as a {@code PlainBody} with my content.
    * @return Body
    */
@@ -55,6 +64,11 @@ public class ChunkedBody implements Body {
   @Override
   public String content() {
     return toString();
+  }
+
+  @Override
+  public byte[] binaryContent() {
+    return toString().getBytes();
   }
 
   /**

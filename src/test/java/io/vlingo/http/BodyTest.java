@@ -138,4 +138,16 @@ public class BodyTest {
     assertTrue(body.hasContent());
     assertTrue(body.content().startsWith("%PDF"));
   }
+
+  @Test
+  public void testThatBinaryBodyIsNotEncoded() {
+    final byte[] pdfBytes = { 37, 80, 68, 70, 45, 49, 46, 52, 10, 37, -30, -29, -49, -45, 10, 49 };
+
+    final Body body = Body.from(pdfBytes, Body.Encoding.None);
+
+    assertNotNull(body);
+    assertNotNull(body.content());
+    assertTrue(body.hasContent());
+    assertEquals(body.binaryContent(),pdfBytes);
+  }
 }
