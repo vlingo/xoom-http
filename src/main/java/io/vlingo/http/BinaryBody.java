@@ -7,13 +7,15 @@
 
 package io.vlingo.http;
 
+import java.nio.charset.StandardCharsets;
+
 public class BinaryBody implements Body {
 
   public final byte[] binaryContent;
 
   @Override
   public String content() {
-    return "";
+    return new String(binaryContent, StandardCharsets.UTF_8);
   }
 
   public byte[] binaryContent() {
@@ -27,7 +29,7 @@ public class BinaryBody implements Body {
 
   @Override
   public String toString() {
-    return "";
+    return content();
   }
 
 
