@@ -61,6 +61,10 @@ public class Response {
     return new Response(version, statusCode, headers, Body.from(entity));
   }
 
+  public static Response of(final Status statusCode, final Body body) {
+    return new Response(Version.Http1_1, statusCode, Headers.empty(), body);
+  }
+
   public static Response of(final Status statusCode, final Headers<ResponseHeader> headers, final Body entity) {
     return new Response(Version.Http1_1, statusCode, headers, entity);
   }
