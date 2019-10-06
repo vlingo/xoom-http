@@ -15,7 +15,7 @@ public class BinaryBody implements Body {
 
   @Override
   public String content() {
-    return new String(binaryContent, StandardCharsets.UTF_8);
+    return Body.bytesToBase64(binaryContent);
   }
 
   public byte[] binaryContent() {
