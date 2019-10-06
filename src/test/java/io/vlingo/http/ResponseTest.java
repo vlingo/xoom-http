@@ -8,10 +8,8 @@
 package io.vlingo.http;
 
 import static io.vlingo.http.Response.Status.Ok;
-import static io.vlingo.http.ResponseHeader.CacheControl;
-import static io.vlingo.http.ResponseHeader.ETag;
-import static io.vlingo.http.ResponseHeader.headers;
-import static io.vlingo.http.ResponseHeader.of;
+import static io.vlingo.http.ResponseHeader.*;
+import static io.vlingo.http.ResponseHeader.ContentLength;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
@@ -35,6 +33,19 @@ public class ResponseTest {
     final String facsimile = "HTTP/1.1 200 OK\nCache-Control: max-age=3600\nContent-Length: " + body.length() + "\n\n{ text : \"some text\" }";
 
     assertEquals(facsimile, response.toString());
+  }
+
+  @Test
+  public void testBinaryBodyResponseWithOneHeaderAndEntity() {
+    final byte[] body = { 1, 2, 1, 2 };
+    final Response response = Response.of(Version.Http1_1, Ok,
+      Header.Headers.of(
+        ResponseHeader.of(ContentType, "application/octet-stream"),
+        ResponseHeader.of(ContentLength, Integer.toString(body.length))
+      ), Body.from(body, Body.Encoding.None));
+
+
+    assertEquals(body, response.entity.binaryContent());
   }
 
   @Test

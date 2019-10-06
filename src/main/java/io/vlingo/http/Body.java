@@ -15,7 +15,7 @@ import java.util.Base64;
  * An HTTP request/response body, with concrete subclass {@code PlainBody} and {@code ChunkedBody}.
  */
 public interface Body {
-  enum Encoding { Base64, UTF8 };
+  enum Encoding { Base64, UTF8, None };
 
   /** An empty {@code PlainBody}. */
   static final Body Empty = new PlainBody();
@@ -66,6 +66,8 @@ public interface Body {
       return new PlainBody(bytesToBase64(body));
     case UTF8:
       return new PlainBody(bytesToUTF8(body));
+    case None:
+      return new BinaryBody(body);
     }
     throw new IllegalArgumentException("Unmapped encoding: " + encoding);
   }
@@ -82,6 +84,8 @@ public interface Body {
       return new PlainBody(bytesToBase64(bufferToArray(body)));
     case UTF8:
       return new PlainBody(bytesToUTF8(bufferToArray(body)));
+    case None:
+      return new BinaryBody(bufferToArray(body));
     }
     throw new IllegalArgumentException("Unmapped encoding: " + encoding);
   }
@@ -118,6 +122,12 @@ public interface Body {
    * @return String
    */
   String content();
+
+  /**
+   * Answer my content as a {@code byte[]}.
+   * @return byte[]
+   */
+  byte[] binaryContent();
 
   /**
    * Answer whether or not this {@code Body} content is complex.

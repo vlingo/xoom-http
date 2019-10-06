@@ -20,6 +20,11 @@ public class PlainBody implements Body {
     return content;
   }
 
+  @Override
+  public byte[] binaryContent() {
+    return content.getBytes();
+  }
+
   /**
    * @see io.vlingo.http.Body#hasContent()
    */
