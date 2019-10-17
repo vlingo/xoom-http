@@ -7,8 +7,6 @@
 
 package io.vlingo.http;
 
-import java.nio.charset.StandardCharsets;
-
 public class BinaryBody implements Body {
 
   public final byte[] binaryContent;
@@ -18,6 +16,7 @@ public class BinaryBody implements Body {
     return Body.bytesToBase64(binaryContent);
   }
 
+  @Override
   public byte[] binaryContent() {
     return binaryContent;
   }
