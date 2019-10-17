@@ -7,6 +7,7 @@
 
 package io.vlingo.http.resource;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +58,8 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
           final Timing timing,
           final String channelMailboxTypeName)
   throws Exception {
+    final long start = Instant.now().toEpochMilli();
+
     this.filters = filters;
     this.dispatcherPoolIndex = 0;
     this.world = stage().world();
@@ -85,7 +88,9 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
                       sizing.maxMessageSize,
                       timing.probeInterval);
 
-      logger().info("Server " + ServerName + " is listening on port: " + port);
+      final long end = Instant.now().toEpochMilli();
+
+      logger().info("Server " + ServerName + " is listening on port: " + port + " started in " + (end - start) + " ms");
 
       this.requestMissingContentTimeout = timing.requestMissingContentTimeout;
 
