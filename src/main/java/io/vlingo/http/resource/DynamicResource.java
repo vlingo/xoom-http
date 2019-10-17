@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.vlingo.actors.Logger;
 import io.vlingo.actors.Stage;
 import io.vlingo.http.Context;
 import io.vlingo.http.Method;
@@ -55,6 +56,15 @@ public class DynamicResource extends Resource<ResourceHandler> {
       }
     }
     return Action.unmatchedResults;
+  }
+
+  @Override
+  protected void log(final Logger logger) {
+    logger.info("Resource: " + name);
+
+    for (final Action action : actions) {
+      logger.info("Action: id=" + action.id + ", method=" + action.method + ", uri=" + action.uri + ", to=" + action.to.signature());
+    }
   }
 
   @Override

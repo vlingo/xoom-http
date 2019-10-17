@@ -115,7 +115,7 @@ public final class Action {
     }
 
     final Action otherAction = (Action) other;
-    
+
     return this.method.equals(otherAction.method) && this.uri.equals(otherAction.uri) && this.to.equals(otherAction.to);
   }
 
@@ -154,7 +154,7 @@ public final class Action {
 
   private Object mapOtherFrom(final RawPathParameter parameter) {
     final String type = this.to.parameterOf(parameter.name).type;
-      
+
     switch (type) {
     case "String":
       return parameter.value;
@@ -223,7 +223,7 @@ public final class Action {
   public static class MappedParameter {
     public final String type;
     public final Object value;
-    
+
     MappedParameter(final String type, final Object value) {
       this.type = type;
       this.value = value;
@@ -255,10 +255,10 @@ public final class Action {
             final List<String> parameterNames,
             final String path,
             final boolean disallowPathParametersWithSlash) {
-      
+
       this.action = action;
       this.parameters = new ArrayList<>(parameterNames.size());
-      
+
       if (running == null) {
         this.matched = false;
       } else {
@@ -266,7 +266,7 @@ public final class Action {
         final int total = running.total();
         for (int idx = 0, parameterIndex = 0; idx < total; ++idx) {
           final MatchSegment segment = running.matchSegment(idx);
-          
+
           if (segment.isPathParameter()) {
             final int pathStartIndex = segment.pathStartIndex();
             final int pathEndIndex = running.nextSegmentStartIndex(idx, path.length());
@@ -309,7 +309,7 @@ public final class Action {
   public static class BodyTypedParameter {
     public final String name;
     public final Class<?> type;
-    
+
     public BodyTypedParameter(final Class<?> type, final String name) {
       this.type = type;
       this.name = name;
@@ -337,7 +337,7 @@ public final class Action {
       }
       return null;
     }
-    
+
     public RawPathParameter(final String name, final String value) {
       this.name = name;
       this.value = value;
@@ -448,7 +448,7 @@ public final class Action {
 
   private static class Matchable {
     private final List<PathSegment> pathSegments;
-    
+
     @Override
     public int hashCode() {
       return 31 * pathSegments.hashCode();
@@ -517,7 +517,7 @@ public final class Action {
       this.value = value;
       this.pathParameter = pathParameter;
     }
-    
+
     public int lastIndexOf(final int startIndex) {
       return startIndex + value.length();
     }
@@ -534,7 +534,7 @@ public final class Action {
   public static class ToSpec {
     private final String methodName;
     private final List<MethodParameter> parameters;
-    
+
     public final String methodName() {
       return methodName;
     }
@@ -542,7 +542,19 @@ public final class Action {
     public final List<MethodParameter> parameters() {
       return Collections.unmodifiableList(parameters);
     }
-    
+
+    public String signature() {
+      final StringBuilder builder = new StringBuilder();
+
+      builder
+        .append(methodName)
+        .append("(")
+        .append(commaSeparatedParameters())
+        .append(")");
+
+      return builder.toString();
+    }
+
     @Override
     public String toString() {
       return "ToSpec[methodName=" + methodName + ", parameters=" + parameters + "]";
@@ -572,6 +584,24 @@ public final class Action {
       return null;
     }
 
+    private String commaSeparatedParameters() {
+      final StringBuilder builder = new StringBuilder();
+
+      String separator = "";
+
+      for (final MethodParameter parameter : parameters) {
+        builder
+          .append(separator)
+          .append(parameter.type)
+          .append(" ")
+          .append(parameter.name);
+
+        separator = ", ";
+      }
+
+      return builder.toString();
+    }
+
     private Class<?> load(final String classname) {
       try {
         return Class.forName(classname);
@@ -582,18 +612,18 @@ public final class Action {
 
     private Tuple2<String, List<MethodParameter>> parse(final String to) {
       final String bad = "Invalid to declaration: " + to;
-      
+
       final int openParen = to.indexOf("(");
       final int closeParen = to.lastIndexOf(")");
-      
+
       if (openParen < 0 || closeParen < 0) {
         throw new IllegalStateException(bad);
       }
-      
+
       final String methodName = to.substring(0, openParen);
       final String[] rawParameters = to.substring(openParen + 1, closeParen).split(",");
       final List<MethodParameter> parameters = new ArrayList<>(rawParameters.length);
-      
+
       for (String rawParameter : rawParameters) {
         rawParameter = rawParameter.trim();
         if (!rawParameter.isEmpty()) {
@@ -606,7 +636,7 @@ public final class Action {
           }
         }
       }
-      
+
       return Tuple2.from(methodName, parameters);
     }
 

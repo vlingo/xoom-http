@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.vlingo.actors.Actor;
+import io.vlingo.actors.Logger;
 import io.vlingo.actors.Returns;
 import io.vlingo.actors.World;
 import io.vlingo.common.BasicCompletes;
@@ -87,6 +88,8 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       logger().info("Server " + ServerName + " is listening on port: " + port);
 
       this.requestMissingContentTimeout = timing.requestMissingContentTimeout;
+
+      logResourceMappings(resources);
 
     } catch (Exception e) {
       final String message = "Failed to start server because: " + e.getMessage();
@@ -188,6 +191,13 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
     for (final String id : toRemove) {
       requestsMissingContent.remove(id);
+    }
+  }
+
+  private void logResourceMappings(final Resources resources) {
+    final Logger logger = logger();
+    for (final String resourceName : resources.namedResources.keySet()) {
+      resources.namedResources.get(resourceName).log(logger);
     }
   }
 

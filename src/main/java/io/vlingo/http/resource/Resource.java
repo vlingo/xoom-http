@@ -13,6 +13,7 @@ import java.net.URI;
 import java.util.concurrent.atomic.AtomicLong;
 
 import io.vlingo.actors.Definition;
+import io.vlingo.actors.Logger;
 import io.vlingo.actors.Stage;
 import io.vlingo.http.Context;
 import io.vlingo.http.Method;
@@ -27,6 +28,8 @@ public abstract class Resource<T> {
   public abstract void dispatchToHandlerWith(final Context context, final Action.MappedParameters mappedParameters);
 
   abstract Action.MatchResults matchWith(final Method method, final URI uri);
+
+  protected abstract void log(final Logger logger);
 
   protected abstract ResourceHandler resourceHandlerInstance(final Stage stage);
 

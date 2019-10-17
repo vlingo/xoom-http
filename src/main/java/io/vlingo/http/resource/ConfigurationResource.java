@@ -12,6 +12,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
+import io.vlingo.actors.Logger;
 import io.vlingo.actors.Stage;
 import io.vlingo.common.compiler.DynaClassLoader;
 import io.vlingo.common.compiler.DynaCompiler;
@@ -155,6 +156,15 @@ public abstract class ConfigurationResource<T> extends Resource<T> {
       super(name, handlerPoolSize);
     this.resourceHandlerClass = resourceHandlerClass;
     this.actions = Collections.unmodifiableList(actions);
+  }
+
+  @Override
+  protected void log(final Logger logger) {
+    logger.info("Resource: " + name);
+
+    for (final Action action : actions) {
+      logger.info("Action: id=" + action.id + ", method=" + action.method + ", uri=" + action.uri + ", to=" + action.to.signature());
+    }
   }
 
   @Override
