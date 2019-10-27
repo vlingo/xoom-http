@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import io.vlingo.actors.Actor;
 import io.vlingo.http.Context;
 import io.vlingo.http.Response;
+import io.vlingo.http.Response.Status;
 import io.vlingo.http.resource.Action.MappedParameters;
 
 public class ResourceRequestHandlerActor extends Actor implements ResourceRequestHandler {
@@ -28,10 +29,10 @@ public class ResourceRequestHandlerActor extends Actor implements ResourceReques
       resourceHandler.context = context;
       resourceHandler.stage = stage();
       consumer.accept(resourceHandler);
-    }catch (Error throwable) {
+    } catch (Error throwable) {
       logger().error("Error thrown by resource dispatcher", throwable);
       context.completes.with(Response.of(Response.Status.InternalServerError));
-    }catch (RuntimeException exception) {
+    } catch (RuntimeException exception) {
       logger().error("Runtime thrown by resource dispatcher", exception);
       context.completes.with(Response.of(Response.Status.InternalServerError));
     }
@@ -42,8 +43,15 @@ public class ResourceRequestHandlerActor extends Actor implements ResourceReques
     final Consumer<ResourceHandler> consumer = (resource) ->
       handler
         .execute(context.request, mappedParameters, resource.logger())
-        .andFinallyConsume(context.completes::with);
+        .andThen(outcome -> respondWith(context, outcome))
+        .otherwise(failure -> respondWith(context, failure))
+        .recoverFrom(exception -> Response.of(Status.BadRequest, exception.getMessage()));
 
     handleFor(context, consumer);
+  }
+
+  private Response respondWith(final Context context, final Response response) {
+    context.completes.with(response);
+    return response;
   }
 }
