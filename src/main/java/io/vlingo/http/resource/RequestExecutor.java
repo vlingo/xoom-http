@@ -20,8 +20,12 @@ abstract class RequestExecutor {
                                             final Logger logger) {
 
     try {
-      return executeAction.get()
-        .recoverFrom(ex -> ResourceErrorProcessor.resourceHandlerError(errorHandler, logger, ex));
+      final Completes<Response> resourceResponse =
+              executeAction
+                .get()
+                .otherwise(failed -> failed)
+                .recoverFrom(ex -> ResourceErrorProcessor.resourceHandlerError(errorHandler, logger, ex));
+      return resourceResponse;
     } catch(Exception ex) {
       return Completes.withFailure(ResourceErrorProcessor.resourceHandlerError(errorHandler, logger, ex));
     }
