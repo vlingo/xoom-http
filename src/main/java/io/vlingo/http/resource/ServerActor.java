@@ -316,7 +316,8 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     public <O> Completes<O> with(final O response) {
       final Response filtered = filters.process((Response) response);
       final ConsumerByteBuffer buffer = BasicConsumerByteBuffer.allocate(0, maxMessageSize);
-      requestResponseContext.respondWith((filtered).include(correlationId).into(buffer));
+      final Response completedResponse = filtered.include(correlationId);
+      requestResponseContext.respondWith(completedResponse.into(buffer));
       return (Completes<O>) this;
     }
   }
