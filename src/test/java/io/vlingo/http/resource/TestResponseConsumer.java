@@ -66,6 +66,7 @@ public class TestResponseConsumer {
 
     @Override
     public void consume(final Response response) {
+      System.out.println("KNOWN RESPONSE:\n" + response);
       access.writeUsing("response", response);
     }
   }
