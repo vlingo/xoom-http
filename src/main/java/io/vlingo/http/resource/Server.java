@@ -78,7 +78,7 @@ public interface Server extends Stoppable {
           final Sizing sizing,
           final Timing timing) {
 
-    return startWith(stage, resources, Filters.none(), port, sizing, timing, "queueMailbox", "queueMailbox");
+    return startWith(stage, resources, filters, port, sizing, timing, "queueMailbox", "queueMailbox");
   }
 
   /**
