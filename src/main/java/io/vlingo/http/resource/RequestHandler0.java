@@ -77,7 +77,8 @@ public class RequestHandler0 extends RequestHandler {
   Completes<Response> execute(final Request request,
                               final Action.MappedParameters mappedParameters,
                               final Logger logger) {
-    return execute(request, logger);
+    final Completes<Response> response = execute(request, logger);
+    return response;
   }
 
   // region FluentAPI
