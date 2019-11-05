@@ -20,6 +20,8 @@ import io.vlingo.actors.World;
 import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
 import io.vlingo.common.Scheduled;
+import io.vlingo.common.pool.ElasticResourcePool;
+import io.vlingo.common.pool.ResourcePool;
 import io.vlingo.http.Context;
 import io.vlingo.http.Filters;
 import io.vlingo.http.Header;
@@ -35,6 +37,7 @@ import io.vlingo.wire.channel.RequestResponseContext;
 import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
 import io.vlingo.wire.message.BasicConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBuffer;
+import io.vlingo.wire.message.ConsumerByteBufferPool;
 
 public class ServerActor extends Actor implements Server, RequestChannelConsumerProvider, Scheduled<Object> {
   static final String ChannelName = "server-request-response-channel";
@@ -47,7 +50,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   private final int maxMessageSize;
   private final Map<String,RequestResponseHttpContext> requestsMissingContent;
   private final long requestMissingContentTimeout;
-  //private final ByteBufferPool responseBufferPool;
+  private final ResourcePool<ConsumerByteBuffer, Void> responseBufferPool;
   private final World world;
 
   public ServerActor(
@@ -67,7 +70,8 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     this.maxMessageSize = sizing.maxMessageSize;
 
     try {
-      //this.responseBufferPool = new ByteBufferPool(sizing.maxBufferPoolSize, sizing.maxMessageSize);
+      responseBufferPool = new ConsumerByteBufferPool(
+        ElasticResourcePool.Config.of(sizing.maxBufferPoolSize), sizing.maxMessageSize);
 
       this.dispatcherPool = new Dispatcher[sizing.dispatcherPoolSize];
 
@@ -315,7 +319,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     @SuppressWarnings("unchecked")
     public <O> Completes<O> with(final O response) {
       final Response filtered = filters.process((Response) response);
-      final ConsumerByteBuffer buffer = BasicConsumerByteBuffer.allocate(0, maxMessageSize);
+      final ConsumerByteBuffer buffer = responseBufferPool.acquire();
       final Response completedResponse = filtered.include(correlationId);
       requestResponseContext.respondWith(completedResponse.into(buffer));
       return (Completes<O>) this;
