@@ -35,7 +35,6 @@ import io.vlingo.wire.channel.RequestChannelConsumer;
 import io.vlingo.wire.channel.RequestChannelConsumerProvider;
 import io.vlingo.wire.channel.RequestResponseContext;
 import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
-import io.vlingo.wire.message.BasicConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBufferPool;
 
@@ -47,7 +46,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   private final Dispatcher[] dispatcherPool;
   private int dispatcherPoolIndex;
   private final Filters filters;
-  private final int maxMessageSize;
+  //private final int maxMessageSize;
   private final Map<String,RequestResponseHttpContext> requestsMissingContent;
   private final long requestMissingContentTimeout;
   private final ResourcePool<ConsumerByteBuffer, Void> responseBufferPool;
@@ -67,7 +66,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     this.dispatcherPoolIndex = 0;
     this.world = stage().world();
     this.requestsMissingContent = new HashMap<>();
-    this.maxMessageSize = sizing.maxMessageSize;
+    //this.maxMessageSize = sizing.maxMessageSize;
 
     try {
       responseBufferPool = new ConsumerByteBufferPool(
