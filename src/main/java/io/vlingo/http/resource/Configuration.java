@@ -13,7 +13,7 @@ import java.util.Properties;
 
 public class Configuration {
   public static Configuration instance;
-  
+
   private int port;
   private Sizing sizing;
   private Timing timing;
@@ -58,7 +58,7 @@ public class Configuration {
   private Configuration() {
     this.port = 8080;
     this.sizing = Sizing.define();
-    this.timing = new Timing(10, 100);
+    this.timing = new Timing(4, 2, 100);
   }
 
   private Configuration(final Properties properties) {
@@ -70,10 +70,11 @@ public class Configuration {
     final int maxBufferPoolSize = Integer.parseInt(properties.getProperty("server.buffer.pool.size", String.valueOf(this.sizing.maxBufferPoolSize)));
     final int maxMessageSize = Integer.parseInt(properties.getProperty("server.message.buffer.size", String.valueOf(this.sizing.maxMessageSize)));
     final long probeInterval = Long.parseLong(properties.getProperty("server.probe.interval", String.valueOf(this.timing.probeInterval)));
+    final long probeTimeout = Long.parseLong(properties.getProperty("server.probe.timeout", String.valueOf(this.timing.probeInterval)));
     final long requestMissingContentTimeout = Long.parseLong(properties.getProperty("server.request.missing.content.timeout", String.valueOf(this.timing.requestMissingContentTimeout)));
 
     this.sizing = new Sizing(processorPoolSize, dispatcherPoolSize, maxBufferPoolSize, maxMessageSize);
-    this.timing = new Timing(probeInterval, requestMissingContentTimeout);
+    this.timing = new Timing(probeInterval, probeTimeout, requestMissingContentTimeout);
   }
 
   public static class Sizing {
@@ -91,6 +92,10 @@ public class Configuration {
 
     public static Sizing define() {
       return new Sizing(10, 10, 100, 65535);
+    }
+
+    public static Sizing defineWith(final int processorPoolSize, final int dispatcherPoolSize, final int maxBufferPoolSize, final int maxMessageSize) {
+      return new Sizing(processorPoolSize, dispatcherPoolSize, maxBufferPoolSize, maxMessageSize);
     }
 
     public Sizing withProcessorPoolSize(final int processorPoolSize) {
@@ -112,23 +117,33 @@ public class Configuration {
 
   public static class Timing {
     public final long probeInterval;
+    public final long probeTimeout;
     public final long requestMissingContentTimeout;
 
-    public Timing(final long probeInterval, final long requestMissingContentTimeout) {
+    public Timing(final long probeInterval, final long probeTimeout, final long requestMissingContentTimeout) {
       this.probeInterval = probeInterval;
+      this.probeTimeout = probeTimeout;
       this.requestMissingContentTimeout = requestMissingContentTimeout;
     }
 
     public static Timing define() {
-      return new Timing(10, 100);
+      return new Timing(3, 2, 100);
+    }
+
+    public static Timing defineWith(final long probeInterval, final long probeTimeout, final long requestMissingContentTimeout) {
+      return new Timing(probeInterval, probeTimeout, requestMissingContentTimeout);
     }
 
     public Timing withProbeInterval(final int probeInterval) {
-      return new Timing(probeInterval, this.requestMissingContentTimeout);
+      return new Timing(probeInterval, this.probeTimeout, this.requestMissingContentTimeout);
+    }
+
+    public Timing withProbeTimeout(final int probeTimeout) {
+      return new Timing(this.probeInterval, probeTimeout, this.requestMissingContentTimeout);
     }
 
     public Timing withRequestMissingContentTimeout(final long requestMissingContentTimeout) {
-      return new Timing(this.probeInterval, requestMissingContentTimeout);
+      return new Timing(this.probeInterval, this.probeTimeout, requestMissingContentTimeout);
     }
   }
 }
