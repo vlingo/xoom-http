@@ -1,11 +1,12 @@
 package io.vlingo.http.resource;
 
-import io.vlingo.http.resource.Configuration.Sizing;
-import io.vlingo.http.resource.Configuration.Timing;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
+import org.junit.Test;
+
+import io.vlingo.http.resource.Configuration.Sizing;
+import io.vlingo.http.resource.Configuration.Timing;
 
 public class ConfigurationTest {
 
@@ -23,7 +24,7 @@ public class ConfigurationTest {
     assertEquals(65535, configuration.sizing().maxMessageSize);
 
     assertNotNull(configuration.timing());
-    assertEquals(10, configuration.timing().probeInterval);
+    assertEquals(4, configuration.timing().probeInterval);
     assertEquals(100, configuration.timing().requestMissingContentTimeout);
   }
 
@@ -38,6 +39,7 @@ public class ConfigurationTest {
           .withMaxMessageSize(3333))
         .with(Timing.define()
           .withProbeInterval(30)
+          .withProbeTimeout(40)
           .withRequestMissingContentTimeout(200));
 
     assertNotNull(configuration);
@@ -50,6 +52,7 @@ public class ConfigurationTest {
 
     assertNotNull(configuration.timing());
     assertEquals(30, configuration.timing().probeInterval);
+    assertEquals(40, configuration.timing().probeTimeout);
     assertEquals(200, configuration.timing().requestMissingContentTimeout);
   }
 }

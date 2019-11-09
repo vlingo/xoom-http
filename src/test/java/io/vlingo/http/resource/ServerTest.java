@@ -134,7 +134,7 @@ public class ServerTest extends ResourceTestFixtures {
     User.resetId();
 
     serverPort = baseServerPort.getAndIncrement();
-    server = Server.startWith(world.stage(), resources, serverPort, new Sizing(1, 1, 100, 10240), new Timing(1, 100));
+    server = Server.startWith(world.stage(), resources, serverPort, new Sizing(1, 1, 100, 10240), new Timing(1, 1, 100));
     assertTrue(server.startUp().await(500L));
 
     progress = new Progress();
