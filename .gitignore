@@ -7,6 +7,7 @@ target/
 .DS_Store
 *.log
 *.log.*
+jmeter_log*
 
 # Intellij
 .idea/
