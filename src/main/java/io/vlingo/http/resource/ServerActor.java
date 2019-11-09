@@ -89,7 +89,8 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
                       sizing.processorPoolSize,
                       sizing.maxBufferPoolSize,
                       sizing.maxMessageSize,
-                      timing.probeInterval);
+                      timing.probeInterval,
+                      timing.probeTimeout);
 
       final long end = Instant.now().toEpochMilli();
 
