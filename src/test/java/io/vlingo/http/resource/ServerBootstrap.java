@@ -41,8 +41,8 @@ public class ServerBootstrap {
                     8081,
                     Sizing.defineWith(4, 10, 100, 10240),
                     Timing.defineWith(3, 1, 100),
-                    "queueMailbox",
-                    "queueMailbox");
+                    "arrayQueueMailbox",
+                    "arrayQueueMailbox");
 
     Runtime.getRuntime().addShutdownHook(new Thread() {
       @Override
