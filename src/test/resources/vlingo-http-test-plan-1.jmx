@@ -119,7 +119,7 @@
             <connectTime>true</connectTime>
           </value>
         </objProp>
-        <stringProp name="filename"></stringProp>
+        <stringProp name="filename">/Users/vvernon/Projects/vlingo/vlingo-http/jmeter_log.txt</stringProp>
       </ResultCollector>
       <hashTree/>
     </hashTree>

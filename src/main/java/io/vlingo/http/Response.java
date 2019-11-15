@@ -104,6 +104,16 @@ public class Response {
     return consumerByteBuffer.put(Converters.textToBytes(toString())).flip();
   }
 
+  public int size() {
+    int headersSize = 0;
+    for (final ResponseHeader header : headers) {
+      // name + ": " + value + "\n"
+      headersSize += (header.name.length() + 2 + header.value.length() + 1);
+    }
+    // HTTP/1.1 + 1 + status code + "\n" + headers + "\n" + entity + just-in-case
+    return 9 + statusCode.length() + 1 + headersSize + 1 + entity.content().length() + 5;
+  }
+
   @Override
   public String toString() {
     final StringBuilder builder = new StringBuilder(size());
@@ -121,12 +131,11 @@ public class Response {
     this.version = version;
     this.status = status;
     this.statusCode = status.value.substring(0, status.value.indexOf(' '));
-    this.headers = headers;
     this.entity = entityFrom(headers, entity);
-    addMissingContentLengthHeader();
+    this.headers = addMissingContentLengthHeader(headers);
   }
 
-  private void addMissingContentLengthHeader() {
+  private Headers<ResponseHeader> addMissingContentLengthHeader(final Headers<ResponseHeader> headers) {
     if (!entity.isComplex()) {
       final int contentLength = entity.content().length();
       final Header header = headers.headerOf(ResponseHeader.ContentLength);
@@ -134,6 +143,7 @@ public class Response {
         headers.add(ResponseHeader.of(ResponseHeader.ContentLength, Integer.toString(contentLength)));
       }
     }
+    return headers;
   }
 
   private StringBuilder appendAllHeadersTo(final StringBuilder builder) {
@@ -153,16 +163,6 @@ public class Response {
     }
 
     return entity;
-  }
-
-  private int size() {
-    int headersSize = 0;
-    for (final ResponseHeader header : headers) {
-      // name + ": " + value + "\n"
-      headersSize += (header.name.length() + 2 + header.value.length() + 1);
-    }
-    // HTTP/1.1 + 1 + status code + "\n" + headers + "\n" + entity + just-in-case
-    return 9 + statusCode.length() + 1 + headersSize + 1 + entity.content().length() + 5;
   }
 
   public enum Status {
