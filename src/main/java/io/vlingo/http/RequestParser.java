@@ -7,16 +7,12 @@
 
 package io.vlingo.http;
 
-import java.net.URI;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Queue;
-
 import io.vlingo.http.Header.Headers;
 import io.vlingo.wire.message.Converters;
+
+import java.net.URI;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 public class RequestParser {
   private final VirtualStateParser virtualStateParser;
@@ -58,7 +54,6 @@ public class RequestParser {
   //=========================================
 
   static class VirtualStateParser {
-    private static class OutOfContentException extends RuntimeException { private static final long serialVersionUID = 1L; }
 
     private enum Step { NotStarted, RequestLine, Headers, Body, Completed };
 
@@ -137,7 +132,7 @@ public class RequestParser {
       outOfContentTime = 0;
       final String requestContentText = Converters.bytesToText(requestContent.array(), 0, requestContent.limit());
       if (contentQueue.isEmpty()) {
-        requestText = requestText + requestContentText;
+        requestText = requestText.concat(requestContentText);
       } else {
         contentQueue.add(requestContentText);
       }
@@ -149,26 +144,24 @@ public class RequestParser {
     }
 
     VirtualStateParser parse() {
+      boolean isOutOfContent = false;
       while (!hasCompleted()) {
-        try {
-          if (isNotStarted()) {
-            nextStep();
-          } else if (isRequestLineStep()) {
-            parseRequestLine();
-          } else if (isHeadersStep()) {
-            parseHeaders();
-          } else if (isBodyStep()) {
-            parseBody();
-          } else if (isCompletedStep()) {
-            continuation = false;
-            newRequest();
-          }
-        } catch (OutOfContentException e) {
+        if (isNotStarted()) {
+          isOutOfContent = nextStep();
+        } else if (isRequestLineStep()) {
+          isOutOfContent = parseRequestLine();
+        } else if (isHeadersStep()) {
+          isOutOfContent = parseHeaders();
+        } else if (isBodyStep()) {
+          isOutOfContent = parseBody();
+        } else if (isCompletedStep()) {
+          continuation = false;
+          isOutOfContent = newRequest();
+        }
+        if (isOutOfContent) {
           continuation = true;
           outOfContentTime = System.currentTimeMillis();
           return this;
-        } catch (Throwable t) {
-          throw t;
         }
       }
       return this;
@@ -180,15 +173,15 @@ public class RequestParser {
       return compact;
     }
 
-    private String nextLine(final String errorResult, final String errorMessage) {
+    private Optional<String> nextLine(final String errorResult, final String errorMessage) {
       int possibleCarriageReturnIndex = -1;
       final int lineBreak = requestText.indexOf("\n", position);
       if (lineBreak < 0) {
         if (contentQueue.isEmpty()) {
           requestText = compact();
-          throw new OutOfContentException();
+          return Optional.empty();
         }
-        requestText = compact() + contentQueue.poll();
+        requestText = compact().concat(contentQueue.poll());
         return nextLine(errorResult, errorMessage);
       } else if (lineBreak == 0) {
         possibleCarriageReturnIndex = 0;
@@ -196,10 +189,10 @@ public class RequestParser {
       final int endOfLine = requestText.charAt(lineBreak + possibleCarriageReturnIndex) == '\r' ? lineBreak - 1 : lineBreak;
       final String line  = requestText.substring(position, endOfLine).trim();
       position = lineBreak + 1;
-      return line;
+      return Optional.of(line);
     }
 
-    private void nextStep() {
+    private boolean nextStep() {
       if (isNotStarted()) {
         currentStep = Step.RequestLine;
       } else if (isRequestLineStep()) {
@@ -211,6 +204,7 @@ public class RequestParser {
       } else if (isCompletedStep()) {
         currentStep = Step.NotStarted;
       }
+      return false;
     }
 
     private boolean isBodyStep() {
@@ -233,14 +227,14 @@ public class RequestParser {
       return currentStep == Step.RequestLine;
     }
 
-    private void parseBody() {
+    private boolean parseBody() {
       continuation = false;
       if (contentLength > 0) {
         final int endIndex = position + contentLength;
         if (requestText.length() < endIndex) {
           if (contentQueue.isEmpty()) {
             requestText = compact();
-            throw new OutOfContentException();
+            return true;
           }
           requestText = compact() + contentQueue.poll();
           parseBody();
@@ -253,19 +247,25 @@ public class RequestParser {
         body = Body.from("");
         nextStep();
       }
+      return false;
     }
 
-    private void parseHeaders() {
+    private boolean parseHeaders() {
       if (!continuation) {
-        headers = new Headers<>(2);
+        headers = new Headers<>(8);
       }
       continuation = false;
       while (true) {
-        final String maybeHeaderLine = nextLine(Response.Status.BadRequest.toString(), "\n\nHeader is required.");
-        if (maybeHeaderLine.isEmpty()) {
+        final Optional<String> maybeHeaderLine =
+          nextLine(Response.Status.BadRequest.toString(), "\n\nHeader is required.");
+        if (!maybeHeaderLine.isPresent()) {
+          return true;
+        }
+        final String headerLine = maybeHeaderLine.get();
+        if (headerLine.isEmpty()) {
           break;
         }
-        final RequestHeader header = RequestHeader.from(maybeHeaderLine);
+        final RequestHeader header = RequestHeader.from(headerLine);
         headers.add(header);
         if (contentLength == 0) {
           final int maybeContentLength = header.ifContentLength();
@@ -277,42 +277,39 @@ public class RequestParser {
       if (headers.isEmpty()) {
         throw new IllegalArgumentException(Response.Status.BadRequest + "\n\nHeader is required.");
       }
-      nextStep();
+      return nextStep();
     }
 
-    private void parseRequestLine() {
+    private boolean parseRequestLine() {
       continuation = false;
-      final String line = nextLine(Response.Status.BadRequest.toString(), "\n\nRequest line is required.");
-      final String[] parts = line.split(" ");
-
+      final Optional<String> maybeLine = nextLine(Response.Status.BadRequest.toString(), "\n\nRequest line is required.");
+      if (!maybeLine.isPresent()) {
+        return true;
+      }
+      final StringTokenizer tokenizer = new StringTokenizer(maybeLine.get(), " ");
       try {
-        method = Method.from(parseSpecificRequestLinePart(parts, 1, "Method"));
-        uri = new URI(parseSpecificRequestLinePart(parts, 2, "URI/path"));
-        version = Version.from(parseSpecificRequestLinePart(parts, 3, "HTTP/version"));
-        
-        nextStep();
+        method = Method.from(parseNextRequestLinePart(tokenizer, "Method"));
+        uri = new URI(parseNextRequestLinePart(tokenizer, "URI/path"));
+        version = Version.from(parseNextRequestLinePart(tokenizer, "HTTP/version"));
+
+        return nextStep();
       } catch (Exception e) {
         throw new IllegalArgumentException(Response.Status.BadRequest.toString() + "\n\nParsing exception: " + e.getMessage(), e);
       }
     }
 
-    private String parseSpecificRequestLinePart(final String[] parts, final int part, final String name) {
-      int partCount = 0;
-      for (int idx = 0; idx < parts.length; ++idx) {
-        if (parts[idx].length() > 0) {
-          if (++partCount == part) {
-            return parts[idx];
-          }
-        }
+    private String parseNextRequestLinePart(final StringTokenizer tokenizer, final String expectedPartName) {
+      if(tokenizer.hasMoreTokens()) {
+        return tokenizer.nextToken();
       }
-      throw new IllegalArgumentException(Response.Status.BadRequest + "\n\nRequest line part missing: " + name);
+      throw new IllegalArgumentException(Response.Status.BadRequest + "\n\nRequest line part missing: " + expectedPartName);
     }
 
-    private void newRequest() {
+    private boolean newRequest() {
       final Request request = new Request(method, uri, version, headers, body);
       fullRequests.add(request);
       reset();
-      nextStep();
+      return nextStep();
     }
 
     private void reset() {
