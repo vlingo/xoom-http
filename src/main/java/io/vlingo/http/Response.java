@@ -11,6 +11,8 @@ import io.vlingo.http.Header.Headers;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 import io.vlingo.wire.message.Converters;
 
+import java.util.function.Function;
+
 public class Response {
 
   public static Response of(final Status statusCode) {
@@ -100,8 +102,10 @@ public class Response {
     return this;
   }
 
-  public ConsumerByteBuffer into(final ConsumerByteBuffer consumerByteBuffer) {
-    return consumerByteBuffer.put(Converters.textToBytes(toString())).flip();
+  public ConsumerByteBuffer into(final ConsumerByteBuffer buffer) {
+    Function<String, byte[]> convert = Converters::textToBytes;
+    Function<byte[], ConsumerByteBuffer> put = buffer::put;
+    return into(convert.andThen(put)).flip();
   }
 
   public int size() {
@@ -114,17 +118,22 @@ public class Response {
     return 9 + statusCode.length() + 1 + headersSize + 1 + entity.content().length() + 5;
   }
 
+  private <R> R into(Function<String,R> appender) {
+    // TODO: currently supports only HTTP/1.1
+    appender.apply(Version.HTTP_1_1);
+    appender.apply(" ");
+    appender.apply(status.toString());
+    appender.apply("\n");
+
+    appendAllHeadersTo(appender);
+    appender.apply("\n");
+    return appender.apply(entity.toString());
+  }
+
+
   @Override
   public String toString() {
-    final StringBuilder builder = new StringBuilder(size());
-
-    // TODO: currently supports only HTTP/1.1
-
-    builder.append(Version.HTTP_1_1).append(" ").append(status).append("\n");
-    appendAllHeadersTo(builder);
-    builder.append("\n").append(entity);
-
-    return builder.toString();
+    return into(new StringBuilder(size())::append).toString();
   }
 
   protected Response(final Version version, final Status status, final Headers<ResponseHeader> headers, final Body entity) {
@@ -146,11 +155,13 @@ public class Response {
     return headers;
   }
 
-  private StringBuilder appendAllHeadersTo(final StringBuilder builder) {
+  private <R> void appendAllHeadersTo(Function<String, R> appender) {
     for (final ResponseHeader header : headers) {
-      builder.append(header.name).append(": ").append(header.value).append("\n");
+      appender.apply(header.name);
+      appender.apply(": ");
+      appender.apply(header.value);
+      appender.apply("\n");
     }
-    return builder;
   }
 
   private Body entityFrom(final Headers<ResponseHeader> headers, final Body entity) {

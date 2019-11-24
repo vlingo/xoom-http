@@ -9,16 +9,16 @@
 
 package io.vlingo.http.resource;
 
-import java.util.List;
-import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
+
+import java.util.List;
+import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class RequestHandler {
   public final Method method;
@@ -28,7 +28,7 @@ public abstract class RequestHandler {
   protected MediaTypeMapper mediaTypeMapper;
   protected ErrorHandler errorHandler;
 
-  RequestHandler(final Method method, final String path, final List<ParameterResolver<?>> parameterResolvers) {
+  protected RequestHandler(final Method method, final String path, final List<ParameterResolver<?>> parameterResolvers) {
     this.method = method;
     this.path = path;
     this.actionSignature = generateActionSignature(parameterResolvers);
@@ -36,7 +36,7 @@ public abstract class RequestHandler {
     this.mediaTypeMapper = DefaultMediaTypeMapper.instance();
   }
 
-  RequestHandler(final Method method,
+  protected RequestHandler(final Method method,
                  final String path,
                  final List<ParameterResolver<?>> parameterResolvers,
                  final ErrorHandler errorHandler,
@@ -55,7 +55,7 @@ public abstract class RequestHandler {
     return executeRequest.get();
   }
 
-  abstract Completes<Response> execute(final Request request,
+  protected abstract Completes<Response> execute(final Request request,
                                        final Action.MappedParameters mappedParameters,
                                        final Logger logger);
 

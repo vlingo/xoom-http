@@ -7,15 +7,15 @@
 
 package io.vlingo.http.resource;
 
-import java.util.Arrays;
-import java.util.function.Supplier;
-
 import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Header;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
+
+import java.util.Arrays;
+import java.util.function.Supplier;
 
 public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
   final ParameterResolver<T> resolverParam1;
@@ -100,7 +100,7 @@ public class RequestHandler5<T, R, U, I, J> extends RequestHandler {
   }
 
   @Override
-  Completes<Response> execute(final Request request,
+  protected Completes<Response> execute(final Request request,
                               final Action.MappedParameters mappedParameters,
                               final Logger logger) {
     final T param1 = resolverParam1.apply(request, mappedParameters);
