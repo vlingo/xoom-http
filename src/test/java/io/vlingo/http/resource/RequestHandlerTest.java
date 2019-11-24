@@ -1,18 +1,5 @@
 package io.vlingo.http.resource;
 
-import static io.vlingo.http.Response.Status.InternalServerError;
-import static io.vlingo.http.Response.Status.Ok;
-import static io.vlingo.http.Response.Status.UnsupportedMediaType;
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Method;
@@ -26,6 +13,16 @@ import io.vlingo.http.resource.RequestHandler0.ParamExecutor0;
 import io.vlingo.http.resource.serialization.JsonSerialization;
 import io.vlingo.http.sample.user.NameData;
 import io.vlingo.http.sample.user.model.Name;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static io.vlingo.http.Response.Status.*;
+import static org.junit.Assert.assertEquals;
 
 public class RequestHandlerTest extends RequestHandlerTestBase {
 
@@ -195,7 +192,7 @@ class RequestObjectHandlerFake extends RequestHandler {
   }
 
   @Override
-  Completes<Response> execute(Request request, Action.MappedParameters mappedParameters, Logger logger) {
+  protected Completes<Response> execute(Request request, Action.MappedParameters mappedParameters, Logger logger) {
    return executor.execute(request,
                            DefaultMediaTypeMapper.instance(),
                            errorHandler, logger);
@@ -222,7 +219,7 @@ class RequestHandlerFake extends RequestHandler {
   }
 
   @Override
-  Completes<Response> execute(final Request request,
+  protected Completes<Response> execute(final Request request,
                               final Action.MappedParameters mappedParameters,
                               final Logger logger) {
     throw new UnsupportedOperationException();
