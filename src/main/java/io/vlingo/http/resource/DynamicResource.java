@@ -32,8 +32,7 @@ public class DynamicResource extends Resource<ResourceHandler> {
         predicate.method.toString(),
         predicate.path,
         "dynamic" + currentId + "(" + predicate.actionSignature + ")",
-        null,
-        false));
+        null));
     }
   }
 

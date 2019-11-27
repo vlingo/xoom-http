@@ -17,10 +17,9 @@ import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 
 public final class Action {
-  static final MatchResults unmatchedResults = new MatchResults(null, null, Collections.emptyList(), "", false);
+  static final MatchResults unmatchedResults = new MatchResults(null, null, Collections.emptyList(), "");
 
   public final List<MappedParameter> additionalParameters;
-  public final boolean disallowPathParametersWithSlash;
   public final int id;
   public final Method method;
   public final String uri;
@@ -29,18 +28,17 @@ public final class Action {
   public final Mapper mapper;
   private final Matchable matchable;
 
-  public Action(final int id, final String method, final String uri, final String to, final String mapper, final boolean disallowPathParametersWithSlash) {
-    this(id, method, uri, to, mapper, disallowPathParametersWithSlash, Collections.emptyList());
+  public Action(final int id, final String method, final String uri, final String to, final String mapper) {
+    this(id, method, uri, to, mapper, Collections.emptyList());
   }
 
-  public Action(final int id, final String method, final String uri, final String to, final String mapper, final boolean disallowPathParametersWithSlash, final List<MappedParameter> additionalParameters) {
+  public Action(final int id, final String method, final String uri, final String to, final String mapper, final List<MappedParameter> additionalParameters) {
     this.id = id;
     this.method = Method.from(method);
     this.uri = uri;
     this.to = new ToSpec(to);
     this.originalTo = to;
     this.mapper = mapper == null ? DefaultJsonMapper.instance : mapperFrom(mapper);
-    this.disallowPathParametersWithSlash = disallowPathParametersWithSlash;
     this.additionalParameters = additionalParameters;
     this.matchable = new Matchable(uri);
   }
@@ -93,11 +91,11 @@ public final class Action {
       }
       int nextPathSegmentIndex = indexOfNextSegmentStart(pathCurrentIndex, path);
       if ( nextPathSegmentIndex != path.length()) {
-        if (disallowPathParametersWithSlash || nextPathSegmentIndex < path.length() - 1) {
+        if (nextPathSegmentIndex < path.length() - 1) {
           return unmatchedResults;
         }
       }
-      final MatchResults matchResults = new MatchResults(this, running, parameterNames(), path, disallowPathParametersWithSlash);
+      final MatchResults matchResults = new MatchResults(this, running, parameterNames(), path);
       return matchResults;
     }
     return unmatchedResults;
@@ -253,8 +251,7 @@ public final class Action {
             final Action action,
             final RunningMatchSegments running,
             final List<String> parameterNames,
-            final String path,
-            final boolean disallowPathParametersWithSlash) {
+            final String path) {
 
       this.action = action;
       this.parameters = new ArrayList<>(parameterNames.size());
@@ -275,7 +272,7 @@ public final class Action {
               return;
             }
             final String value = path.substring(pathStartIndex, pathEndIndex);
-            if (disallowPathParametersWithSlash && value.indexOf("/") >= 0) {
+            if (value.indexOf("/") >= 0) {
               this.matched = false;
               return;
             }

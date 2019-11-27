@@ -15,21 +15,21 @@ public class Actions {
   private int currentId;
   private final List<Action> actions;
 
-  public static Actions canBe(final String method, final String uri, final String to, final boolean disallowPathParametersWithSlash) {
-    return new Actions(method, uri, to, null, disallowPathParametersWithSlash);
+  public static Actions canBe(final String method, final String uri, final String to) {
+    return new Actions(method, uri, to, null);
   }
 
-  public static Actions canBe(final String method, final String uri, final String to, final String mapper, final boolean disallowPathParametersWithSlash) {
-    return new Actions(method, uri, to, mapper, disallowPathParametersWithSlash);
+  public static Actions canBe(final String method, final String uri, final String to, final String mapper) {
+    return new Actions(method, uri, to, mapper);
   }
 
-  public Actions also(final String method, final String uri, final String to, final boolean disallowPathParametersWithSlash) {
-    actions.add(new Action(currentId++, method, uri, to, null, disallowPathParametersWithSlash));
+  public Actions also(final String method, final String uri, final String to) {
+    actions.add(new Action(currentId++, method, uri, to, null));
     return this;
   }
 
-  public Actions also(final String method, final String uri, final String to, final String mapper, final boolean disallowPathParametersWithSlash) {
-    actions.add(new Action(currentId++, method, uri, to, mapper, disallowPathParametersWithSlash));
+  public Actions also(final String method, final String uri, final String to, final String mapper) {
+    actions.add(new Action(currentId++, method, uri, to, mapper));
     return this;
   }
 
@@ -37,8 +37,8 @@ public class Actions {
     return Collections.unmodifiableList(actions);
   }
 
-  private Actions(final String method, final String uri, final String to, final String mapper, final boolean disallowPathParametersWithSlash) {
+  private Actions(final String method, final String uri, final String to, final String mapper) {
     this.actions = new ArrayList<>();
-    actions.add(new Action(currentId++, method, uri, to, mapper, disallowPathParametersWithSlash));
+    actions.add(new Action(currentId++, method, uri, to, mapper));
   }
 }

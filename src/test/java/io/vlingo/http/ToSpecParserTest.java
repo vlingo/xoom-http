@@ -16,46 +16,46 @@ public class ToSpecParserTest {
 
   @Test
   public void testSimpleUnqualifiedNonBodyParameterMapping() {
-    new Action(0, "PATCH", "/airports/{airportId}/stringProperty", "changeStringProperty(String value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/integerProperty", "changeIntegerProperty(int value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/integerProperty", "changeIntegerProperty(Integer value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/longProperty", "changeLongProperty(long value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/longProperty", "changeLongProperty(Long value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/booleanProperty", "changeBooleanProperty(boolean value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/booleanProperty", "changeBooleanProperty(Long value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/doubleProperty", "changeDoubleProperty(double value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/doubleProperty", "changeDoubleProperty(Double value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/shortProperty", "changeShortProperty(short value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/shortProperty", "changeShortProperty(Short value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/floatProperty", "changeFloatProperty(float value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/floatProperty", "changeFloatProperty(Float value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/characterProperty", "changeCharacterProperty(char value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/characterProperty", "changeCharacterProperty(Character value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/byteProperty", "changeByteProperty(byte value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/byteProperty", "changeByteProperty(Byte value)", null, true);
+    new Action(0, "PATCH", "/airports/{airportId}/stringProperty", "changeStringProperty(String value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/integerProperty", "changeIntegerProperty(int value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/integerProperty", "changeIntegerProperty(Integer value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/longProperty", "changeLongProperty(long value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/longProperty", "changeLongProperty(Long value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/booleanProperty", "changeBooleanProperty(boolean value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/booleanProperty", "changeBooleanProperty(Long value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/doubleProperty", "changeDoubleProperty(double value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/doubleProperty", "changeDoubleProperty(Double value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/shortProperty", "changeShortProperty(short value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/shortProperty", "changeShortProperty(Short value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/floatProperty", "changeFloatProperty(float value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/floatProperty", "changeFloatProperty(Float value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/characterProperty", "changeCharacterProperty(char value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/characterProperty", "changeCharacterProperty(Character value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/byteProperty", "changeByteProperty(byte value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/byteProperty", "changeByteProperty(Byte value)", null);
   }
   
   @Test(expected=IllegalStateException.class)
   public void testComplexUnqualifiedNonBodyParameterMapping() {
-    new Action(0, "PATCH", "/airports/{airportId}/geocode", "name(body:Geocode geocode)", null, true);
+    new Action(0, "PATCH", "/airports/{airportId}/geocode", "name(body:Geocode geocode)", null);
   }
 
   @Test
   public void testSimpleQualifiedBodyParameterMapping() {
-    new Action(0, "PATCH", "/airports/{airportId}/stringProperty", "changeStringProperty(body:java.lang.String value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/integerProperty", "changeIntegerProperty(body:java.lang.Integer value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/longProperty", "changeLongProperty(body:java.lang.Long value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/booleanProperty", "changeBooleanProperty(body:java.lang.Long value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/doubleProperty", "changeDoubleProperty(body:java.lang.Double value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/shortProperty", "changeShortProperty(body:java.lang.Short value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/floatProperty", "changeFloatProperty(body:java.lang.Float value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/characterProperty", "changeCharacterProperty(body:java.lang.Character value)", null, true);
-    new Action(0, "PATCH", "/airports/{airportId}/byteProperty", "changeByteProperty(body:java.lang.Byte value)", null, true);
+    new Action(0, "PATCH", "/airports/{airportId}/stringProperty", "changeStringProperty(body:java.lang.String value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/integerProperty", "changeIntegerProperty(body:java.lang.Integer value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/longProperty", "changeLongProperty(body:java.lang.Long value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/booleanProperty", "changeBooleanProperty(body:java.lang.Long value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/doubleProperty", "changeDoubleProperty(body:java.lang.Double value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/shortProperty", "changeShortProperty(body:java.lang.Short value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/floatProperty", "changeFloatProperty(body:java.lang.Float value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/characterProperty", "changeCharacterProperty(body:java.lang.Character value)", null);
+    new Action(0, "PATCH", "/airports/{airportId}/byteProperty", "changeByteProperty(body:java.lang.Byte value)", null);
   }
   
   @Test
   public void testComplexQualifiedBodyParameterMapping() {
-    new Action(0, "PATCH", "/airports/{airportId}/geocode", "name(body:io.vlingo.http.ToSpecParserTest$Geocode geocode)", null, true);
+    new Action(0, "PATCH", "/airports/{airportId}/geocode", "name(body:io.vlingo.http.ToSpecParserTest$Geocode geocode)", null);
   }
 
   class Geocode {
