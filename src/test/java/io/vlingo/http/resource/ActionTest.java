@@ -86,6 +86,39 @@ public class ActionTest {
   }
 
   @Test
+  public void testMatchesMultipleParametersWithSimilarUri() throws Exception {
+    final Action shortAction =
+      new Action(
+        0,
+        "GET",
+        "/o/{oId}/u/{uId}/foo",
+        "foo(String oId, String uId, String uId)",
+        null,
+        false);
+
+    final Action longAction =
+      new Action(
+        0,
+        "GET",
+        "/o/{oId}/u/{uId}/c/{cId}/foo",
+        "foo(String oId, String uId, String uId, String cId)",
+        null,
+        false);
+
+    final MatchResults matchResultsShortUriToShortAction = shortAction.matchWith(Method.GET, new URI("/o/1/u/2/foo"));
+    final MatchResults matchResultsLongUriToShortAction = shortAction.matchWith(Method.GET, new URI("/o/1/u/2/c/3/foo"));
+
+    final MatchResults matchResultsShortUriToLongAction = longAction.matchWith(Method.GET, new URI("/o/1/u/2/foo"));
+    final MatchResults matchResultsLongUriToLongAction = longAction.matchWith(Method.GET, new URI("/o/1/u/2/c/3/foo"));
+
+
+    assertTrue(matchResultsShortUriToShortAction.matched);
+    assertFalse(matchResultsLongUriToShortAction.matched);
+    assertFalse(matchResultsShortUriToLongAction.matched);
+    assertTrue(matchResultsLongUriToLongAction.matched);
+  }
+
+  @Test
   public void testMatchesOneParameterWithEndSlash() throws Exception {
     final Action action = new Action(0, "GET", "/users/{userId}/", "queryUser(String userId)", null, false);
     
