@@ -7,11 +7,11 @@
 
 package io.vlingo.http;
 
+import java.util.function.Function;
+
 import io.vlingo.http.Header.Headers;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 import io.vlingo.wire.message.Converters;
-
-import java.util.function.Function;
 
 public class Response {
 
@@ -114,8 +114,8 @@ public class Response {
       // name + ": " + value + "\n"
       headersSize += (header.name.length() + 2 + header.value.length() + 1);
     }
-    // HTTP/1.1 + 1 + status code + "\n" + headers + "\n" + entity + just-in-case
-    return 9 + statusCode.length() + 1 + headersSize + 1 + entity.content().length() + 5;
+    // HTTP/1.1 + 1 + status + "\n" + headers + "\n" + entity + just-in-case
+    return 9 + status.value.length() + 1 + headersSize + 1 + entity.content().length() + 5;
   }
 
   private <R> R into(Function<String,R> appender) {
