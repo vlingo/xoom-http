@@ -7,17 +7,21 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.common.Tuple2;
+import io.vlingo.http.Method;
+import io.vlingo.http.Request;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import io.vlingo.common.Tuple2;
-import io.vlingo.http.Method;
-import io.vlingo.http.Request;
-
 public final class Action {
-  static final MatchResults unmatchedResults = new MatchResults(null, null, Collections.emptyList(), "");
+  static final String PATH_SEPARATOR = "/";
+  static final String PATH_PARAM_PREFIX = "{";
+  static final String PATH_PARAM_SUFFIX = "}";
+
+  static final MatchResults unmatchedResults = new MatchResults(null, null, Collections.emptyList(), new String[]{});
 
   public final List<MappedParameter> additionalParameters;
   public final int id;
@@ -60,45 +64,55 @@ public final class Action {
     return new MappedParameters(this.id, this.method, to.methodName, mapped);
   }
 
-  private int indexOfNextSegmentStart(int currentIndex, String path) {
-    int nextSegmentStart = path.indexOf("/", currentIndex);
-    if (nextSegmentStart < currentIndex) {
-      return path.length();
-    }
-    return nextSegmentStart;
-  }
-
   MatchResults matchWith(final Method method, final URI uri) {
     if (this.method.equals(method)) {
-      final String path = uri.getPath();
-      int pathCurrentIndex = 0;
-      final int totalSegments = matchable.totalSegments();
-      final RunningMatchSegments running = new RunningMatchSegments(totalSegments);
-      for (int idx = 0; idx < totalSegments; ++idx) {
-        final PathSegment segment = matchable.pathSegment(idx);
-        if (segment.isPathParameter()) {
-          running.keepParameterSegment(pathCurrentIndex);
-          pathCurrentIndex = indexOfNextSegmentStart(pathCurrentIndex, path);
-        } else {
-          final int indexOfSegment = path.indexOf(segment.value, pathCurrentIndex);
-          if (indexOfSegment == -1 || (pathCurrentIndex == 0 && indexOfSegment != 0)) {
+      final String path =
+        uri.getPath();
+      final String[] pathSegments = splitUri(path, matchable.totalSegments());
+
+      final PathSegment[] templateSegments = new PathSegment[matchable.totalSegments()];
+      final RunningMatchSegments running = new RunningMatchSegments(matchable.totalSegments());
+
+      if (pathSegments.length != templateSegments.length) {
+        return unmatchedResults;
+      }
+
+      matchable.pathSegments.toArray(templateSegments);
+      for (int position = 0; position < templateSegments.length; position++) {
+        final PathSegment templateSegment = matchable.pathSegment(position);
+        if (!templateSegment.isPathParameter()) {
+          if (!templateSegment.value.equals(pathSegments[position]))
             return unmatchedResults;
-          }
-          final int lastIndex = segment.lastIndexOf(indexOfSegment);
-          running.keepPathSegment(indexOfSegment, lastIndex);
-          pathCurrentIndex = lastIndex;
+          running.keepPathSegment(position);
+          // continue only if we have a matching static path segment
+        } else {
+          running.keepParameterSegment(position);
         }
       }
-      int nextPathSegmentIndex = indexOfNextSegmentStart(pathCurrentIndex, path);
-      if ( nextPathSegmentIndex != path.length()) {
-        if (nextPathSegmentIndex < path.length() - 1) {
-          return unmatchedResults;
-        }
-      }
-      final MatchResults matchResults = new MatchResults(this, running, parameterNames(), path);
-      return matchResults;
+      return new MatchResults(this, running, parameterNames(), pathSegments);
     }
     return unmatchedResults;
+  }
+
+  private static String[] splitUri(String uri) {
+    return splitUri(uri, 10);
+  }
+  private static String[] splitUri(String uri, int expectedSize) {
+    List<String> segments = new ArrayList<>(expectedSize);
+    int pos = 0;
+    int idx;
+    while (true) {
+      idx = uri.indexOf(PATH_SEPARATOR, pos);
+      if (idx < 0) {
+        segments.add(uri.substring(pos));
+        break;
+      }
+      segments.add(uri.substring(pos, idx));
+      pos = idx + 1;
+    }
+
+    String[] result = new String[segments.size()];
+    return segments.toArray(result);
   }
 
   @Override
@@ -154,34 +168,34 @@ public final class Action {
     final String type = this.to.parameterOf(parameter.name).type;
 
     switch (type) {
-    case "String":
-      return parameter.value;
-    case "int":
-    case "Integer":
-      return Integer.parseInt(parameter.value);
-    case "long":
-    case "Long":
-      return Long.parseLong(parameter.value);
-    case "boolean":
-    case "Boolean":
-      return Boolean.parseBoolean(parameter.value);
-    case "double":
-    case "Double":
-      return Double.parseDouble(parameter.value);
-    case "short":
-    case "Short":
-      return Short.parseShort(parameter.value);
-    case "float":
-    case "Float":
-      return Float.parseFloat(parameter.value);
-    case "char":
-    case "Character":
-      return parameter.value.charAt(0);
-    case "byte":
-    case "Byte":
-      return Byte.parseByte(parameter.value);
-    default:
-      return null;
+      case "String":
+        return parameter.value;
+      case "int":
+      case "Integer":
+        return Integer.parseInt(parameter.value);
+      case "long":
+      case "Long":
+        return Long.parseLong(parameter.value);
+      case "boolean":
+      case "Boolean":
+        return Boolean.parseBoolean(parameter.value);
+      case "double":
+      case "Double":
+        return Double.parseDouble(parameter.value);
+      case "short":
+      case "Short":
+        return Short.parseShort(parameter.value);
+      case "float":
+      case "Float":
+        return Float.parseFloat(parameter.value);
+      case "char":
+      case "Character":
+        return parameter.value.charAt(0);
+      case "byte":
+      case "Byte":
+        return Byte.parseByte(parameter.value);
+      default:
+        return null;
     }
   }
 
@@ -248,10 +262,10 @@ public final class Action {
     }
 
     MatchResults(
-            final Action action,
-            final RunningMatchSegments running,
-            final List<String> parameterNames,
-            final String path) {
+      final Action action,
+      final RunningMatchSegments running,
+      final List<String> parameterNames,
+      final String[] pathSegments) {
 
       this.action = action;
       this.parameters = new ArrayList<>(parameterNames.size());
@@ -259,30 +273,18 @@ public final class Action {
       if (running == null) {
         this.matched = false;
       } else {
-        int pathLength = 0;
         final int total = running.total();
-        for (int idx = 0, parameterIndex = 0; idx < total; ++idx) {
-          final MatchSegment segment = running.matchSegment(idx);
+        int staticPathSegments = 0;
+        for (int position = 0, parameterIndex = 0; position < total; ++position) {
+          final MatchSegment segment = running.matchSegment(position);
 
           if (segment.isPathParameter()) {
-            final int pathStartIndex = segment.pathStartIndex();
-            final int pathEndIndex = running.nextSegmentStartIndex(idx, path.length());
-            if (pathStartIndex >= pathEndIndex) {
-              this.matched = false;
-              return;
-            }
-            final String value = path.substring(pathStartIndex, pathEndIndex);
-            if (value.indexOf("/") >= 0) {
-              this.matched = false;
-              return;
-            }
-            pathLength += value.length();
-            parameters.add(new RawPathParameter(parameterNames.get(parameterIndex++), value));
+            parameters.add(new RawPathParameter(parameterNames.get(parameterIndex++), pathSegments[position]));
           } else {
-            pathLength += action.matchable.pathSegment(idx).value.length();
+            staticPathSegments++;
           }
         }
-        this.matched = pathLength == path.length();
+        this.matched = parameters.size() + staticPathSegments == pathSegments.length;
       }
     }
 
@@ -391,17 +393,14 @@ public final class Action {
       this.matchSegments = new ArrayList<>(totalSegments + 1);
     }
 
-    void keepParameterSegment(final int pathStartIndex) {
-      matchSegments.add(new MatchSegment(true, pathStartIndex));
+    void keepParameterSegment(final int position) {
+      matchSegments.add(new MatchSegment(true, position));
     }
 
-    void keepPathSegment(final int pathStartIndex, final int pathEndIndex) {
-      matchSegments.add(new MatchSegment(false, pathStartIndex));
+    void keepPathSegment(final int position) {
+      matchSegments.add(new MatchSegment(false, position));
     }
 
-    int nextSegmentStartIndex(final int index, final int maxIndex) {
-      return index < (total() - 1) ? matchSegment(index + 1).pathStartIndex : maxIndex;
-    }
 
     MatchSegment matchSegment(final int index) {
       return matchSegments.get(index);
@@ -418,20 +417,20 @@ public final class Action {
 
   private static class MatchSegment {
     private final boolean pathParameter;
-    private final int pathStartIndex;
+    private final int position;
 
     @Override
     public String toString() {
-      return "MatchSegment[pathParameter=" + pathParameter + ", pathStartIndex=" + pathStartIndex + "]";
+      return "MatchSegment[pathParameter=" + pathParameter + ", position=" + position + "]";
     }
 
-    MatchSegment(final boolean pathParameter, final int pathStartIndex) {
+    MatchSegment(final boolean pathParameter, final int position) {
       this.pathParameter = pathParameter;
-      this.pathStartIndex = pathStartIndex;
+      this.position = position;
     }
 
-    int pathStartIndex() {
-      return pathStartIndex;
+    int position() {
+      return position;
     }
 
     boolean isPathParameter() {
@@ -470,26 +469,17 @@ public final class Action {
 
     private List<PathSegment> segmented(final String uri) {
       final List<PathSegment> segments = new ArrayList<>();
-      String start = uri;
-      while (true) {
-        final int openBrace = start.indexOf("{");
-        if (openBrace >= 0) {
-          final int closeBrace = start.indexOf("}", openBrace);
-          if (closeBrace > openBrace) {
-            final String segment = start.substring(0, openBrace);
-            segments.add(new PathSegment(segment, false));
-            final String parameter = start.substring(openBrace + 1, closeBrace);
-            segments.add(new PathSegment(parameter, true));
-            start = start.substring(closeBrace + 1);
-            if (start.isEmpty()) {
-              break;
-            }
-          } else {
-            throw new IllegalStateException("URI has unbalanced brace: " + uri);
+      for (String segment : splitUri(uri)) {
+        if (segment.startsWith(PATH_PARAM_PREFIX)) {
+          if (!segment.endsWith(PATH_PARAM_SUFFIX)) {
+            throw new IllegalStateException("URI template has unbalanced brace: " + uri);
           }
+          segments.add(
+            new PathSegment(
+              segment.substring(1, segment.length() - 1),
+              true));
         } else {
-          segments.add(new PathSegment(start, false));
-          break;
+          segments.add(new PathSegment(segment, false));
         }
       }
 
