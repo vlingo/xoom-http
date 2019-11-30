@@ -20,7 +20,7 @@ import static junit.framework.TestCase.assertTrue;
 public class BenchmarkTests {
   @Test
   public void launchBenchmark() throws Exception {
-    final double expectedMinUsPerOp = 370;
+    final double expectedMinUsPerOp = 570;
 
     Options opt = new OptionsBuilder()
       .include(this.getClass().getName() + ".*")
