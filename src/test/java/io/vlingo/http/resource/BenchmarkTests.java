@@ -1,5 +1,6 @@
 package io.vlingo.http.resource;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -19,8 +20,9 @@ import static junit.framework.TestCase.assertTrue;
 
 public class BenchmarkTests {
   @Test
+  @Ignore("Ignoring this test in favor of the existing jMeter tests, but keep it for local tests of future refactorings to action matching")
   public void launchBenchmark() throws Exception {
-    final double expectedMinUsPerOp = 570;
+    final double expectedMinUsPerOp = 350;
 
     Options opt = new OptionsBuilder()
       .include(this.getClass().getSimpleName() + "\\.benchmark.*")
