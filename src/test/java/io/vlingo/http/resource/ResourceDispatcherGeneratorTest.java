@@ -62,12 +62,12 @@ public class ResourceDispatcherGeneratorTest {
   @Before
   @SuppressWarnings("unchecked")
   public void setUp() {
-    actionPostUser = new Action(0, "POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", null, true);
-    actionPatchUserContact = new Action(1, "PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)", null, true);
-    actionPatchUserName = new Action(2, "PATCH", "/users/{userId}/name", "changeName(String userId, body:io.vlingo.http.sample.user.NameData nameData)", null, true);
-    actionGetUser = new Action(3, "GET", "/users/{userId}", "queryUser(String userId)", null, true);
-    actionGetUsers = new Action(4, "GET", "/users", "queryUsers()", null, true);
-    actionQueryUserError = new Action(5, "GET", "/users/{userId}/error", "queryUserError(String userId)", null, true);
+    actionPostUser = new Action(0, "POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", null);
+    actionPatchUserContact = new Action(1, "PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)", null);
+    actionPatchUserName = new Action(2, "PATCH", "/users/{userId}/name", "changeName(String userId, body:io.vlingo.http.sample.user.NameData nameData)", null);
+    actionGetUser = new Action(3, "GET", "/users/{userId}", "queryUser(String userId)", null);
+    actionGetUsers = new Action(4, "GET", "/users", "queryUsers()", null);
+    actionQueryUserError = new Action(5, "GET", "/users/{userId}/error", "queryUserError(String userId)", null);
 
     actions =
             Arrays.asList(

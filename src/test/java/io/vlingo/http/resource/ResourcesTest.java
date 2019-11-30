@@ -97,15 +97,15 @@ public class ResourcesTest {
     final Resources resources =
             Resources
               .are(ConfigurationResource.defining("user", UserResource.class, 10,
-                      Actions.canBe("POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", true)
-                              .also("PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)", true)
-                              .also("PATCH", "/users/{userId}/name", "changeName(String userId, body:io.vlingo.http.sample.user.NameData nameData)", true)
-                              .also("GET", "/users/{userId}", "queryUser(String userId)", true)
-                              .also("GET", "/users", "queryUsers()", true)
+                      Actions.canBe("POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)")
+                              .also("PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)")
+                              .also("PATCH", "/users/{userId}/name", "changeName(String userId, body:io.vlingo.http.sample.user.NameData nameData)")
+                              .also("GET", "/users/{userId}", "queryUser(String userId)")
+                              .also("GET", "/users", "queryUsers()")
                               .thatsAll()),
                    ConfigurationResource.defining("profile", ProfileResource.class, 5,
-                      Actions.canBe("PUT", "/users/{userId}/profile", "define(String userId, body:io.vlingo.http.sample.user.ProfileData profileData)", "io.vlingo.http.sample.user.ProfileDataMapper", false)
-                              .also("GET", "/users/{userId}/profile", "query(String userId)", "io.vlingo.http.sample.user.ProfileDataMapper", false)
+                      Actions.canBe("PUT", "/users/{userId}/profile", "define(String userId, body:io.vlingo.http.sample.user.ProfileData profileData)", "io.vlingo.http.sample.user.ProfileDataMapper")
+                              .also("GET", "/users/{userId}/profile", "query(String userId)", "io.vlingo.http.sample.user.ProfileDataMapper")
                               .thatsAll()));
 
     assertNotNull(resources.resourceOf("user"));
@@ -114,8 +114,8 @@ public class ResourcesTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testThatWrongIdSequenceBreaks() {
-    final Action actionPostUser = new Action(0, "POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", null, true);
-    final Action actionPatchUserContact = new Action(3, "PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)", null, true);
+    final Action actionPostUser = new Action(0, "POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", null);
+    final Action actionPatchUserContact = new Action(3, "PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)", null);
 
     final List<Action> actions = Arrays.asList(actionPostUser, actionPatchUserContact);
 
@@ -127,8 +127,8 @@ public class ResourcesTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testThatWrongIdOrderBreaks() {
-    final Action actionPostUser = new Action(3, "POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", null, true);
-    final Action actionPatchUserContact = new Action(1, "PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)", null, true);
+    final Action actionPostUser = new Action(3, "POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", null);
+    final Action actionPatchUserContact = new Action(1, "PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)", null);
 
     final List<Action> actions = Arrays.asList(actionPostUser, actionPatchUserContact);
 

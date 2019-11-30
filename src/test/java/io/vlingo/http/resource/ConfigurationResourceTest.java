@@ -237,12 +237,12 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
   @Test
   public void testThatAllPoorlyOrderedActionHaveMatches() throws Exception {
     System.out.println("testThatAllPoorlyOrderedActionHaveMatches()");
-    actionPostUser = new Action(0, "POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", null, true);
-    actionPatchUserContact = new Action(1, "PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)", null, true);
-    actionPatchUserName = new Action(2, "PATCH", "/users/{userId}/name", "changeName(String userId, body:io.vlingo.http.sample.user.NameData nameData)", null, true);
-    actionGetUsers = new Action(3, "GET", "/users", "queryUsers()", null, true);
-    actionGetUser = new Action(4, "GET", "/users/{userId}", "queryUser(String userId)", null, true);
-    final Action actionGetUserEmailAddress = new Action(5, "GET", "/users/{userId}/emailAddresses/{emailAddressId}", "queryUserEmailAddress(String userId, String emailAddressId)", null, true);
+    actionPostUser = new Action(0, "POST", "/users", "register(body:io.vlingo.http.sample.user.UserData userData)", null);
+    actionPatchUserContact = new Action(1, "PATCH", "/users/{userId}/contact", "changeContact(String userId, body:io.vlingo.http.sample.user.ContactData contactData)", null);
+    actionPatchUserName = new Action(2, "PATCH", "/users/{userId}/name", "changeName(String userId, body:io.vlingo.http.sample.user.NameData nameData)", null);
+    actionGetUsers = new Action(3, "GET", "/users", "queryUsers()", null);
+    actionGetUser = new Action(4, "GET", "/users/{userId}", "queryUser(String userId)", null);
+    final Action actionGetUserEmailAddress = new Action(5, "GET", "/users/{userId}/emailAddresses/{emailAddressId}", "queryUserEmailAddress(String userId, String emailAddressId)", null);
 
     //=============================================================
     // this test assures that the optional feature used in the

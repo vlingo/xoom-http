@@ -26,7 +26,7 @@ public class ActionTest {
 
   @Test
   public void testMatchesNoParameters() throws Exception {
-    final Action action = new Action(0, "GET", "/users", "queryUsers()", null, false);
+    final Action action = new Action(0, "GET", "/users", "queryUsers()", null);
     
     final MatchResults matchResults = action.matchWith(Method.GET, new URI("/users"));
     
@@ -37,7 +37,7 @@ public class ActionTest {
 
   @Test
   public void testMatchesOneParameterInBetween() throws Exception {
-    final Action action = new Action(0, "PATCH", "/users/{userId}/name", "changeName(String userId)", null, false);
+    final Action action = new Action(0, "PATCH", "/users/{userId}/name", "changeName(String userId)", null);
     
     final MatchResults matchResults = action.matchWith(Method.PATCH, new URI("/users/1234567/name"));
     
@@ -50,7 +50,7 @@ public class ActionTest {
 
   @Test
   public void testMatchesOneParameterLastPosition() throws Exception {
-    final Action action = new Action(0, "GET", "/users/{userId}", "queryUser(String userId)", null, false);
+    final Action action = new Action(0, "GET", "/users/{userId}", "queryUser(String userId)", null);
     
     final MatchResults matchResults = action.matchWith(Method.GET, new URI("/users/1234567"));
     
@@ -69,8 +69,7 @@ public class ActionTest {
                     "GET",
                     "/catalogs/{catalogId}/products/{productId}/details/{detailId}",
                     "queryCatalogProductDetails(String catalogId, String productId, String detailId)",
-                    null,
-                    false);
+                    null);
     
     final MatchResults matchResults = action.matchWith(Method.GET, new URI("/catalogs/123/products/4567/details/890"));
     
@@ -86,8 +85,39 @@ public class ActionTest {
   }
 
   @Test
+  public void testMatchesMultipleParametersWithSimilarUri() throws Exception {
+    final Action shortAction =
+      new Action(
+        0,
+        "GET",
+        "/o/{oId}/u/{uId}/foo",
+        "foo(String oId, String uId, String uId)",
+        null);
+
+    final Action longAction =
+      new Action(
+        0,
+        "GET",
+        "/o/{oId}/u/{uId}/c/{cId}/foo",
+        "foo(String oId, String uId, String uId, String cId)",
+        null);
+
+    final MatchResults matchResultsShortUriToShortAction = shortAction.matchWith(Method.GET, new URI("/o/1/u/2/foo"));
+    final MatchResults matchResultsLongUriToShortAction = shortAction.matchWith(Method.GET, new URI("/o/1/u/2/c/3/foo"));
+
+    final MatchResults matchResultsShortUriToLongAction = longAction.matchWith(Method.GET, new URI("/o/1/u/2/foo"));
+    final MatchResults matchResultsLongUriToLongAction = longAction.matchWith(Method.GET, new URI("/o/1/u/2/c/3/foo"));
+
+
+    assertTrue(matchResultsShortUriToShortAction.matched);
+    assertFalse(matchResultsLongUriToShortAction.matched);
+    assertFalse(matchResultsShortUriToLongAction.matched);
+    assertTrue(matchResultsLongUriToLongAction.matched);
+  }
+
+  @Test
   public void testMatchesOneParameterWithEndSlash() throws Exception {
-    final Action action = new Action(0, "GET", "/users/{userId}/", "queryUser(String userId)", null, false);
+    final Action action = new Action(0, "GET", "/users/{userId}/", "queryUser(String userId)", null);
     
     final MatchResults matchResults = action.matchWith(Method.GET, new URI("/users/1234567/"));
     
@@ -106,8 +136,7 @@ public class ActionTest {
                     "GET",
                     "/users/{userId}/emailAddresses/{emailAddressId}/",
                     "queryUserEmailAddress(String userId, String emailAddressId)",
-                    null,
-                    false);
+                    null);
     
     final MatchResults matchResults = action.matchWith(Method.GET, new URI("/users/1234567/emailAddresses/890/"));
     
@@ -122,7 +151,7 @@ public class ActionTest {
 
   @Test
   public void testNoMatchMethod() throws Exception {
-    final Action action = new Action(0, "GET", "/users/all", "queryUsers()", null, false);
+    final Action action = new Action(0, "GET", "/users/all", "queryUsers()", null);
     
     final MatchResults matchResults = action.matchWith(Method.POST, new URI("/users"));
     
@@ -133,7 +162,7 @@ public class ActionTest {
 
   @Test
   public void testNoMatchNoParameters() throws Exception {
-    final Action action = new Action(0, "GET", "/users/all", "queryUsers()", null, false);
+    final Action action = new Action(0, "GET", "/users/all", "queryUsers()", null);
     
     final MatchResults matchResults = action.matchWith(Method.GET, new URI("/users/one"));
     
@@ -144,7 +173,7 @@ public class ActionTest {
 
   @Test
   public void testNoMatchGivenAdditionalElements() throws Exception {
-    final Action action = new Action(0, "GET", "/users/{id}", "queryUsers(String userId)", null, false);
+    final Action action = new Action(0, "GET", "/users/{id}", "queryUsers(String userId)", null);
 
     final MatchResults matchResults = action.matchWith(Method.GET, new URI("/users/1234/extra"));
 
@@ -155,7 +184,7 @@ public class ActionTest {
 
   @Test
   public void testNoMatchEmptyParam() throws Exception {
-    final Action action = new Action(0, "GET", "/users/{id}/data", "queryUserData(String userId)", null, true);
+    final Action action = new Action(0, "GET", "/users/{id}/data", "queryUserData(String userId)", null);
 
     final MatchResults matchResults = action.matchWith(Method.GET, new URI("/users//data"));
 
@@ -166,7 +195,7 @@ public class ActionTest {
 
   @Test
   public void testMatchEmptyParamGivenAllowsTrailingSlash() throws Exception {
-    final Action action = new Action(0, "GET", "/users/{id}", "queryUsers(String userId)", null, false);
+    final Action action = new Action(0, "GET", "/users/{id}", "queryUsers(String userId)", null);
 
     final MatchResults matchResults = action.matchWith(Method.GET, new URI("/users//"));
 
@@ -184,8 +213,7 @@ public class ActionTest {
                     "GET",
                     "/users/{userId}/emailAddresses/{emailAddressId}/",
                     "queryUserEmailAddress(String userId, String emailAddressId)",
-                    null,
-                    false);
+                    null);
     
     final MatchResults matchResults = action.matchWith(Method.GET, new URI("/users/1234567/emailAddresses/890"));
     
@@ -202,8 +230,7 @@ public class ActionTest {
                     "GET",
                     "/users/{userId}/emailAddresses/{emailAddressId}",
                     "queryUserEmailAddress(String userId, String emailAddressId)",
-                    null,
-                    false);
+                    null);
     
     final MatchResults matchResults = action.matchWith(Method.GET, new URI("/users/1234567/emailAddresses/890/"));
     
@@ -222,8 +249,7 @@ public class ActionTest {
                     "GET",
                     "/users/{userId}",
                     "queryUser(String userId)",
-                    null,
-                    false);
+                    null);
 
     final URI uri = new URI("/users/1234567?one=1.1&two=2.0&three=three*&three=3.3");
     final MatchResults matchResults = action.matchWith(Method.GET, uri);

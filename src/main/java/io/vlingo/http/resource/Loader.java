@@ -139,7 +139,7 @@ public class Loader {
 
         final List<Action> actions = new ArrayList<>(1);
         final List<MappedParameter> additionalParameters = Arrays.asList(mappedParameterProducerClass, mappedParameterProductElements);
-        actions.add(new Action(0, Method.GET.name, feedRequestURI, feedProducerFeed, null, true, additionalParameters));
+        actions.add(new Action(0, Method.GET.name, feedRequestURI, feedProducerFeed, null, additionalParameters));
         final ConfigurationResource<?> resource = resourceFor(resourceName, FeedResource.class, handlerPoolSize, actions);
         feedResourceActions.put(resourceName, resource);
       } catch (Exception e) {
@@ -184,8 +184,8 @@ public class Loader {
 
         final List<Action> actions = new ArrayList<>(2);
         final List<MappedParameter> additionalParameters = Arrays.asList(mappedParameterClass, mappedParameterPayload, mappedParameterInterval, mappedParameterDefaultId);
-        actions.add(new Action(0, Method.GET.name, subscribeURI, ssePublisherSubscribeTo, null, true, additionalParameters));
-        actions.add(new Action(1, Method.DELETE.name, unsubscribeURI, ssePublisherUnsubscribeTo, null, true));
+        actions.add(new Action(0, Method.GET.name, subscribeURI, ssePublisherSubscribeTo, null, additionalParameters));
+        actions.add(new Action(1, Method.DELETE.name, unsubscribeURI, ssePublisherUnsubscribeTo, null));
         final ConfigurationResource<?> resource = resourceFor(resourceName, SseStreamResource.class, handlerPoolSize, actions);
         sseResourceActions.put(resourceName, resource);
       } catch (Exception e) {
@@ -229,7 +229,7 @@ public class Loader {
 
         final List<Action> actions = new ArrayList<>(1);
         final List<MappedParameter> additionalParameters = Arrays.asList(mappedParameterRoot, mappedParameterValidSubPaths);
-        actions.add(new Action(0, Method.GET.name, actionSubPath + slash + staticFilesResourcePathParameter, staticFilesResourceServeFile, null, false, additionalParameters));
+        actions.add(new Action(0, Method.GET.name, actionSubPath + slash + staticFilesResourcePathParameter, staticFilesResourceServeFile, null, additionalParameters));
         final ConfigurationResource<?> resource = resourceFor(resourceName, StaticFilesResource.class, Integer.parseInt(poolSize), actions);
         staticFilesResourceActions.put(resourceName, resource);
       }
@@ -289,7 +289,7 @@ public class Loader {
         final String to = properties.getProperty(keyPrefix + "to", null);
         final String mapper = properties.getProperty(keyPrefix + "mapper", null);
 
-        resourceActions.add(new Action(actionId, method, uri, to, mapper, disallowPathParametersWithSlash));
+        resourceActions.add(new Action(actionId, method, uri, to, mapper));
       } catch (Exception e) {
         System.out.println("vlingo/http: Failed to load resource: " + resourceName + " action:" + actionName + " because: " + e.getMessage());
         throw e;
