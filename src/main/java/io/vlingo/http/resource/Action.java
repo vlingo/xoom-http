@@ -272,7 +272,7 @@ public final class Action {
               return;
             }
             final String value = path.substring(pathStartIndex, pathEndIndex);
-            if (value.indexOf("/") >= 0) {
+            if (value.indexOf("/") >= 0 && !"/".equals(path.substring(pathEndIndex-1))) {
               this.matched = false;
               return;
             }
