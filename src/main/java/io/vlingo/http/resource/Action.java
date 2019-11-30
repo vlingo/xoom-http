@@ -168,34 +168,34 @@ public final class Action {
     final String type = this.to.parameterOf(parameter.name).type;
 
     switch (type) {
-      case "String":
-        return parameter.value;
-      case "int":
-      case "Integer":
-        return Integer.parseInt(parameter.value);
-      case "long":
-      case "Long":
-        return Long.parseLong(parameter.value);
-      case "boolean":
-      case "Boolean":
-        return Boolean.parseBoolean(parameter.value);
-      case "double":
-      case "Double":
-        return Double.parseDouble(parameter.value);
-      case "short":
-      case "Short":
-        return Short.parseShort(parameter.value);
-      case "float":
-      case "Float":
-        return Float.parseFloat(parameter.value);
-      case "char":
-      case "Character":
-        return parameter.value.charAt(0);
-      case "byte":
-      case "Byte":
-        return Byte.parseByte(parameter.value);
-      default:
-        return null;
+    case "String":
+      return parameter.value;
+    case "int":
+    case "Integer":
+      return Integer.parseInt(parameter.value);
+    case "long":
+    case "Long":
+      return Long.parseLong(parameter.value);
+    case "boolean":
+    case "Boolean":
+      return Boolean.parseBoolean(parameter.value);
+    case "double":
+    case "Double":
+      return Double.parseDouble(parameter.value);
+    case "short":
+    case "Short":
+      return Short.parseShort(parameter.value);
+    case "float":
+    case "Float":
+      return Float.parseFloat(parameter.value);
+    case "char":
+    case "Character":
+      return parameter.value.charAt(0);
+    case "byte":
+    case "Byte":
+      return Byte.parseByte(parameter.value);
+    default:
+      return null;
     }
   }
 
