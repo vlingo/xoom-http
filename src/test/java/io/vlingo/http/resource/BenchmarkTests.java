@@ -23,7 +23,7 @@ public class BenchmarkTests {
     final double expectedMinUsPerOp = 570;
 
     Options opt = new OptionsBuilder()
-      .include(this.getClass().getName() + ".*")
+      .include(this.getClass().getSimpleName() + "\\.benchmark.*")
       .mode(Mode.AverageTime)
       .timeUnit(TimeUnit.MICROSECONDS)
       .warmupTime(TimeValue.seconds(1))
@@ -75,8 +75,7 @@ public class BenchmarkTests {
   }
 
   @Benchmark
-  public void
-  benchmarkActionMatching(ActionMatchingBenchmarkState state, Blackhole bh) {
+  public void benchmarkActionMatching(ActionMatchingBenchmarkState state, Blackhole bh) {
     Map<URI, Action> subjects = state.subjects;
 
     for (Map.Entry<URI, Action> e : subjects.entrySet()) {
