@@ -9,6 +9,8 @@ package io.vlingo.http.resource;
 
 import java.nio.ByteBuffer;
 
+import io.vlingo.actors.ActorInstantiator;
+import io.vlingo.actors.RouterSpecification;
 import io.vlingo.actors.Stoppable;
 import io.vlingo.common.Cancellable;
 import io.vlingo.common.Completes;
@@ -64,6 +66,76 @@ public interface ClientConsumer extends ResponseChannelConsumer, Scheduled<Objec
       this.parser = parser;
       this.probe = probe;
       this.buffer = buffer;
+    }
+  }
+
+  static class CorrelatingClientConsumerInstantiator implements ActorInstantiator<ClientCorrelatingRequesterConsumerActor> {
+    private final Configuration configuration;
+
+    public CorrelatingClientConsumerInstantiator(final Configuration configuration) {
+      this.configuration = configuration;
+    }
+
+    @Override
+    public ClientCorrelatingRequesterConsumerActor instantiate() {
+      try {
+        return new ClientCorrelatingRequesterConsumerActor(configuration);
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Failed to instantiate " + type() + " because: " + e.getMessage(), e);
+      }
+    }
+
+    @Override
+    public Class<ClientCorrelatingRequesterConsumerActor> type() {
+      return ClientCorrelatingRequesterConsumerActor.class;
+    }
+  }
+
+  static class LoadBalancingClientRequestConsumerInstantiator implements ActorInstantiator<LoadBalancingClientRequestConsumerActor> {
+    private final Configuration configuration;
+    private final RouterSpecification<ClientConsumer> spec;
+
+    public LoadBalancingClientRequestConsumerInstantiator(final Configuration configuration, final RouterSpecification<ClientConsumer> spec) {
+      this.configuration = configuration;
+      this.spec = spec;
+    }
+
+    @Override
+    public LoadBalancingClientRequestConsumerActor instantiate() {
+      try {
+        return new LoadBalancingClientRequestConsumerActor(configuration, spec);
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Failed to instantiate " + type() + " because: " + e.getMessage(), e);
+      }
+    }
+
+    @Override
+    public Class<LoadBalancingClientRequestConsumerActor> type() {
+      return LoadBalancingClientRequestConsumerActor.class;
+    }
+  }
+
+  static class RoundRobinClientRequestConsumerInstantiator implements ActorInstantiator<RoundRobinClientRequestConsumerActor> {
+    private final Configuration configuration;
+    private final RouterSpecification<ClientConsumer> spec;
+
+    public RoundRobinClientRequestConsumerInstantiator(final Configuration configuration, final RouterSpecification<ClientConsumer> spec) {
+      this.configuration = configuration;
+      this.spec = spec;
+    }
+
+    @Override
+    public RoundRobinClientRequestConsumerActor instantiate() {
+      try {
+        return new RoundRobinClientRequestConsumerActor(configuration, spec);
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Failed to instantiate " + type() + " because: " + e.getMessage(), e);
+      }
+    }
+
+    @Override
+    public Class<RoundRobinClientRequestConsumerActor> type() {
+      return RoundRobinClientRequestConsumerActor.class;
     }
   }
 }
