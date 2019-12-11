@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.vlingo.actors.Actor;
+import io.vlingo.actors.ActorInstantiator;
+import io.vlingo.actors.ActorInstantiator.Registry;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.Stoppable;
 import io.vlingo.actors.World;
@@ -104,8 +106,15 @@ public class SseStreamResource extends ResourceHandler {
     @SuppressWarnings("unchecked")
     public SsePublisherActor(final String streamName, final Class<? extends Actor> feedClass, final int feedPayload, final int feedInterval, final String feedDefaultId) {
       this.streamName = streamName;
-      this.feed = stage().actorFor(SseFeed.class, Definition.has(feedClass, Definition.parameters(streamName, feedPayload, feedDefaultId)));
       this.subscribers = new HashMap<>();
+
+      final ActorInstantiator<?> instantiator = Registry.instantiatorFor(feedClass);
+      instantiator.set("feedClass", feedClass);
+      instantiator.set("streamName", streamName);
+      instantiator.set("feedPayload", feedPayload);
+      instantiator.set("feedDefaultId", feedDefaultId);
+
+      this.feed = stage().actorFor(SseFeed.class, Definition.has(feedClass, instantiator));
 
       this.cancellable = stage().scheduler().schedule(selfAs(Scheduled.class), null, 10, feedInterval);
 
