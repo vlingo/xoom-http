@@ -7,8 +7,11 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.actors.ActorInstantiator;
 import io.vlingo.actors.Stoppable;
 import io.vlingo.http.Request;
+import io.vlingo.http.resource.Client.Configuration;
+import io.vlingo.wire.channel.ResponseChannelConsumer;
 
 /**
  * Sends {@code Request} messages in behalf of a client.
@@ -19,4 +22,30 @@ public interface RequestSender extends Stoppable {
    * @param request the Request to send
    */
   void sendRequest(final Request request);
+
+  static class RequestSenderProbeInstantiator implements ActorInstantiator<RequestSenderProbeActor> {
+    final Configuration configuration;
+    final ResponseChannelConsumer consumer;
+    final String testId;
+
+    public RequestSenderProbeInstantiator(final Configuration configuration, final ResponseChannelConsumer consumer, final String testId) {
+      this.configuration = configuration;
+      this.consumer = consumer;
+      this.testId = testId;
+    }
+
+    @Override
+    public RequestSenderProbeActor instantiate() {
+      try {
+        return new RequestSenderProbeActor(configuration, consumer, testId);
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Failed to instantiate " + type() + " because: " + e.getMessage(), e);
+      }
+    }
+
+    @Override
+    public Class<RequestSenderProbeActor> type() {
+      return RequestSenderProbeActor.class;
+    }
+  }
 }
