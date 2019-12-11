@@ -93,7 +93,7 @@ public class Request {
 
   public Header headerOf(final String name) {
     for (final Header header : headers) {
-      if (header.name.equalsIgnoreCase(name)) {
+      if (header.matchesNameOf(name)) {
         return header;
       }
     }
