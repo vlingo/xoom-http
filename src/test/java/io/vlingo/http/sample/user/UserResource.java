@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.vlingo.actors.Address;
+import io.vlingo.actors.AddressFactory;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.Stage;
 import io.vlingo.actors.World;
@@ -31,15 +32,17 @@ import io.vlingo.http.sample.user.model.UserActor;
 import io.vlingo.http.sample.user.model.UserRepository;
 
 public class UserResource extends ResourceHandler {
+  private final AddressFactory addressFactory;
   private final UserRepository repository = UserRepository.instance();
   private final Stage stage;
 
   public UserResource(final World world) {
     this.stage = world.stageNamed("service");
+    this.addressFactory = this.stage.addressFactory();
   }
 
   public void register(final UserData userData) {
-    final Address userAddress = stage().world().addressFactory().uniquePrefixedWith("u-");
+    final Address userAddress = addressFactory.uniquePrefixedWith("u-");
     final User.State userState =
             User.from(
                     userAddress.idString(),
@@ -54,14 +57,14 @@ public class UserResource extends ResourceHandler {
   }
 
   public void changeContact(final String userId, final ContactData contactData) {
-    stage.actorOf(User.class, stage().world().addressFactory().from(userId))
+    stage.actorOf(User.class, addressFactory.from(userId))
       .andThenTo(user -> user.withContact(new Contact(contactData.emailAddress, contactData.telephoneNumber)))
       .otherwiseConsume(noUser -> completes().with(Response.of(NotFound, userLocation(userId))))
       .andFinallyConsume(userState -> Response.of(Ok, serialized(UserData.from(userState))));
   }
 
   public void changeName(final String userId, final NameData nameData) {
-    stage.actorOf(User.class, stage().world().addressFactory().from(userId))
+    stage.actorOf(User.class, addressFactory.from(userId))
       .andThenTo(user -> user.withName(new Name(nameData.given, nameData.family)))
       .otherwiseConsume(noUser -> completes().with(Response.of(NotFound, userLocation(userId))))
       .andFinallyConsume(userState -> {
