@@ -23,8 +23,20 @@ public class Header {
     this.value = value;
   }
 
-  public boolean matchesName(final Header header) {
-    return name.equalsIgnoreCase(header.name);
+  public boolean matchesNameOf(final Header header) {
+    return this.name.equalsIgnoreCase(header.name);
+  }
+
+  public boolean matchesNameOf(final String name) {
+    return this.name.equalsIgnoreCase(name);
+  }
+
+  public boolean matchesValueOf(final Header header) {
+    return this.value.equals(header.value);
+  }
+
+  public boolean matchesValueOf(final String value) {
+    return this.value.equals(value);
   }
 
   @Override
@@ -40,7 +52,7 @@ public class Header {
 
     final Header otherHeader = (Header) other;
 
-    return name.equalsIgnoreCase(otherHeader.name) && value.equals(otherHeader.value);
+    return matchesNameOf(otherHeader) && matchesValueOf(otherHeader);
   }
 
   @Override
@@ -75,7 +87,7 @@ public class Header {
       final Iterator<T> iter = this.iterator();
       while (iter.hasNext()) {
         final T header = iter.next();
-        if (header.name.equalsIgnoreCase(name)) {
+        if (header.matchesNameOf(name)) {
           return header;
         }
       }
