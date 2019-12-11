@@ -16,25 +16,35 @@ public interface SseFeed {
   void to(final Collection<SseSubscriber> subscribers);
 
   static abstract class SseFeedInstantiator<A extends Actor> implements ActorInstantiator<A> {
-    protected final Class<A> type;
-    protected final String streamName;
-    protected final int feedPayload;
-    protected final String feedDefaultId;
+    protected Class<A> feedClass;
+    protected String streamName;
+    protected int feedPayload;
+    protected String feedDefaultId;
 
-    public SseFeedInstantiator(
-            final Class<A> type,
-            final String streamName,
-            final int feedPayload,
-            final String feedDefaultId) {
-      this.type = type;
-      this.streamName = streamName;
-      this.feedPayload = feedPayload;
-      this.feedDefaultId = feedDefaultId;
+    public SseFeedInstantiator() { }
+
+    @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public void set(final String name, final Object value) {
+      switch (name) {
+      case "feedClass":
+        this.feedClass = (Class) value;
+        break;
+      case "streamName":
+        this.streamName = (String) value;
+        break;
+      case "feedPayload":
+        this.feedPayload = (int) value;
+        break;
+      case "feedDefaultId":
+        this.feedDefaultId = (String) value;
+        break;
+      }
     }
 
     @Override
     public Class<A> type() {
-      return type;
+      return feedClass;
     }
   }
 }
