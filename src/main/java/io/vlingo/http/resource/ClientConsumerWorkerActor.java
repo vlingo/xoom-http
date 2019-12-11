@@ -21,6 +21,7 @@ import io.vlingo.http.Response;
 import io.vlingo.http.ResponseHeader;
 import io.vlingo.http.ResponseParser;
 import io.vlingo.http.resource.Client.Configuration;
+import io.vlingo.http.resource.RequestSender.RequestSenderProbeInstantiator;
 import io.vlingo.wire.channel.ResponseChannelConsumer;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 
@@ -132,7 +133,7 @@ public class ClientConsumerWorkerActor extends Actor implements ClientConsumer {
     final Definition definition =
             Definition.has(
                     RequestSenderProbeActor.class,
-                    Definition.parameters(configuration, self, testId));
+                    new RequestSenderProbeInstantiator(configuration, self, testId));
 
     RequestSender requestSender = childActorFor(RequestSender.class, definition);
 
