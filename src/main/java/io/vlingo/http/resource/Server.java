@@ -7,6 +7,7 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.actors.ActorInstantiator;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.Stage;
 import io.vlingo.actors.Stoppable;
@@ -112,7 +113,7 @@ public interface Server extends Stoppable {
             Server.class,
             Definition.has(
                     ServerActor.class,
-                    Definition.parameters(resources, filters, port, sizing, timing, channelMailboxTypeName),
+                    new ServerInstantiator(resources, filters, port, sizing, timing, channelMailboxTypeName),
                     severMailboxTypeName,
                     ServerActor.ServerName),
             stage.world().addressFactory().withHighId(),
@@ -125,4 +126,42 @@ public interface Server extends Stoppable {
 
   Completes<Boolean> shutDown();
   Completes<Boolean> startUp();
+
+  static class ServerInstantiator implements ActorInstantiator<ServerActor> {
+    private final Resources resources;
+    private final Filters filters;
+    private final int port;
+    private final Sizing sizing;
+    private final Timing timing;
+    private final String channelMailboxTypeName;
+
+    public ServerInstantiator(
+            final Resources resources,
+            final Filters filters,
+            final int port,
+            final Sizing sizing,
+            final Timing timing,
+            final String channelMailboxTypeName) {
+      this.resources = resources;
+      this.filters = filters;
+      this.port = port;
+      this.sizing = sizing;
+      this.timing = timing;
+      this.channelMailboxTypeName = channelMailboxTypeName;
+    }
+
+    @Override
+    public ServerActor instantiate() {
+      try {
+        return new ServerActor(resources, filters, port, sizing, timing, channelMailboxTypeName);
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Failed to instantiate " + type() + " because: " + e.getMessage(), e);
+      }
+    }
+
+    @Override
+    public Class<ServerActor> type() {
+      return ServerActor.class;
+    }
+  }
 }
