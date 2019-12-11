@@ -30,6 +30,7 @@ import io.vlingo.http.RequestHeader;
 import io.vlingo.http.Response;
 import io.vlingo.http.ResponseHeader;
 import io.vlingo.http.resource.ResourceHandler;
+import io.vlingo.http.resource.sse.SsePublisher.SsePublisherInstantiator;
 import io.vlingo.wire.channel.RequestResponseContext;
 
 public class SseStreamResource extends ResourceHandler {
@@ -70,7 +71,7 @@ public class SseStreamResource extends ResourceHandler {
   private SsePublisher publisherFor(final String streamName, final Class<? extends Actor> feedClass, final int feedPayload, final int feedInterval, final String feedDefaultId) {
     SsePublisher publisher = publishers.get(streamName);
     if (publisher == null) {
-      publisher = world.actorFor(SsePublisher.class, Definition.has(SsePublisherActor.class, Definition.parameters(streamName, feedClass, feedPayload, feedInterval, feedDefaultId)));
+      publisher = world.actorFor(SsePublisher.class, Definition.has(SsePublisherActor.class, new SsePublisherInstantiator(streamName, feedClass, feedPayload, feedInterval, feedDefaultId)));
       final SsePublisher presentPublisher = publishers.putIfAbsent(streamName, publisher);
       if (presentPublisher != null) {
         publisher.stop();
