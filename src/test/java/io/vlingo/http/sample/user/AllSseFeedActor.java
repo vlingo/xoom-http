@@ -7,24 +7,33 @@
 
 package io.vlingo.http.sample.user;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import io.vlingo.actors.Actor;
+import io.vlingo.actors.ActorInstantiator.Registry;
 import io.vlingo.common.Tuple2;
 import io.vlingo.http.resource.sse.SseEvent;
 import io.vlingo.http.resource.sse.SseFeed;
 import io.vlingo.http.resource.sse.SseSubscriber;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 public class AllSseFeedActor extends Actor implements SseFeed {
   private final int RetryThreshold = 3000;
+
+  static {
+    Registry.register(AllSseFeedActor.class, new AllSseFeedInstantiator());
+  }
 
   private final SseEvent.Builder builder;
   private final int currentStreamId;
   private final int defaultId;
   private final int feedPayload;
   private final String streamName;
+
+  public static void registerInstantiator() {
+    Registry.register(AllSseFeedActor.class, new AllSseFeedInstantiator());
+  }
 
   public AllSseFeedActor(final String streamName, final int feedPayload, final String feedDefaultId) {
     this.streamName = streamName;
@@ -63,5 +72,14 @@ public class AllSseFeedActor extends Actor implements SseFeed {
     }
 
     return Tuple2.from(substream, id + 1);
+  }
+
+  private static class AllSseFeedInstantiator extends SseFeedInstantiator<AllSseFeedActor> {
+    public AllSseFeedInstantiator() { }
+
+    @Override
+    public AllSseFeedActor instantiate() {
+      return new AllSseFeedActor(streamName, feedPayload, feedDefaultId);
+    }
   }
 }
