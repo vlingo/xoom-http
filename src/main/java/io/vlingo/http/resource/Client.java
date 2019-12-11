@@ -7,15 +7,17 @@
 
 package io.vlingo.http.resource;
 
-import java.util.List;
-
 import io.vlingo.actors.Actor;
+import io.vlingo.actors.ActorInstantiator;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.RouterSpecification;
 import io.vlingo.actors.Stage;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
+import io.vlingo.http.resource.ClientConsumer.CorrelatingClientConsumerInstantiator;
+import io.vlingo.http.resource.ClientConsumer.LoadBalancingClientRequestConsumerInstantiator;
+import io.vlingo.http.resource.ClientConsumer.RoundRobinClientRequestConsumerInstantiator;
 import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
@@ -70,32 +72,32 @@ public class Client {
     this.configuration = configuration;
 
     final Class<? extends Actor> clientConsumerType;
-    final List<Object> parameters;
+    final ActorInstantiator<?> instantiator;
 
     switch (type) {
     case Correlating:
       clientConsumerType = ClientCorrelatingRequesterConsumerActor.class;
-      parameters = Definition.parameters(configuration);
+      instantiator = new CorrelatingClientConsumerInstantiator(configuration);
       break;
     case RoundRobin: {
       clientConsumerType = RoundRobinClientRequestConsumerActor.class;
       final Definition definition = Definition.has(ClientConsumerWorkerActor.class, Definition.parameters(configuration));
       final RouterSpecification<ClientConsumer> spec = new RouterSpecification<>(poolSize, definition, ClientConsumer.class);
-      parameters = Definition.parameters(configuration, spec);
+      instantiator = new RoundRobinClientRequestConsumerInstantiator(configuration, spec);
       break;
       }
     case LoadBalancing: {
       clientConsumerType = LoadBalancingClientRequestConsumerActor.class;
       final Definition definition = Definition.has(ClientConsumerWorkerActor.class, Definition.parameters(configuration));
       final RouterSpecification<ClientConsumer> spec = new RouterSpecification<>(poolSize, definition, ClientConsumer.class);
-      parameters = Definition.parameters(configuration, spec);
+      instantiator = new LoadBalancingClientRequestConsumerInstantiator(configuration, spec);
       break;
       }
     default:
       throw new IllegalArgumentException("ClientConsumerType is not mapped: " + type);
     }
 
-    this.consumer = configuration.stage.actorFor(ClientConsumer.class, Definition.has(clientConsumerType, parameters));
+    this.consumer = configuration.stage.actorFor(ClientConsumer.class, Definition.has(clientConsumerType, instantiator));
   }
 
   /**
