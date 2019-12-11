@@ -7,6 +7,7 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.actors.ActorInstantiator;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.Stage;
 import io.vlingo.actors.Stoppable;
@@ -17,10 +18,28 @@ public interface Dispatcher extends Stoppable {
     final Dispatcher dispatcher =
             stage.actorFor(
                     Dispatcher.class,
-                    Definition.has(DispatcherActor.class, Definition.parameters(resources)));
+                    Definition.has(DispatcherActor.class, new DispatcherInstantiator(resources)));
 
     return dispatcher;
   }
 
   void dispatchFor(final Context context);
+
+  static class DispatcherInstantiator implements ActorInstantiator<DispatcherActor> {
+    private final Resources resources;
+
+    public DispatcherInstantiator(final Resources resources) {
+      this.resources = resources;
+    }
+
+    @Override
+    public DispatcherActor instantiate() {
+      return new DispatcherActor(resources);
+    }
+
+    @Override
+    public Class<DispatcherActor> type() {
+      return DispatcherActor.class;
+    }
+  }
 }
