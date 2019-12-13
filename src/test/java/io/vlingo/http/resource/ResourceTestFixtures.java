@@ -7,15 +7,7 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.World;
-import io.vlingo.http.sample.user.ContactData;
-import io.vlingo.http.sample.user.NameData;
-import io.vlingo.http.sample.user.UserData;
-import io.vlingo.http.sample.user.model.UserRepository;
-import io.vlingo.wire.message.ByteBufferAllocator;
-import io.vlingo.wire.message.Converters;
-import org.junit.After;
-import org.junit.Before;
+import static io.vlingo.common.serialization.JsonSerialization.serialized;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -23,7 +15,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.vlingo.common.serialization.JsonSerialization.serialized;
+import org.junit.After;
+import org.junit.Before;
+
+import io.vlingo.actors.World;
+import io.vlingo.http.sample.user.ContactData;
+import io.vlingo.http.sample.user.NameData;
+import io.vlingo.http.sample.user.UserData;
+import io.vlingo.http.sample.user.model.UserRepository;
+import io.vlingo.wire.message.ByteBufferAllocator;
+import io.vlingo.wire.message.Converters;
 
 public abstract class ResourceTestFixtures {
   public static final String WORLD_NAME = "resource-test";
@@ -33,6 +34,7 @@ public abstract class ResourceTestFixtures {
   protected Action actionGetUser;
   protected Action actionGetUsers;
   protected Action actionGetUserError;
+  protected Action actionPutUser;
 
   protected ConfigurationResource<?> resource;
   protected Class<? extends ResourceHandler> resourceHandlerClass;
@@ -77,6 +79,10 @@ public abstract class ResourceTestFixtures {
 
   protected String postRequest(final String body) {
     return "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + body.length() + "\n\n" + body;
+  }
+
+  protected String putRequest(final String userId, final String body) {
+    return "PUT /users/" + userId + " HTTP/1.1\nHost: vlingo.io\nContent-Length: " + body.length() + "\n\n" + body;
   }
 
   protected String getExceptionRequest(final String userId) {
@@ -148,6 +154,7 @@ public abstract class ResourceTestFixtures {
     actionGetUser = new Action(3, "GET", "/users/{userId}", "queryUser(String userId)", null);
     actionGetUsers = new Action(4, "GET", "/users", "queryUsers()", null);
     actionGetUserError = new Action(5, "GET", "/users/{userId}/error", "queryUserError(String userId)", null);
+    actionPutUser = new Action(6, "PUT", "/users/{userId}", "changeUser(String userId, body:io.vlingo.http.sample.user.UserData userData)", null);
 
 
     final List<Action> actions =
@@ -157,11 +164,12 @@ public abstract class ResourceTestFixtures {
                     actionPatchUserName,
                     actionGetUser,
                     actionGetUsers,
-                    actionGetUserError);
+                    actionGetUserError,
+                    actionPutUser);
 
     resourceHandlerClass = ConfigurationResource.newResourceHandlerClassFor("io.vlingo.http.sample.user.UserResource");
 
-    resource = ConfigurationResource.newResourceFor("user", resourceHandlerClass, 6, actions);
+    resource = ConfigurationResource.newResourceFor("user", resourceHandlerClass, 7, actions);
 
     resource.allocateHandlerPool(world.stage());
 
