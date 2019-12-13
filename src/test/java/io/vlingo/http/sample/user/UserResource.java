@@ -24,7 +24,9 @@ import io.vlingo.actors.AddressFactory;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.Stage;
 import io.vlingo.actors.World;
+import io.vlingo.http.Header;
 import io.vlingo.http.Response;
+import io.vlingo.http.ResponseHeader;
 import io.vlingo.http.resource.ResourceHandler;
 import io.vlingo.http.sample.user.model.Contact;
 import io.vlingo.http.sample.user.model.Name;
@@ -60,9 +62,9 @@ public class UserResource extends ResourceHandler {
   public void changeUser(final String userId, UserData userData) {
     System.out.println("PUT: " + userId);
     if (userId.endsWith("123")) {
-      completes().with(Response.of(PermanentRedirect, "/"));
+      completes().with(Response.of(PermanentRedirect, Header.Headers.of(ResponseHeader.of("Location", "/app/"))));
     } else {
-      completes().with(Response.of(Ok, "/"));
+      completes().with(Response.of(Ok));
     }
   }
 
