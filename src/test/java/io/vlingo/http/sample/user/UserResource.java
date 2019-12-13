@@ -11,6 +11,7 @@ import static io.vlingo.common.serialization.JsonSerialization.serialized;
 import static io.vlingo.http.Response.Status.Created;
 import static io.vlingo.http.Response.Status.NotFound;
 import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.Response.Status.PermanentRedirect;
 import static io.vlingo.http.ResponseHeader.Location;
 import static io.vlingo.http.ResponseHeader.headers;
 import static io.vlingo.http.ResponseHeader.of;
@@ -54,6 +55,15 @@ public class UserResource extends ResourceHandler {
     repository.save(userState);
 
     completes().with(Response.of(Created, headers(of(Location, userLocation(userState.id))), serialized(UserData.from(userState))));
+  }
+
+  public void changeUser(final String userId, UserData userData) {
+    System.out.println("PUT: " + userId);
+    if (userId.endsWith("123")) {
+      completes().with(Response.of(PermanentRedirect, "/"));
+    } else {
+      completes().with(Response.of(Ok, "/"));
+    }
   }
 
   public void changeContact(final String userId, final ContactData contactData) {

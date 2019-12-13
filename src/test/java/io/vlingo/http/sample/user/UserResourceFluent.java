@@ -17,6 +17,7 @@ import static io.vlingo.http.ResponseHeader.of;
 import static io.vlingo.http.resource.ResourceBuilder.get;
 import static io.vlingo.http.resource.ResourceBuilder.patch;
 import static io.vlingo.http.resource.ResourceBuilder.post;
+import static io.vlingo.http.resource.ResourceBuilder.put;
 import static io.vlingo.http.resource.ResourceBuilder.resource;
 
 import java.util.ArrayList;
@@ -58,6 +59,11 @@ public class UserResourceFluent extends ResourceHandler {
     repository.save(userState);
 
     return Completes.withSuccess(Response.of(Created, headers(of(Location, userLocation(userState.id))), serialized(UserData.from(userState))));
+  }
+
+  public Completes<Response> changeUser(final String userId, UserData userData) {
+    System.out.println("PUT: " + userId);
+    return Completes.withSuccess(Response.of(Ok));
   }
 
   public Completes<Response> changeContact(final String userId, final ContactData contactData) {
@@ -104,6 +110,10 @@ public class UserResourceFluent extends ResourceHandler {
       post("/users")
         .body(UserData.class)
         .handle(this::register),
+      put("/users/{userId}")
+        .param(String.class)
+        .body(UserData.class)
+        .handle(this::changeUser),
       patch("/users/{userId}/contact")
         .param(String.class)
         .body(ContactData.class)
