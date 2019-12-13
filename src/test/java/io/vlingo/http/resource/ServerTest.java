@@ -7,6 +7,8 @@
 
 package io.vlingo.http.resource;
 
+import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.Response.Status.PermanentRedirect;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -124,6 +126,42 @@ public class ServerTest extends ResourceTestFixtures {
     assertEquals(TOTAL_REQUESTS_RESPONSES, progress.consumeCount.get());
     final Response createdResponse = progress.responses.peek();
     assertNotNull(createdResponse.headers.headerOf(ResponseHeader.Location));
+  }
+
+  @Test
+  public void testThatServerRespondsPermanentRedirectWithNoContentLengthHeader() {
+    final String request = putRequest("u-123", uniqueJohnDoe());
+    client.requestWith(toByteBuffer(request));
+
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+    while (consumeCalls.totalWrites() < 1) {
+      client.probeChannel();
+    }
+    consumeCalls.readFrom("completed");
+
+    final Response response = progress.responses.poll();
+
+    assertNotNull(response);
+    assertEquals(PermanentRedirect.name(), response.status.name());
+    assertEquals(1, progress.consumeCount.get());
+  }
+
+  @Test
+  public void testThatServerRespondsOkWithNoContentLengthHeader() {
+    final String request = putRequest("u-456", uniqueJohnDoe());
+    client.requestWith(toByteBuffer(request));
+
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+    while (consumeCalls.totalWrites() < 1) {
+      client.probeChannel();
+    }
+    consumeCalls.readFrom("completed");
+
+    final Response response = progress.responses.poll();
+
+    assertNotNull(response);
+    assertEquals(Ok.name(), response.status.name());
+    assertEquals(1, progress.consumeCount.get());
   }
 
   @Override
