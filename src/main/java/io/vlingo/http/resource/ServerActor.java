@@ -7,12 +7,6 @@
 
 package io.vlingo.http.resource;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.Logger;
 import io.vlingo.actors.Returns;
@@ -20,15 +14,10 @@ import io.vlingo.actors.World;
 import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
 import io.vlingo.common.Scheduled;
+import io.vlingo.common.completes.SinkAndSourceBasedCompletes;
 import io.vlingo.common.pool.ElasticResourcePool;
 import io.vlingo.common.pool.ResourcePool;
-import io.vlingo.http.Context;
-import io.vlingo.http.Filters;
-import io.vlingo.http.Header;
-import io.vlingo.http.Request;
-import io.vlingo.http.RequestHeader;
-import io.vlingo.http.RequestParser;
-import io.vlingo.http.Response;
+import io.vlingo.http.*;
 import io.vlingo.http.resource.Configuration.Sizing;
 import io.vlingo.http.resource.Configuration.Timing;
 import io.vlingo.wire.channel.RequestChannelConsumer;
@@ -38,6 +27,12 @@ import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
 import io.vlingo.wire.message.BasicConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBufferPool;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ServerActor extends Actor implements Server, RequestChannelConsumerProvider, Scheduled<Object> {
   static final String ChannelName = "server-request-response-channel";
@@ -234,7 +229,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     public void closeWith(final RequestResponseContext<?> requestResponseContext, final Object data) {
       if (data != null) {
         final Request request = filters.process((Request) data);
-        final ResponseCompletes completes = new ResponseCompletes(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
+        final Completes<Response> completes = responseCompletes.of(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
         final Context context = new Context(requestResponseContext, request, world.completesFor(Returns.value(completes)));
         dispatcher.dispatchFor(context);
       }
@@ -259,7 +254,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
         while (parser.hasFullRequest()) {
           final Request request = filters.process(parser.fullRequest());
-          final ResponseCompletes completes = new ResponseCompletes(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
+          final Completes<Response> completes = responseCompletes.of(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
           context = new Context(requestResponseContext, request, world.completesFor(Returns.value(completes)));
           dispatcher.dispatchFor(context);
           if (wasIncompleteContent) {
@@ -269,7 +264,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
         if (parser.isMissingContent() && !requestsMissingContent.containsKey(requestResponseContext.id())) {
           if (context == null) {
-            final ResponseCompletes completes = new ResponseCompletes(requestResponseContext);
+            final Completes<Response> completes = responseCompletes.of(requestResponseContext, null);
             context = new Context(world.completesFor(Returns.value(completes)));
           }
           requestsMissingContent.put(requestResponseContext.id(), new RequestResponseHttpContext(requestResponseContext, context));
@@ -277,7 +272,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
       } catch (Exception e) {
         logger().error("Request parsing failed.", e);
-        new ResponseCompletes(requestResponseContext, null).with(Response.of(Response.Status.BadRequest, e.getMessage()));
+        responseCompletes.of(requestResponseContext, null).with(Response.of(Response.Status.BadRequest, e.getMessage()));
       } finally {
         buffer.release();
       }
@@ -302,18 +297,26 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   // ResponseCompletes
   //=========================================
 
-  private class ResponseCompletes extends BasicCompletes<Response> {
+  ResponseCompletes responseCompletes = new ResponseCompletes();
+  private class ResponseCompletes {
+    public Completes<Response> of(final RequestResponseContext<?> requestResponseContext, final Header correlationId) {
+      if (SinkAndSourceBasedCompletes.isToggleActive()) {
+        return new SinkBasedBasedResponseCompletes(requestResponseContext, correlationId);
+      } else {
+        return new BasicCompletedBasedResponseCompletes(requestResponseContext, correlationId);
+      }
+
+    }
+  }
+
+  private class BasicCompletedBasedResponseCompletes extends BasicCompletes<Response> {
     final Header correlationId;
     final RequestResponseContext<?> requestResponseContext;
 
-    ResponseCompletes(final RequestResponseContext<?> requestResponseContext, final Header correlationId) {
+    BasicCompletedBasedResponseCompletes(final RequestResponseContext<?> requestResponseContext, final Header correlationId) {
       super(stage().scheduler());
       this.requestResponseContext = requestResponseContext;
       this.correlationId = correlationId;
-    }
-
-    ResponseCompletes(final RequestResponseContext<?> requestResponseContext) {
-      this(requestResponseContext, null);
     }
 
     @Override
@@ -324,6 +327,36 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       final Response completedResponse = filtered.include(correlationId);
       requestResponseContext.respondWith(completedResponse.into(buffer));
       return (Completes<O>) this;
+    }
+
+    private ConsumerByteBuffer bufferFor(final Response response) {
+      final int size = response.size();
+      if (size < maxMessageSize) {
+        return responseBufferPool.acquire();
+      }
+
+      return BasicConsumerByteBuffer.allocate(0, size + 1024);
+    }
+  }
+
+  private class SinkBasedBasedResponseCompletes extends SinkAndSourceBasedCompletes<Response> {
+    final Header correlationId;
+    final RequestResponseContext<?> requestResponseContext;
+
+    SinkBasedBasedResponseCompletes(final RequestResponseContext<?> requestResponseContext, final Header correlationId) {
+      super(stage().scheduler());
+      this.requestResponseContext = requestResponseContext;
+      this.correlationId = correlationId;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <O> Completes<O> with(final O response) {
+      final Response filtered = filters.process((Response) response);
+      final ConsumerByteBuffer buffer = bufferFor(filtered);
+      final Response completedResponse = filtered.include(correlationId);
+      requestResponseContext.respondWith(completedResponse.into(buffer));
+      return super.with(response);
     }
 
     private ConsumerByteBuffer bufferFor(final Response response) {

@@ -7,11 +7,11 @@
 
 package io.vlingo.http.resource;
 
-import java.util.function.Supplier;
-
 import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Response;
+
+import java.util.function.Supplier;
 
 abstract class RequestExecutor {
 

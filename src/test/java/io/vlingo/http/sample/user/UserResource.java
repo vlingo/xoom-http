@@ -7,32 +7,19 @@
 
 package io.vlingo.http.sample.user;
 
-import static io.vlingo.common.serialization.JsonSerialization.serialized;
-import static io.vlingo.http.Response.Status.Created;
-import static io.vlingo.http.Response.Status.NotFound;
-import static io.vlingo.http.Response.Status.Ok;
-import static io.vlingo.http.Response.Status.PermanentRedirect;
-import static io.vlingo.http.ResponseHeader.Location;
-import static io.vlingo.http.ResponseHeader.headers;
-import static io.vlingo.http.ResponseHeader.of;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import io.vlingo.actors.Address;
-import io.vlingo.actors.AddressFactory;
-import io.vlingo.actors.Definition;
-import io.vlingo.actors.Stage;
-import io.vlingo.actors.World;
+import io.vlingo.actors.*;
 import io.vlingo.http.Header;
 import io.vlingo.http.Response;
 import io.vlingo.http.ResponseHeader;
 import io.vlingo.http.resource.ResourceHandler;
-import io.vlingo.http.sample.user.model.Contact;
-import io.vlingo.http.sample.user.model.Name;
-import io.vlingo.http.sample.user.model.User;
-import io.vlingo.http.sample.user.model.UserActor;
-import io.vlingo.http.sample.user.model.UserRepository;
+import io.vlingo.http.sample.user.model.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static io.vlingo.common.serialization.JsonSerialization.serialized;
+import static io.vlingo.http.Response.Status.*;
+import static io.vlingo.http.ResponseHeader.*;
 
 public class UserResource extends ResourceHandler {
   private final AddressFactory addressFactory;
@@ -60,7 +47,6 @@ public class UserResource extends ResourceHandler {
   }
 
   public void changeUser(final String userId, UserData userData) {
-    System.out.println("PUT: " + userId);
     if (userId.endsWith("123")) {
       completes().with(Response.of(PermanentRedirect, Header.Headers.of(ResponseHeader.of("Location", "/app/"))));
     } else {
