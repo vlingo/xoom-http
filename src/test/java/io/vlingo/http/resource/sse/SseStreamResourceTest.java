@@ -26,6 +26,7 @@ import io.vlingo.http.resource.MockCompletesEventuallyResponse;
 import io.vlingo.http.sample.user.AllSseFeedActor;
 
 public class SseStreamResourceTest {
+  @SuppressWarnings("unused")
   private SseClient client;
   private MockRequestResponseContext context;
   private MockSseStreamResource resource;

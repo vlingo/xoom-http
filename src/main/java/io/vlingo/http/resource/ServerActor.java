@@ -7,6 +7,12 @@
 
 package io.vlingo.http.resource;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.Logger;
 import io.vlingo.actors.Returns;
@@ -17,7 +23,13 @@ import io.vlingo.common.Scheduled;
 import io.vlingo.common.completes.SinkAndSourceBasedCompletes;
 import io.vlingo.common.pool.ElasticResourcePool;
 import io.vlingo.common.pool.ResourcePool;
-import io.vlingo.http.*;
+import io.vlingo.http.Context;
+import io.vlingo.http.Filters;
+import io.vlingo.http.Header;
+import io.vlingo.http.Request;
+import io.vlingo.http.RequestHeader;
+import io.vlingo.http.RequestParser;
+import io.vlingo.http.Response;
 import io.vlingo.http.resource.Configuration.Sizing;
 import io.vlingo.http.resource.Configuration.Timing;
 import io.vlingo.wire.channel.RequestChannelConsumer;
@@ -27,12 +39,6 @@ import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
 import io.vlingo.wire.message.BasicConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBufferPool;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class ServerActor extends Actor implements Server, RequestChannelConsumerProvider, Scheduled<Object> {
   static final String ChannelName = "server-request-response-channel";
@@ -350,7 +356,6 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <O> Completes<O> with(final O response) {
       final Response filtered = filters.process((Response) response);
       final ConsumerByteBuffer buffer = bufferFor(filtered);
