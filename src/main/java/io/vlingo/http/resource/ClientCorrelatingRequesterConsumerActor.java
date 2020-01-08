@@ -53,35 +53,38 @@ public class ClientCorrelatingRequesterConsumerActor extends Actor implements Cl
    */
   @Override
   public void consume(final ConsumerByteBuffer buffer) {
-    if (state.parser == null) {
-      state.parser = ResponseParser.parserFor(buffer.asByteBuffer());
-    } else {
-      state.parser.parseNext(buffer.asByteBuffer());
-    }
-    buffer.release();
-
-    while (state.parser.hasFullResponse()) {
-      final Response response = state.parser.fullResponse();
-      final ResponseHeader correlationId = response.headers.headerOfOrDefault(ResponseHeader.XCorrelationID, state.correlationId);
-      if (correlationId == null) {
-        logger().warn("Client Consumer: Cannot complete response because no correlation id.");
-        state.configuration.consumerOfUnknownResponses.consume(response);
+    try {
+      if (state.parser == null) {
+        state.parser = ResponseParser.parserFor(buffer.asByteBuffer());
       } else {
-        if (state.parser.isKeepAliveConnection() && state.parser.isStreamContentType()) {
-          state.correlationId = correlationId;
-        }
-        final CompletesEventually completes = state.configuration.keepAlive ?
-                completables.get(correlationId.value) :
-                completables.remove(correlationId.value);
-        if (completes == null) {
-          state.configuration.stage.world().defaultLogger().warn(
-                  "Client Consumer: Cannot complete response because mismatched correlation id: " +
-                   correlationId.value);
+        state.parser.parseNext(buffer.asByteBuffer());
+      }
+
+      while (state.parser.hasFullResponse()) {
+        final Response response = state.parser.fullResponse();
+        final ResponseHeader correlationId = response.headers.headerOfOrDefault(ResponseHeader.XCorrelationID, state.correlationId);
+        if (correlationId == null) {
+          logger().warn("Client Consumer: Cannot complete response because no correlation id.");
           state.configuration.consumerOfUnknownResponses.consume(response);
         } else {
-          completes.with(response);
+          if (state.parser.isKeepAliveConnection() && state.parser.isStreamContentType()) {
+            state.correlationId = correlationId;
+          }
+          final CompletesEventually completes = state.configuration.keepAlive ?
+                  completables.get(correlationId.value) :
+                  completables.remove(correlationId.value);
+          if (completes == null) {
+            state.configuration.stage.world().defaultLogger().warn(
+                    "Client Consumer: Cannot complete response because mismatched correlation id: " +
+                     correlationId.value);
+            state.configuration.consumerOfUnknownResponses.consume(response);
+          } else {
+            completes.with(response);
+          }
         }
       }
+    } finally {
+      buffer.release();
     }
   }
 
