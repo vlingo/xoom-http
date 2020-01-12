@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.List;
 
 import io.vlingo.actors.Actor;
-import io.vlingo.actors.ActorInstantiator.Registry;
+import io.vlingo.actors.ActorInstantiatorRegistry;
 import io.vlingo.common.Tuple2;
 import io.vlingo.http.resource.sse.SseEvent;
 import io.vlingo.http.resource.sse.SseFeed;
@@ -22,7 +22,7 @@ public class AllSseFeedActor extends Actor implements SseFeed {
   private final int RetryThreshold = 3000;
 
   static {
-    Registry.register(AllSseFeedActor.class, new AllSseFeedInstantiator());
+    ActorInstantiatorRegistry.register(AllSseFeedActor.class, new AllSseFeedInstantiator());
   }
 
   private final SseEvent.Builder builder;
@@ -32,7 +32,7 @@ public class AllSseFeedActor extends Actor implements SseFeed {
   private final String streamName;
 
   public static void registerInstantiator() {
-    Registry.register(AllSseFeedActor.class, new AllSseFeedInstantiator());
+    ActorInstantiatorRegistry.register(AllSseFeedActor.class, new AllSseFeedInstantiator());
   }
 
   public AllSseFeedActor(final String streamName, final int feedPayload, final String feedDefaultId) {

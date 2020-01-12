@@ -14,7 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.vlingo.actors.ActorInstantiator;
-import io.vlingo.actors.ActorInstantiator.Registry;
+import io.vlingo.actors.ActorInstantiatorRegistry;
 import io.vlingo.actors.World;
 import io.vlingo.actors.testkit.AccessSafely;
 import io.vlingo.http.Context;
@@ -113,7 +113,7 @@ public class SseStreamResourceTest {
     final Context requestContext = new Context(context, request, completes);
     sseStreamResource.__internal__test_set_up(requestContext, world.stage());
 
-    final ActorInstantiator<?> instantiator = Registry.instantiatorFor(AllSseFeedActor.class);
+    final ActorInstantiator<?> instantiator = ActorInstantiatorRegistry.instantiatorFor(AllSseFeedActor.class);
     instantiator.set("feedClass", AllSseFeedActor.class);
     instantiator.set("streamName", "all");
     instantiator.set("feedPayload", 1);

@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.ActorInstantiator;
-import io.vlingo.actors.ActorInstantiator.Registry;
+import io.vlingo.actors.ActorInstantiatorRegistry;
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.Stoppable;
 import io.vlingo.actors.World;
@@ -108,7 +108,7 @@ public class SseStreamResource extends ResourceHandler {
       this.streamName = streamName;
       this.subscribers = new HashMap<>();
 
-      final ActorInstantiator<?> instantiator = Registry.instantiatorFor(feedClass);
+      final ActorInstantiator<?> instantiator = ActorInstantiatorRegistry.instantiatorFor(feedClass);
       instantiator.set("feedClass", feedClass);
       instantiator.set("streamName", streamName);
       instantiator.set("feedPayload", feedPayload);
