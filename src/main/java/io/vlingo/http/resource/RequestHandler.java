@@ -10,6 +10,7 @@
 package io.vlingo.http.resource;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,6 +26,8 @@ public abstract class RequestHandler {
   public final Method method;
   public final String path;
   public final String actionSignature;
+  public final String contentSignature;
+  public final Class<?> bodyType;
   private final Pattern pattern = Pattern.compile("\\{(.*?)\\}");
   protected MediaTypeMapper mediaTypeMapper;
   protected ErrorHandler errorHandler;
@@ -33,24 +36,24 @@ public abstract class RequestHandler {
     this.method = method;
     this.path = path;
     this.actionSignature = generateActionSignature(parameterResolvers);
+    this.contentSignature = detectRequestBodyType(parameterResolvers).map(Class::getSimpleName).orElse(null);
+    this.bodyType = detectRequestBodyType(parameterResolvers).orElse(null);
     this.errorHandler = DefaultErrorHandler.instance();
     this.mediaTypeMapper = DefaultMediaTypeMapper.instance();
   }
 
   protected RequestHandler(final Method method,
-                 final String path,
-                 final List<ParameterResolver<?>> parameterResolvers,
-                 final ErrorHandler errorHandler,
-                 final MediaTypeMapper mediaTypeMapper) {
+                           final String path,
+                           final List<ParameterResolver<?>> parameterResolvers,
+                           final ErrorHandler errorHandler,
+                           final MediaTypeMapper mediaTypeMapper) {
     this.method = method;
     this.path = path;
     this.actionSignature = generateActionSignature(parameterResolvers);
+    this.contentSignature = detectRequestBodyType(parameterResolvers).map(Class::getSimpleName).orElse(null);
+    this.bodyType = detectRequestBodyType(parameterResolvers).orElse(null);
     this.errorHandler = errorHandler;
     this.mediaTypeMapper = mediaTypeMapper;
-  }
-
-  protected ContentType contentType() {
-    return ContentType.of("text/plain", "us-ascii");
   }
 
   protected Completes<Response> runParamExecutor(Object paramExecutor, Supplier<Completes<Response>> executeRequest) {
@@ -61,9 +64,14 @@ public abstract class RequestHandler {
   }
 
   protected abstract Completes<Response> execute(final Request request,
-                                       final Action.MappedParameters mappedParameters,
-                                       final Logger logger);
+                                                 final Action.MappedParameters mappedParameters,
+                                                 final Logger logger);
 
+  private Optional<? extends Class<?>> detectRequestBodyType(final List<ParameterResolver<?>> parameterResolvers) {
+    return parameterResolvers.stream().filter(parameterResolver -> parameterResolver.type == ParameterResolver.Type.BODY)
+      .map(p -> p.paramClass)
+      .findFirst();
+  }
 
   private String generateActionSignature(final List<ParameterResolver<?>> parameterResolvers) {
     checkOrder(parameterResolvers);

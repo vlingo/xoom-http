@@ -11,6 +11,7 @@ import io.vlingo.actors.CompletesEventually;
 import io.vlingo.actors.Logger;
 import io.vlingo.actors.Stage;
 import io.vlingo.common.Scheduler;
+import io.vlingo.http.ContentType;
 import io.vlingo.http.Context;
 
 public abstract class ResourceHandler {
@@ -47,6 +48,10 @@ public abstract class ResourceHandler {
 
   protected Stage stage() {
     return stage;
+  }
+
+  protected ContentType contentType() {
+    return ContentType.of("text/plain", "us-ascii");
   }
 
   public void __internal__test_set_up(final Context context, final Stage stage) {
