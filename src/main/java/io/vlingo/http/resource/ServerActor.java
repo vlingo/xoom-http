@@ -7,12 +7,6 @@
 
 package io.vlingo.http.resource;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.Logger;
 import io.vlingo.actors.Returns;
@@ -22,14 +16,7 @@ import io.vlingo.common.Completes;
 import io.vlingo.common.Scheduled;
 import io.vlingo.common.completes.SinkAndSourceBasedCompletes;
 import io.vlingo.common.pool.ElasticResourcePool;
-import io.vlingo.common.pool.ResourcePool;
-import io.vlingo.http.Context;
-import io.vlingo.http.Filters;
-import io.vlingo.http.Header;
-import io.vlingo.http.Request;
-import io.vlingo.http.RequestHeader;
-import io.vlingo.http.RequestParser;
-import io.vlingo.http.Response;
+import io.vlingo.http.*;
 import io.vlingo.http.resource.Configuration.Sizing;
 import io.vlingo.http.resource.Configuration.Timing;
 import io.vlingo.wire.channel.RequestChannelConsumer;
@@ -39,6 +26,12 @@ import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
 import io.vlingo.wire.message.BasicConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBufferPool;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ServerActor extends Actor implements Server, RequestChannelConsumerProvider, Scheduled<Object> {
   static final String ChannelName = "server-request-response-channel";
@@ -51,7 +44,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   private final int maxMessageSize;
   private final Map<String,RequestResponseHttpContext> requestsMissingContent;
   private final long requestMissingContentTimeout;
-  private final ResourcePool<ConsumerByteBuffer, Void> responseBufferPool;
+  private final ConsumerByteBufferPool responseBufferPool;
   private final World world;
 
   public ServerActor(
@@ -338,7 +331,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     private ConsumerByteBuffer bufferFor(final Response response) {
       final int size = response.size();
       if (size < maxMessageSize) {
-        return responseBufferPool.acquire();
+        return responseBufferPool.acquire("ServerActor#BasicCompletedBasedResponseCompletes#bufferFor");
       }
 
       return BasicConsumerByteBuffer.allocate(0, size + 1024);
@@ -367,7 +360,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     private ConsumerByteBuffer bufferFor(final Response response) {
       final int size = response.size();
       if (size < maxMessageSize) {
-        return responseBufferPool.acquire();
+        return responseBufferPool.acquire("ServerActor#SinkBasedBasedResponseCompletes#bufferFor");
       }
 
       return BasicConsumerByteBuffer.allocate(0, size + 1024);
