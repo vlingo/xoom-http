@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
 
 import io.vlingo.actors.Logger;
 import io.vlingo.common.Completes;
-import io.vlingo.http.ContentType;
 import io.vlingo.http.Method;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
