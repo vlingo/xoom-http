@@ -7,13 +7,8 @@
 
 package io.vlingo.http.resource;
 
-import java.util.function.Consumer;
-
-import io.vlingo.actors.Actor;
-import io.vlingo.actors.DeadLetter;
-import io.vlingo.actors.LocalMessage;
-import io.vlingo.actors.Mailbox;
-import io.vlingo.actors.Stoppable;
+import io.vlingo.actors.*;
+import io.vlingo.common.SerializableConsumer;
 
 public class RequestSender__Proxy implements io.vlingo.http.resource.RequestSender {
 
@@ -32,7 +27,7 @@ public class RequestSender__Proxy implements io.vlingo.http.resource.RequestSend
   @Override
   public void sendRequest(io.vlingo.http.Request arg0) {
     if (!actor.isStopped()) {
-      final java.util.function.Consumer<RequestSender> consumer = (actor) -> actor.sendRequest(arg0);
+      final SerializableConsumer<RequestSender> consumer = (actor) -> actor.sendRequest(arg0);
       if (mailbox.isPreallocated()) { mailbox.send(actor, RequestSender.class, consumer, null, sendRequestRepresentation1); }
       else { mailbox.send(new LocalMessage<RequestSender>(actor, RequestSender.class, consumer, sendRequestRepresentation1)); }
     } else {
@@ -42,7 +37,7 @@ public class RequestSender__Proxy implements io.vlingo.http.resource.RequestSend
   @Override
   public void conclude() {
     if (!actor.isStopped()) {
-      final Consumer<Stoppable> consumer = (actor) -> actor.conclude();
+      final SerializableConsumer<Stoppable> consumer = (actor) -> actor.conclude();
       if (mailbox.isPreallocated()) { mailbox.send(actor, Stoppable.class, consumer, null, representationConclude0); }
       else { mailbox.send(new LocalMessage<Stoppable>(actor, Stoppable.class, consumer, representationConclude0)); }
     } else {
@@ -52,7 +47,7 @@ public class RequestSender__Proxy implements io.vlingo.http.resource.RequestSend
   @Override
   public void stop() {
     if (!actor.isStopped()) {
-      final java.util.function.Consumer<RequestSender> consumer = (actor) -> actor.stop();
+      final SerializableConsumer<RequestSender> consumer = (actor) -> actor.stop();
       if (mailbox.isPreallocated()) { mailbox.send(actor, RequestSender.class, consumer, null, stopRepresentation2); }
       else { mailbox.send(new LocalMessage<RequestSender>(actor, RequestSender.class, consumer, stopRepresentation2)); }
     } else {
