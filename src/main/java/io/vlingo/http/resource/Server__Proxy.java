@@ -7,16 +7,10 @@
 
 package io.vlingo.http.resource;
 
-import java.util.function.Consumer;
-
-import io.vlingo.actors.Actor;
-import io.vlingo.actors.DeadLetter;
-import io.vlingo.actors.LocalMessage;
-import io.vlingo.actors.Mailbox;
-import io.vlingo.actors.Returns;
-import io.vlingo.actors.Stoppable;
+import io.vlingo.actors.*;
 import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
+import io.vlingo.common.SerializableConsumer;
 
 public class Server__Proxy implements Server {
 
@@ -41,7 +35,7 @@ public class Server__Proxy implements Server {
   @Override
   public Completes<Boolean> shutDown() {
     if (!actor.isStopped()) {
-      final Consumer<Server> consumer = (actor) -> actor.shutDown();
+      final SerializableConsumer<Server> consumer = (actor) -> actor.shutDown();
       final Completes<Boolean> completes = new BasicCompletes<>(actor.scheduler());
       if (mailbox.isPreallocated()) { mailbox.send(actor, Server.class, consumer, Returns.value(completes), shutDownRepresentation1); }
       else { mailbox.send(new LocalMessage<Server>(actor, Server.class, consumer, Returns.value(completes), shutDownRepresentation1)); }
@@ -55,7 +49,7 @@ public class Server__Proxy implements Server {
   @Override
   public Completes<Boolean> startUp() {
     if (!actor.isStopped()) {
-      final Consumer<Server> consumer = (actor) -> actor.startUp();
+      final SerializableConsumer<Server> consumer = (actor) -> actor.startUp();
       final Completes<Boolean> completes = new BasicCompletes<>(actor.scheduler());
       if (mailbox.isPreallocated()) { mailbox.send(actor, Server.class, consumer, Returns.value(completes), startUpRepresentation2); }
       else { mailbox.send(new LocalMessage<Server>(actor, Server.class, consumer, Returns.value(completes), startUpRepresentation2)); }
@@ -69,7 +63,7 @@ public class Server__Proxy implements Server {
   @Override
   public void conclude() {
     if (!actor.isStopped()) {
-      final Consumer<Stoppable> consumer = (actor) -> actor.conclude();
+      final SerializableConsumer<Stoppable> consumer = (actor) -> actor.conclude();
       if (mailbox.isPreallocated()) { mailbox.send(actor, Stoppable.class, consumer, null, representationConclude0); }
       else { mailbox.send(new LocalMessage<Stoppable>(actor, Stoppable.class, consumer, representationConclude0)); }
     } else {
@@ -80,7 +74,7 @@ public class Server__Proxy implements Server {
   @Override
   public void stop() {
     if (!actor.isStopped()) {
-      final Consumer<Server> consumer = (actor) -> actor.stop();
+      final SerializableConsumer<Server> consumer = (actor) -> actor.stop();
       if (mailbox.isPreallocated()) { mailbox.send(actor, Server.class, consumer, null, stopRepresentation3); }
       else { mailbox.send(new LocalMessage<Server>(actor, Server.class, consumer, stopRepresentation3)); }
     } else {

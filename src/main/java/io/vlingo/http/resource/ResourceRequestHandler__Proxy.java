@@ -7,12 +7,11 @@
 
 package io.vlingo.http.resource;
 
-import java.util.function.Consumer;
-
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.DeadLetter;
 import io.vlingo.actors.LocalMessage;
 import io.vlingo.actors.Mailbox;
+import io.vlingo.common.SerializableConsumer;
 import io.vlingo.http.Context;
 import io.vlingo.http.resource.Action.MappedParameters;
 
@@ -33,7 +32,7 @@ public class ResourceRequestHandler__Proxy implements ResourceRequestHandler {
   @SuppressWarnings("rawtypes")
   public void handleFor(io.vlingo.http.Context arg0, java.util.function.Consumer arg1) {
     if (!actor.isStopped()) {
-      final Consumer<ResourceRequestHandler> consumer = (actor) -> actor.handleFor(arg0, arg1);
+      final SerializableConsumer<ResourceRequestHandler> consumer = (actor) -> actor.handleFor(arg0, arg1);
       if (mailbox.isPreallocated()) { mailbox.send(actor, ResourceRequestHandler.class, consumer, null, handleForRepresentation1); }
       else { mailbox.send(new LocalMessage<ResourceRequestHandler>(actor, ResourceRequestHandler.class, consumer, handleForRepresentation1)); }
     } else {
@@ -44,7 +43,7 @@ public class ResourceRequestHandler__Proxy implements ResourceRequestHandler {
   @Override
   public void handleFor(final Context arg0, final MappedParameters arg1, final RequestHandler arg2) {
     if (!actor.isStopped()) {
-      final Consumer<ResourceRequestHandler> consumer = (actor) -> actor.handleFor(arg0, arg1, arg2);
+      final SerializableConsumer<ResourceRequestHandler> consumer = (actor) -> actor.handleFor(arg0, arg1, arg2);
       if (mailbox.isPreallocated()) { mailbox.send(actor, ResourceRequestHandler.class, consumer, null, handleForRepresentation2); }
       else { mailbox.send(new LocalMessage<ResourceRequestHandler>(actor, ResourceRequestHandler.class, consumer, handleForRepresentation2)); }
     } else {

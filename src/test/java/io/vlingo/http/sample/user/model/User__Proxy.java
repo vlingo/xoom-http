@@ -7,15 +7,10 @@
 
 package io.vlingo.http.sample.user.model;
 
-import java.util.function.Consumer;
-
-import io.vlingo.actors.Actor;
-import io.vlingo.actors.DeadLetter;
-import io.vlingo.actors.LocalMessage;
-import io.vlingo.actors.Mailbox;
-import io.vlingo.actors.Returns;
+import io.vlingo.actors.*;
 import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
+import io.vlingo.common.SerializableConsumer;
 
 public class User__Proxy implements User {
 
@@ -33,7 +28,7 @@ public class User__Proxy implements User {
   @Override
   public Completes<State> withContact(io.vlingo.http.sample.user.model.Contact arg0) {
     if (!actor.isStopped()) {
-      final Consumer<User> consumer = (actor) -> actor.withContact(arg0);
+      final SerializableConsumer<User> consumer = (actor) -> actor.withContact(arg0);
       final Completes<State> completes = new BasicCompletes<>(actor.scheduler());
       mailbox.send(new LocalMessage<User>(actor, User.class, consumer, Returns.value(completes), withContactRepresentation1));
       return completes;
@@ -45,7 +40,7 @@ public class User__Proxy implements User {
   @Override
   public Completes<State> withName(io.vlingo.http.sample.user.model.Name arg0) {
     if (!actor.isStopped()) {
-      final Consumer<User> consumer = (actor) -> actor.withName(arg0);
+      final SerializableConsumer<User> consumer = (actor) -> actor.withName(arg0);
       final Completes<State> completes = new BasicCompletes<>(actor.scheduler());
       mailbox.send(new LocalMessage<User>(actor, User.class, consumer, Returns.value(completes), withNameRepresentation2));
       return completes;

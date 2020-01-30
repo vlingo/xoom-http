@@ -11,6 +11,7 @@ import io.vlingo.actors.Actor;
 import io.vlingo.actors.DeadLetter;
 import io.vlingo.actors.LocalMessage;
 import io.vlingo.actors.Mailbox;
+import io.vlingo.common.SerializableConsumer;
 
 public class SseFeed__Proxy implements io.vlingo.http.resource.sse.SseFeed {
 
@@ -27,7 +28,7 @@ public class SseFeed__Proxy implements io.vlingo.http.resource.sse.SseFeed {
   @Override
   public void to(java.util.Collection<io.vlingo.http.resource.sse.SseSubscriber> arg0) {
     if (!actor.isStopped()) {
-      final java.util.function.Consumer<SseFeed> consumer = (actor) -> actor.to(arg0);
+      final SerializableConsumer<SseFeed> consumer = (actor) -> actor.to(arg0);
       if (mailbox.isPreallocated()) { mailbox.send(actor, SseFeed.class, consumer, null, toRepresentation1); }
       else { mailbox.send(new LocalMessage<SseFeed>(actor, SseFeed.class, consumer, toRepresentation1)); }
     } else {
