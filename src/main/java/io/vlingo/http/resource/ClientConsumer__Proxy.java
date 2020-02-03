@@ -7,7 +7,13 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.*;
+import io.vlingo.actors.Actor;
+import io.vlingo.actors.Address;
+import io.vlingo.actors.DeadLetter;
+import io.vlingo.actors.LocalMessage;
+import io.vlingo.actors.Mailbox;
+import io.vlingo.actors.Returns;
+import io.vlingo.actors.Stoppable;
 import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
 import io.vlingo.common.SerializableConsumer;
@@ -24,7 +30,9 @@ public class ClientConsumer__Proxy implements ClientConsumer {
   private final transient  Actor actor;
   private final transient Mailbox mailbox;
 
+  @SuppressWarnings("unused")
   private final Class<ClientConsumer> protocol = ClientConsumer.class;
+  @SuppressWarnings("unused")
   private final Address address;
 
   public ClientConsumer__Proxy(final Actor actor, final Mailbox mailbox){
