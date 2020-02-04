@@ -7,13 +7,7 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.Actor;
-import io.vlingo.actors.Address;
-import io.vlingo.actors.DeadLetter;
-import io.vlingo.actors.LocalMessage;
-import io.vlingo.actors.Mailbox;
-import io.vlingo.actors.Returns;
-import io.vlingo.actors.Stoppable;
+import io.vlingo.actors.*;
 import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
 import io.vlingo.common.SerializableConsumer;
@@ -21,23 +15,17 @@ import io.vlingo.http.Response;
 
 public class ClientConsumer__Proxy implements ClientConsumer {
 
-  private static final transient String representationConclude0 = "conclude()";
-  private static final transient String requestWithRepresentation1 = "requestWith(io.vlingo.http.Request)";
-  private static final transient String consumeRepresentation2 = "consume(io.vlingo.wire.message.ConsumerByteBuffer)";
-  private static final transient String intervalSignalRepresentation3 = "intervalSignal(io.vlingo.actors.Scheduled, java.lang.Object)";
-  private static final transient String stopRepresentation4 = "stop()";
-
-  private final transient  Actor actor;
-  private final transient Mailbox mailbox;
-
-  @SuppressWarnings("unused")
-  private final Class<ClientConsumer> protocol = ClientConsumer.class;
-  @SuppressWarnings("unused")
-  private final Address address;
+  private static final String representationConclude0 = "conclude()";
+  private static final String requestWithRepresentation1 = "requestWith(io.vlingo.http.Request)";
+  private static final String consumeRepresentation2 = "consume(io.vlingo.wire.message.ConsumerByteBuffer)";
+  private static final String intervalSignalRepresentation3 = "intervalSignal(io.vlingo.actors.Scheduled, java.lang.Object)";
+  private static final String stopRepresentation4 = "stop()";
+  
+  private final Actor actor;
+  private final Mailbox mailbox;
 
   public ClientConsumer__Proxy(final Actor actor, final Mailbox mailbox){
     this.actor = actor;
-    this.address = actor.address();
     this.mailbox = mailbox;
   }
 
