@@ -75,6 +75,8 @@ public class AllSseFeedActor extends Actor implements SseFeed {
   }
 
   private static class AllSseFeedInstantiator extends SseFeedInstantiator<AllSseFeedActor> {
+    private static final long serialVersionUID = 530319176678558252L;
+
     public AllSseFeedInstantiator() { }
 
     @Override

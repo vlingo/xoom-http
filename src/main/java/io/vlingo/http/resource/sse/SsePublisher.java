@@ -17,6 +17,8 @@ public interface SsePublisher extends Stoppable {
   void unsubscribe(final SseSubscriber subscriber);
 
   static class SsePublisherInstantiator implements ActorInstantiator<SsePublisherActor> {
+    private static final long serialVersionUID = -3527194754132755789L;
+
     private final String streamName;
     private final Class<? extends Actor> feedClass;
     private final int feedPayload;

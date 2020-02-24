@@ -15,7 +15,9 @@ import io.vlingo.actors.ActorInstantiator;
 public interface SseFeed {
   void to(final Collection<SseSubscriber> subscribers);
 
-  static abstract class SseFeedInstantiator<A extends Actor> implements ActorInstantiator<A> {
+  public static abstract class SseFeedInstantiator<A extends Actor> implements ActorInstantiator<A> {
+    private static final long serialVersionUID = 1300345629189223793L;
+
     protected Class<A> feedClass;
     protected String streamName;
     protected int feedPayload;
