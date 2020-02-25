@@ -109,6 +109,7 @@ public class SseStreamResource extends ResourceHandler {
       this.subscribers = new HashMap<>();
 
       final ActorInstantiator<?> instantiator = ActorInstantiatorRegistry.instantiatorFor(feedClass);
+      if(instantiator==null)throw new IllegalArgumentException("No ActorInstantiator registred for feedClass="+feedClass.toString());
       instantiator.set("feedClass", feedClass);
       instantiator.set("streamName", streamName);
       instantiator.set("feedPayload", feedPayload);

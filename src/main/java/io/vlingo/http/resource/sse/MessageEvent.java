@@ -15,6 +15,11 @@ import io.vlingo.http.Header;
 import io.vlingo.http.Response;
 import io.vlingo.http.ResponseHeader;
 
+/**
+ * Describes the HTTP body content of SSE messages
+ * @see <a href="https://en.wikipedia.org/wiki/Server-sent_events">https://en.wikipedia.org/wiki/Server-sent_events</a>
+ * @see <a href="https://html.spec.whatwg.org/multipage/server-sent-events.html">https://html.spec.whatwg.org/multipage/server-sent-events.html</a>
+ */
 public class MessageEvent {
   public static final int NoRetry = -1;
 
@@ -24,6 +29,11 @@ public class MessageEvent {
   public final String id;
   public final int retry;
 
+  /**
+   * On client side received SSE message can be parsed into {@link MessageEvent}
+   * @param response input the client read from SSE server
+   * @return a parsed list of {@link MessageEvent} - empty event if header is missing and not got correct header
+   */
   public static List<MessageEvent> from(final Response response) {
     final Header header = response.headerOf(ResponseHeader.ContentType);
     if (header == null || !header.value.equals("text/event-stream")) {
