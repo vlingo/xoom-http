@@ -24,6 +24,8 @@ public interface RequestSender extends Stoppable {
   void sendRequest(final Request request);
 
   static class RequestSenderProbeInstantiator implements ActorInstantiator<RequestSenderProbeActor> {
+    private static final long serialVersionUID = 2873944246822995889L;
+
     final Configuration configuration;
     final ResponseChannelConsumer consumer;
     final String testId;

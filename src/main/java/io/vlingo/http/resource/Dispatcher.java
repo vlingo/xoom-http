@@ -26,6 +26,8 @@ public interface Dispatcher extends Stoppable {
   void dispatchFor(final Context context);
 
   static class DispatcherInstantiator implements ActorInstantiator<DispatcherActor> {
+    private static final long serialVersionUID = 9025560076715268682L;
+
     private final Resources resources;
 
     public DispatcherInstantiator(final Resources resources) {

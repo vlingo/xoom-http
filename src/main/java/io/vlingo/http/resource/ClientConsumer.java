@@ -70,6 +70,8 @@ public interface ClientConsumer extends ResponseChannelConsumer, Scheduled<Objec
   }
 
   static class CorrelatingClientConsumerInstantiator implements ActorInstantiator<ClientCorrelatingRequesterConsumerActor> {
+    private static final long serialVersionUID = -3142210758802079676L;
+
     private final Configuration configuration;
 
     public CorrelatingClientConsumerInstantiator(final Configuration configuration) {
@@ -92,6 +94,8 @@ public interface ClientConsumer extends ResponseChannelConsumer, Scheduled<Objec
   }
 
   static class LoadBalancingClientRequestConsumerInstantiator implements ActorInstantiator<LoadBalancingClientRequestConsumerActor> {
+    private static final long serialVersionUID = -8755323677274846300L;
+
     private final Configuration configuration;
     private final RouterSpecification<ClientConsumer> spec;
 
@@ -116,6 +120,8 @@ public interface ClientConsumer extends ResponseChannelConsumer, Scheduled<Objec
   }
 
   static class RoundRobinClientRequestConsumerInstantiator implements ActorInstantiator<RoundRobinClientRequestConsumerActor> {
+    private static final long serialVersionUID = -5414705372684318250L;
+
     private final Configuration configuration;
     private final RouterSpecification<ClientConsumer> spec;
 

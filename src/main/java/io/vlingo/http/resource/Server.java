@@ -128,6 +128,8 @@ public interface Server extends Stoppable {
   Completes<Boolean> startUp();
 
   static class ServerInstantiator implements ActorInstantiator<ServerActor> {
+    private static final long serialVersionUID = 1085685844717413620L;
+
     private final Resources resources;
     private final Filters filters;
     private final int port;
