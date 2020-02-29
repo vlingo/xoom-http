@@ -13,8 +13,15 @@ import io.vlingo.actors.Stage;
 import io.vlingo.actors.Stoppable;
 import io.vlingo.http.Context;
 
+/**
+ * Dispatcher is an adapter ( technical actor) that is able to take a http request in form
+ * of a message inside {@link Context} and make sure that the request is handled
+ * <p>
+ * There is a dispatcher for each {@link Resource} and the dispatcher will typically send
+ * the message to a pooled {@link ResourceRequestHandler} that can handle the message.
+ */
 public interface Dispatcher extends Stoppable {
-  public static Dispatcher startWith(final Stage stage, final Resources resources) {
+  static Dispatcher startWith(final Stage stage, final Resources resources) {
     final Dispatcher dispatcher =
             stage.actorFor(
                     Dispatcher.class,
@@ -25,7 +32,7 @@ public interface Dispatcher extends Stoppable {
 
   void dispatchFor(final Context context);
 
-  static class DispatcherInstantiator implements ActorInstantiator<DispatcherActor> {
+  class DispatcherInstantiator implements ActorInstantiator<DispatcherActor> {
     private static final long serialVersionUID = 9025560076715268682L;
 
     private final Resources resources;

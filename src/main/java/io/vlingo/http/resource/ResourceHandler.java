@@ -14,6 +14,15 @@ import io.vlingo.common.Scheduler;
 import io.vlingo.http.ContentType;
 import io.vlingo.http.Context;
 
+/**
+ * Each request to the web server will have own instance of this.
+ * This means that many different ResourceHandler can be in progress concurrently
+ * <p>
+ * The system administrate resourceHandlers in pools. Therefore the same instance can be
+ * meet again and again with different request.
+ * <p>
+ * Possible we should expose {@link #__internal__test_set_up} and explain this break of immutability
+ */
 public abstract class ResourceHandler {
   Context context;
   Stage stage;

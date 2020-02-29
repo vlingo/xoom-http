@@ -10,6 +10,9 @@ package io.vlingo.http;
 import io.vlingo.actors.CompletesEventually;
 import io.vlingo.wire.channel.RequestResponseContext;
 
+/**
+ * Message between server actor and consuming "port"
+ */
 public class Context {
   public final CompletesEventually completes;
   public final Request request;

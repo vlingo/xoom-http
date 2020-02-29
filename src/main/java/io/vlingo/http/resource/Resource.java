@@ -18,8 +18,34 @@ import io.vlingo.actors.Stage;
 import io.vlingo.http.Context;
 import io.vlingo.http.Method;
 
+/**
+ * Specification of web resources that REST services can access - and what method will handle request.
+ * Http body content can also be mapped. See {@link Action}
+ * <p>
+ * The resource location is composed by: URI + path parameters + query parameters
+ * <p>
+ * Contains an {@link Action} list containing [ {@link Method} , {@link URI}, java method ] that can be called from a client
+ * <p>
+ *
+ * In example:
+ * <ul>
+ *   <li>GET, /organizations, ... ,queryOrganization </li>
+ *   <li>POST, /organization, ... ,createOrganization </li>
+ * </ul>
+ *
+ * @param <T> {@link ResourceHandler} type of class that contains the java methods to call when an {@link Action} is selected
+ *           by the dispatcher and is going to be executed
+ *           It is optional to specify the generic type when {@link Action} is used active
+ */
 public abstract class Resource<T> {
   public final String name;
+  /**
+   * Number of {@link ResourceRequestHandler} that can work with requests to the declared web URL concurrent.
+   * When a Web Requests - a message -  comes (from outside the {@link io.vlingo.actors.World}) it will
+   * easy take longer time for the underlying {@link ResourceHandler} to complete.
+   * Therefore the {@link #handlerPool} provides true concurrent request execution via a pool
+   * of {@link ResourceRequestHandler} that can work concurrent.
+   */
   public final int handlerPoolSize;
 
   private final ResourceRequestHandler[] handlerPool;
