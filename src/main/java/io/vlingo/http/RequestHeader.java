@@ -7,6 +7,15 @@
 
 package io.vlingo.http;
 
+/**
+ * List of HTTP headers that is added to http client calls and checked in services. See {@link ResponseHeader}
+ * for response returned to client.
+ * <p>
+ * There are descriptions of headers on the web
+ *
+ * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields">Wikipedia.org:header_fields</a>
+ * @see <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html">www.w3.org:protocol-rfc2616</a>
+ */
 public class RequestHeader extends Header {
   public static final String Accept = "Accept";
   public static final String AcceptCharset = "Accept-Charset";
