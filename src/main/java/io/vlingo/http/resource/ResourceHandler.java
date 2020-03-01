@@ -16,7 +16,11 @@ import io.vlingo.http.Context;
 
 /**
  * Each request to the web server will have own instance of this.
- * This means that many different ResourceHandler can be in progress concurrently
+ * This means that many different ResourceHandler can be in progress concurrently.
+ * <p>
+ * A {@link ResourceHandler} can be seen as a "light" {@link io.vlingo.actors.Actor} -
+ * that works in the specific http-server request handling -
+ * it got access to {@link Scheduler} and similar services.
  * <p>
  * The system administrate resourceHandlers in pools. Therefore the same instance can be
  * meet again and again with different request.
