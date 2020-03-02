@@ -63,4 +63,21 @@ public class SseSubscriber {
   public String streamName() {
     return streamName;
   }
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("SseSubscriber [");
+    sb.append("stream='").append(streamName()).append('\'');
+    if (hasCorrelationId()) {
+      sb.append(", correlationId='").append(correlationId()).append('\'');
+    }
+    if (hasCurrentEventId()) {
+      sb.append(", currentEventId='").append(currentEventId()).append('\'');
+    }
+    if (client.id()!=null) {
+      sb.append(", client=").append(client.id());
+    }
+    sb.append(']');
+    return sb.toString();
+  }
 }

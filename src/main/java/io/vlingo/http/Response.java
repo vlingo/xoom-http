@@ -13,6 +13,10 @@ import io.vlingo.http.Header.Headers;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 import io.vlingo.wire.message.Converters;
 
+/**
+ * A response to an HTTP request, including headers, entity/body. Factory methods
+ * are provided for fluent creation, as well as an enumeration of statuses.
+ */
 public class Response {
 
   public static Response of(final Status statusCode) {

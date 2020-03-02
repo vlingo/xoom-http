@@ -7,6 +7,14 @@
 
 package io.vlingo.http;
 
+/**
+ * The standard HTTP response header along with standard type names and
+ * convenience factory methods for frequently used headers.
+ * <p>
+ * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields">Wikipedia.org:header_fields</a>
+ * <p>
+ * @see <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html">www.w3.org:protocol-rfc2616</a>
+ */
 public class ResponseHeader extends Header {
   public static final String AccessControlAllowOrigin = "Access-Control-Allow-Origin";
   public static final String AccessControlAllowCredentials = "Access-Control-Allow-Credentials";
@@ -119,6 +127,10 @@ public class ResponseHeader extends Header {
     return new ResponseHeader(name, String.valueOf(value));
   }
 
+  /**
+   * Answer the {@code int} value of the {@code ContentLength} header, or {@code 0} if missing.
+   * @return int
+   */
   public int ifContentLength() {
     if (name.equalsIgnoreCase(ContentLength)) {
       return Integer.parseInt(value);
@@ -126,18 +138,35 @@ public class ResponseHeader extends Header {
     return -1;
   }
 
+  /**
+   * Answer whether or not I have a {@code Connection} with {@code keep-alive} header.
+   * @return boolean
+   */
   public boolean isKeepAliveConnection() {
     return name.equalsIgnoreCase(Connection) && value.equalsIgnoreCase("keep-alive");
   }
 
+  /**
+   * Answer whether or not I have a {@code ContentType} with a kind of {@code -stream} header.
+   * @return boolean
+   */
   public boolean isStreamContentType() {
     return name.equalsIgnoreCase(ContentType) && value.toLowerCase().contains("-stream");
   }
 
+  /**
+   * Answer whether or not I have a {@code TransferEncoding} of {@code chunked} header.
+   * @return boolean
+   */
   public boolean isTransferEncodingChunked() {
     return name.equalsIgnoreCase(TransferEncoding) && value.equalsIgnoreCase("chunked");
   }
 
+  /**
+   * Construct my state.
+   * @param name the String to set as my name
+   * @param value the String to set as my value
+   */
   private ResponseHeader(final String name, final String value) {
     super(name, value);
   }

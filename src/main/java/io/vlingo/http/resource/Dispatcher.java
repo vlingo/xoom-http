@@ -13,7 +13,17 @@ import io.vlingo.actors.Stage;
 import io.vlingo.actors.Stoppable;
 import io.vlingo.http.Context;
 
+/**
+ * The protocol provided by {@code Server} request dispatchers, such as {@code DispatcherActor}.
+ */
 public interface Dispatcher extends Stoppable {
+  /**
+   * Answer a new {@code Dispatcher} backed by {@code DispatcherActor} within {@code Stage}
+   * and assigned to manage dispatching to the given {@code Resources}.
+   * @param stage the Stage within which the new DispatcherActor will reside
+   * @param resources the Resources that may be dispatched
+   * @return Dispatcher
+   */
   public static Dispatcher startWith(final Stage stage, final Resources resources) {
     final Dispatcher dispatcher =
             stage.actorFor(
@@ -23,8 +33,15 @@ public interface Dispatcher extends Stoppable {
     return dispatcher;
   }
 
+  /**
+   * Dispatches the request provided by the given {@code context} to one of my {@code resources}.
+   * @param context the Context holding the Request to be handled
+   */
   void dispatchFor(final Context context);
 
+  /**
+   * The {@code ActorInstantiator} for {@code Dispatcher} instances.
+   */
   static class DispatcherInstantiator implements ActorInstantiator<DispatcherActor> {
     private static final long serialVersionUID = 9025560076715268682L;
 

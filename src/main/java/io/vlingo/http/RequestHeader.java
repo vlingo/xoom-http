@@ -7,6 +7,14 @@
 
 package io.vlingo.http;
 
+/**
+ * The standard HTTP request header along with standard type names and
+ * convenience factory methods for frequently used headers.
+ * <p>
+ * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields">Wikipedia.org:header_fields</a>
+ * <p>
+ * @see <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html">www.w3.org:protocol-rfc2616</a>
+ */
 public class RequestHeader extends Header {
   public static final String Accept = "Accept";
   public static final String AcceptCharset = "Accept-Charset";
@@ -111,13 +119,22 @@ public class RequestHeader extends Header {
     return new RequestHeader(name, value);
   }
 
-  int ifContentLength() {
+  /**
+   * Answer the {@code int} value of the {@code ContentLength} header, or {@code 0} if missing.
+   * @return int
+   */
+  public int ifContentLength() {
     if (name.equalsIgnoreCase(ContentLength)) {
       return Integer.parseInt(value);
     }
     return 0;
   }
 
+  /**
+   * Construct my state.
+   * @param name the String to set as my name
+   * @param value the String to set as my value
+   */
   private RequestHeader(final String name, final String value) {
     super(name, value);
   }

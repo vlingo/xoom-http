@@ -12,6 +12,10 @@ import java.nio.ByteBuffer;
 
 import io.vlingo.http.Header.Headers;
 
+/**
+ * A request from a client, including headers, body, method, URI, and version.
+ * Factory methods are provided for fluent creation.
+ */
 public class Request {
   public final Body body;
   public final Headers<RequestHeader> headers;
