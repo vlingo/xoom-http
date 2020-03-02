@@ -133,5 +133,6 @@ public class SseStreamResourceTest {
     Configuration.define();
     context = new MockRequestResponseContext(new MockResponseSenderChannel());
     client = new SseClient(context);
+    AllSseFeedActor.registerInstantiator();
   }
 }
