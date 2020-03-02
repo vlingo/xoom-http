@@ -18,16 +18,13 @@ import io.vlingo.http.Context;
  * The abstract base class of all classes that represent REST resources
  * that are described by {@code Actions}, handle incoming requests, and produce
  * outgoing responses.
- * <p>
- * NOTE: Concrete extender instances are pooled and will be continually
+ * <p>NOTE: Concrete extender instances are pooled and will be continually
  * reused to handle requests. Therefore these must not maintain business
- * state that accumulates or otherwise changes across requests.
- * <p>
- * NOTE: Resources that provide an independent {@code routes()}
+ * state that accumulates or otherwise changes across requests.</p>
+ * <p>NOTE: Resources that provide an independent {@code routes()}
  * implementation are not required to extend {@code ResourceHandler}
- * and are not pooled by the {@code DispatcherActor}.
- * <p>
- * @see io.vlingo.http.resource.DynamicResource
+ * and are not pooled by the {@code DispatcherActor}.</p>
+ * <p>@see io.vlingo.http.resource.DynamicResource</p>
  */
 public abstract class ResourceHandler {
   /** My {@code Context} which is injected for each new request I handle. */
