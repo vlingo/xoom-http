@@ -79,9 +79,15 @@ public class SseClient {
   }
 
   private void sendInitialResponse() {
-    final Response response = Response.of(Ok, headers.copy());
-    final ConsumerByteBuffer buffer = BasicConsumerByteBuffer.allocate(1, maxMessageSize);
-    context.respondWith(response.into(buffer));
+    try {
+      final Response response = Response.of(Ok, headers.copy());
+      final ConsumerByteBuffer buffer = BasicConsumerByteBuffer.allocate(1, maxMessageSize);
+      context.respondWith(response.into(buffer));
+    } catch (Exception e) {
+      // it's possible that I am being used for an unsubscribe
+      // where the client has already disconnected and this
+      // attempt will fail; ignore it and return.
+    }
   }
 
   private String flatten(final Collection<SseEvent> events) {
