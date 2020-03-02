@@ -98,21 +98,33 @@ public class Header {
       return new Headers<T>(0);
     }
 
-    @SuppressWarnings("unchecked")
     public Headers<T> and(final Headers<? extends Header> headers) {
-      super.addAll((Collection<T>) headers);
+      for (final Header header : headers) {
+        and(header);
+      }
       return this;
     }
 
     @SuppressWarnings("unchecked")
     public Headers<T> and(final Header header) {
-      add((T) header);
+      Header modified = null;
+      final int size = size();
+      for (int index = 0; index < size; ++index) {
+        if (get(index).matchesNameOf(header)) {
+          modified = set(index, (T) header);
+          break;
+        }
+      }
+
+      if (modified == null) {
+        add((T) header);
+      }
+
       return this;
     }
 
-    @SuppressWarnings("unchecked")
     public Headers<T> and(final String name, final String value) {
-      add((T) new Header(name, value));
+      and(new Header(name, value));
       return this;
     }
 
@@ -122,11 +134,6 @@ public class Header {
         headers.add(header);
       }
       return headers;
-    }
-
-    @Override
-    public T set(int index, T element) {
-      throw new UnsupportedOperationException();
     }
 
     @Override
