@@ -134,8 +134,10 @@ public class SseStreamResource extends ResourceHandler {
 
     @Override
     public void unsubscribe(final SseSubscriber subscriber) {
-      subscriber.close();
-      subscribers.remove(subscriber.id());
+      final SseSubscriber actual = subscribers.remove(subscriber.id());
+      if (actual != null) {
+        actual.close();
+      }
     }
 
 
