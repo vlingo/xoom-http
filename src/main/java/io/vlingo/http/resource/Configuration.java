@@ -127,7 +127,10 @@ public class Configuration {
     }
 
     public static Timing define() {
-      return new Timing(3, 2, 100);
+      // Faster, but may not work on some hardware/OS:
+      //   new Timing(3, 2, 100);
+
+      return new Timing(7, 3, 100);
     }
 
     public static Timing defineWith(final long probeInterval, final long probeTimeout, final long requestMissingContentTimeout) {
