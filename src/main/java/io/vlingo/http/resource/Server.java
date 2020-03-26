@@ -15,7 +15,18 @@ import io.vlingo.common.Completes;
 import io.vlingo.http.Filters;
 import io.vlingo.http.resource.Configuration.Sizing;
 import io.vlingo.http.resource.Configuration.Timing;
+import io.vlingo.wire.channel.RefreshableSelector;
 
+/**
+ * The protocol of the HTTP {@code Server}, as well as factory methods for starting it.
+ * The factory methods will initialize the vlingo-wire {@code RefreshableSelector} as
+ * non-refreshing unless you initialize if prior to starting the {@code Server}.
+ * <p>
+ * NOTE: Override the {@code Server} initialization of RefreshableSelector initialization
+ * by using the {@code withCountedThreshold()} count-based refreshing initialization or the
+ * {@code withTimedThreshold()} time-based refreshing initialization prior to starting the
+ * {@code Server}. This may be done just following the {@code World} start up.
+ */
 public interface Server extends Stoppable {
 
   public static Server startWith(final Stage stage) {
@@ -108,6 +119,11 @@ public interface Server extends Stoppable {
           final Timing timing,
           final String severMailboxTypeName,
           final String channelMailboxTypeName) {
+
+    // this may be overridden by using a different RefreshableSelector
+    // initialization that supports a count- or time-based refresh
+    // prior to starting the Server.
+    RefreshableSelector.withNoThreshold(stage.world().defaultLogger());
 
     final Server server = stage.actorFor(
             Server.class,
