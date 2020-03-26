@@ -19,12 +19,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import io.vlingo.actors.Logger;
 import io.vlingo.actors.World;
 import io.vlingo.actors.testkit.AccessSafely;
 import io.vlingo.common.Completes;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
 import io.vlingo.http.resource.TestResponseConsumer.UnknownResponseConsumer;
+import io.vlingo.wire.channel.RefreshableSelector;
 import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
@@ -86,6 +88,8 @@ public class SecureClientTest {
 
   @Before
   public void setUp() {
+    RefreshableSelector.withNoThreshold(Logger.basicLogger());
+
     world = World.startWithDefaults("secure-client");
   }
 
