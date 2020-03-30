@@ -74,7 +74,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       }
 
       this.channel =
-              ServerRequestResponseChannel.start(
+              ServerRequestResponseChannel.startWithNetty(
                       stage(),
                       stage().world().addressFactory().withHighId(ChannelName),
                       channelMailboxTypeName,
@@ -83,9 +83,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
                       ChannelName,
                       sizing.processorPoolSize,
                       sizing.maxBufferPoolSize,
-                      sizing.maxMessageSize,
-                      timing.probeInterval,
-                      timing.probeTimeout);
+                      sizing.maxMessageSize);
 
       final long end = Instant.now().toEpochMilli();
 
