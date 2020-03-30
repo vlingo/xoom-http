@@ -3,7 +3,7 @@ dist: trusty
 
 before_install:
   - rm -rf $HOME/.m2/repository/io/vlingo
-  - cp .maven/settings.xml $HOME/.m2/settings.xml
+  - cp .travis/settings.xml $HOME/.m2/settings.xml
 
 script:
   - mvn install -Dtest=\!SecureClientTest
