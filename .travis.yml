@@ -3,7 +3,7 @@ dist: trusty
 
 before_install:
   - rm -rf $HOME/.m2/repository/io/vlingo
-  - cp travis_settings.xml $HOME/.m2/settings.xml
+  - cp .maven/settings.xml $HOME/.m2/settings.xml
 
 script:
   - mvn install -Dtest=\!SecureClientTest
@@ -16,7 +16,7 @@ cache:
 
 deploy:
   provider: bintray
-  file: bintray.json
+  file: .travis/bintray.json
   skip_cleanup: true
   user: d-led
   on:
