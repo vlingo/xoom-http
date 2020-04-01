@@ -18,6 +18,8 @@ import static org.junit.Assert.assertNotNull;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
 import org.junit.Before;
@@ -34,12 +36,19 @@ import io.vlingo.http.resource.Configuration.Timing;
 import io.vlingo.http.resource.TestResponseConsumer.KnownResponseConsumer;
 import io.vlingo.http.resource.TestResponseConsumer.UnknownResponseConsumer;
 import io.vlingo.http.sample.user.model.User;
+import io.vlingo.wire.node.Address;
+import io.vlingo.wire.node.AddressType;
+import io.vlingo.wire.node.Host;
 
 public class ClientTest extends ResourceTestFixtures {
+  private static final Random random = new Random();
+  private static AtomicInteger PORT_TO_USE = new AtomicInteger(10_000 + random.nextInt(50_000));
+
   private Client client;
   private int expectedHeaderCount;
   private Response expectedResponse;
   private ResponseHeader location;
+  private int portToUse;
   private Server server;
 
   @Test
@@ -50,8 +59,9 @@ public class ClientTest extends ResourceTestFixtures {
     final AccessSafely access = safely.afterCompleting(1);
     final UnknownResponseConsumer unknown = new UnknownResponseConsumer(access);
     final KnownResponseConsumer known = new KnownResponseConsumer(access);
+    final Address address = Address.from(Host.of("localhost"), portToUse, AddressType.NONE);
 
-    client = Client.using(Configuration.defaultedExceptFor(world.stage(), unknown));
+    client = Client.using(Configuration.defaultedExceptFor(world.stage(), address, unknown));
 
     client.requestWith(
             Request
@@ -82,8 +92,9 @@ public class ClientTest extends ResourceTestFixtures {
     final AccessSafely access = safely.afterCompleting(10);
     final UnknownResponseConsumer unknown = new UnknownResponseConsumer(access);
     final KnownResponseConsumer known = new KnownResponseConsumer(access);
+    final Address address = Address.from(Host.of("localhost"), portToUse, AddressType.NONE);
 
-    final Configuration config = Client.Configuration.defaultedExceptFor(world.stage(), unknown);
+    final Configuration config = Client.Configuration.defaultedExceptFor(world.stage(), address, unknown);
     config.testInfo(true);
 
     final Client client =
@@ -125,8 +136,9 @@ public class ClientTest extends ResourceTestFixtures {
     final AccessSafely access = safely.afterCompleting(100);
     final UnknownResponseConsumer unknown = new UnknownResponseConsumer(access);
     final KnownResponseConsumer known = new KnownResponseConsumer(access);
+    final Address address = Address.from(Host.of("localhost"), portToUse, AddressType.NONE);
 
-    final Configuration config = Client.Configuration.defaultedExceptFor(world.stage(), unknown);
+    final Configuration config = Client.Configuration.defaultedExceptFor(world.stage(), address, unknown);
     config.testInfo(true);
 
     final Client client =
@@ -171,7 +183,9 @@ public class ClientTest extends ResourceTestFixtures {
 
     User.resetId();
 
-    server = Server.startWith(world.stage(), resources, 8080, new Sizing(1, 10, 100, 10240), new Timing(10, 2, 100));
+    portToUse = PORT_TO_USE.incrementAndGet();
+
+    server = Server.startWith(world.stage(), resources, portToUse, new Sizing(1, 10, 100, 10240), new Timing(10, 3, 100));
 
     Thread.sleep(10); // delay for server startup
   }
