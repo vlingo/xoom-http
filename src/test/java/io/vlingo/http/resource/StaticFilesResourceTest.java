@@ -20,6 +20,7 @@ import io.vlingo.wire.message.Converters;
 import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -182,6 +183,18 @@ public class StaticFilesResourceTest {
     progress = new Progress();
     consumer = world.actorFor(ResponseChannelConsumer.class, Definition.has(TestResponseChannelConsumer.class, Definition.parameters(progress)));
     client = new NettyClientRequestResponseChannel(Address.from(Host.of("localhost"), serverPort, AddressType.NONE), consumer, 100, 10240);
+  }
+
+
+  @After
+  public void tearDown() throws Exception {
+    this.client.close();
+
+    this.server.shutDown();
+
+    Thread.sleep(200);
+    
+    this.world.terminate();
   }
 
   private String getRequest(final String filePath) {

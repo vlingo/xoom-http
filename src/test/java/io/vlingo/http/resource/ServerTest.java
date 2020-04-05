@@ -183,14 +183,11 @@ public class ServerTest extends ResourceTestFixtures {
 
   @Override
   @After
-  public void tearDown() {
+  public void tearDown() throws InterruptedException {
     client.close();
 
-    server.shutDown(); // TODO: wait
-//    if (!server.shutDown().await(2000)) {
-//      System.out.println("Server did not shut down properly.");
-//    }
-
+    server.shutDown();
+    
     super.tearDown();
   }
 }
