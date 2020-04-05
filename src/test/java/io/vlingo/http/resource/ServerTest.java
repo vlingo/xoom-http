@@ -7,18 +7,6 @@
 
 package io.vlingo.http.resource;
 
-import static io.vlingo.http.Response.Status.Ok;
-import static io.vlingo.http.Response.Status.PermanentRedirect;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.testkit.AccessSafely;
 import io.vlingo.http.Response;
@@ -28,11 +16,22 @@ import io.vlingo.http.resource.Configuration.Timing;
 import io.vlingo.http.resource.TestResponseChannelConsumer.Progress;
 import io.vlingo.http.sample.user.model.User;
 import io.vlingo.wire.channel.ResponseChannelConsumer;
-import io.vlingo.wire.fdx.bidirectional.BasicClientRequestResponseChannel;
 import io.vlingo.wire.fdx.bidirectional.ClientRequestResponseChannel;
+import io.vlingo.wire.fdx.bidirectional.netty.client.NettyClientRequestResponseChannel;
 import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.Response.Status.PermanentRedirect;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class ServerTest extends ResourceTestFixtures {
   private static final int TOTAL_REQUESTS_RESPONSES = 1_000;
@@ -179,7 +178,7 @@ public class ServerTest extends ResourceTestFixtures {
 
     consumer = world.actorFor(ResponseChannelConsumer.class, Definition.has(TestResponseChannelConsumer.class, Definition.parameters(progress)));
 
-    client = new BasicClientRequestResponseChannel(Address.from(Host.of("localhost"), serverPort, AddressType.NONE), consumer, 100, 10240, world.defaultLogger());
+    client = new NettyClientRequestResponseChannel(Address.from(Host.of("localhost"), serverPort, AddressType.NONE), consumer, 100, 10240);
   }
 
   @Override
