@@ -7,17 +7,6 @@
 
 package io.vlingo.http.resource;
 
-import static io.vlingo.common.serialization.JsonSerialization.serialized;
-
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.junit.After;
-import org.junit.Before;
-
 import io.vlingo.actors.World;
 import io.vlingo.http.sample.user.ContactData;
 import io.vlingo.http.sample.user.NameData;
@@ -25,6 +14,16 @@ import io.vlingo.http.sample.user.UserData;
 import io.vlingo.http.sample.user.model.UserRepository;
 import io.vlingo.wire.message.ByteBufferAllocator;
 import io.vlingo.wire.message.Converters;
+import org.junit.After;
+import org.junit.Before;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static io.vlingo.common.serialization.JsonSerialization.serialized;
 
 public abstract class ResourceTestFixtures {
   public static final String WORLD_NAME = "resource-test";
@@ -182,7 +181,10 @@ public abstract class ResourceTestFixtures {
   }
 
   @After
-  public void tearDown() {
+  public void tearDown() throws InterruptedException {
+    //wait for the tearDown overridden implementations to end
+    Thread.sleep(200);
+
     world.terminate();
 
     UserRepository.reset();

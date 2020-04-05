@@ -7,24 +7,6 @@
 
 package io.vlingo.http.resource;
 
-import static io.vlingo.http.Method.POST;
-import static io.vlingo.http.RequestHeader.contentLength;
-import static io.vlingo.http.RequestHeader.host;
-import static io.vlingo.http.Response.Status.Created;
-import static io.vlingo.http.Response.Status.RequestTimeout;
-import static io.vlingo.http.ResponseHeader.Location;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.net.URI;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import io.vlingo.actors.testkit.AccessSafely;
 import io.vlingo.http.Body;
 import io.vlingo.http.Request;
@@ -39,6 +21,23 @@ import io.vlingo.http.sample.user.model.User;
 import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.net.URI;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static io.vlingo.http.Method.POST;
+import static io.vlingo.http.RequestHeader.contentLength;
+import static io.vlingo.http.RequestHeader.host;
+import static io.vlingo.http.Response.Status.Created;
+import static io.vlingo.http.Response.Status.RequestTimeout;
+import static io.vlingo.http.ResponseHeader.Location;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class ClientTest extends ResourceTestFixtures {
   private static final Random random = new Random();
@@ -192,7 +191,7 @@ public class ClientTest extends ResourceTestFixtures {
 
   @Override
   @After
-  public void tearDown() {
+  public void tearDown() throws InterruptedException {
     if (client != null) client.close();
 
     if (server != null) server.stop();

@@ -7,14 +7,6 @@
 
 package io.vlingo.http.resource;
 
-import java.nio.ByteBuffer;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import io.vlingo.actors.World;
 import io.vlingo.actors.testkit.AccessSafely;
 import io.vlingo.http.Filters;
@@ -29,6 +21,13 @@ import io.vlingo.wire.message.Converters;
 import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ResourceFailureTest {
   private static final AtomicInteger nextPort = new AtomicInteger(14000);
@@ -88,8 +87,12 @@ public class ResourceFailureTest {
   }
 
   @After
-  public void tearDown() {
+  public void tearDown() throws InterruptedException {
+    client.close();
+    
     server.shutDown();
+
+    Thread.sleep(200);
 
     world.terminate();
   }
