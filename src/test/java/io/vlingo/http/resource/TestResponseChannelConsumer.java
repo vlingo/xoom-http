@@ -21,7 +21,7 @@ import io.vlingo.wire.message.ConsumerByteBuffer;
 public class TestResponseChannelConsumer extends Actor implements ResponseChannelConsumer {
   private ResponseParser parser;
   private final Progress progress;
-  
+
   public TestResponseChannelConsumer(final Progress progress) {
     this.progress = progress;
   }
@@ -51,18 +51,21 @@ public class TestResponseChannelConsumer extends Actor implements ResponseChanne
      * Answer with an AccessSafely which writes responses to "consume" and reads the write count from "completed".
      * <p>
      * Note: Clients can replace the default lambdas with their own via readingWith/writingWith.
-     * 
+     *
      * @param n Number of times consume(response) must be called before readFrom(...) will return.
      * @return
      */
     public AccessSafely expectConsumeTimes(final int n) {
-      consumeCalls = AccessSafely.afterCompleting(n)
+      consumeCalls = AccessSafely.afterCompleting(n);
+
+      consumeCalls
           .writingWith("consume", response -> {
             responses.add((Response) response);
             consumeCount.incrementAndGet();
           })
           .readingWith("completed", () -> consumeCalls.totalWrites())
           ;
+
       return consumeCalls;
     }
   }
