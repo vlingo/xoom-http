@@ -7,6 +7,24 @@
 
 package io.vlingo.http.resource;
 
+import static io.vlingo.http.Method.POST;
+import static io.vlingo.http.RequestHeader.contentLength;
+import static io.vlingo.http.RequestHeader.host;
+import static io.vlingo.http.Response.Status.Created;
+import static io.vlingo.http.Response.Status.RequestTimeout;
+import static io.vlingo.http.ResponseHeader.Location;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.net.URI;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import io.vlingo.actors.testkit.AccessSafely;
 import io.vlingo.http.Body;
 import io.vlingo.http.Request;
@@ -21,23 +39,6 @@ import io.vlingo.http.sample.user.model.User;
 import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.net.URI;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static io.vlingo.http.Method.POST;
-import static io.vlingo.http.RequestHeader.contentLength;
-import static io.vlingo.http.RequestHeader.host;
-import static io.vlingo.http.Response.Status.Created;
-import static io.vlingo.http.Response.Status.RequestTimeout;
-import static io.vlingo.http.ResponseHeader.Location;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 public class ClientTest extends ResourceTestFixtures {
   private static final Random random = new Random();
@@ -60,7 +61,7 @@ public class ClientTest extends ResourceTestFixtures {
     final KnownResponseConsumer known = new KnownResponseConsumer(access);
     final Address address = Address.from(Host.of("localhost"), portToUse, AddressType.NONE);
 
-    client = Client.using(Configuration.defaultedExceptFor(world.stage(), address, unknown));
+    client = Client.using(Configuration.defaultedKeepAliveExceptFor(world.stage(), address, unknown));
 
     client.requestWith(
             Request
@@ -93,7 +94,7 @@ public class ClientTest extends ResourceTestFixtures {
     final KnownResponseConsumer known = new KnownResponseConsumer(access);
     final Address address = Address.from(Host.of("localhost"), portToUse, AddressType.NONE);
 
-    final Configuration config = Client.Configuration.defaultedExceptFor(world.stage(), address, unknown);
+    final Configuration config = Client.Configuration.defaultedKeepAliveExceptFor(world.stage(), address, unknown);
     config.testInfo(true);
 
     final Client client =
@@ -137,7 +138,7 @@ public class ClientTest extends ResourceTestFixtures {
     final KnownResponseConsumer known = new KnownResponseConsumer(access);
     final Address address = Address.from(Host.of("localhost"), portToUse, AddressType.NONE);
 
-    final Configuration config = Client.Configuration.defaultedExceptFor(world.stage(), address, unknown);
+    final Configuration config = Client.Configuration.defaultedKeepAliveExceptFor(world.stage(), address, unknown);
     config.testInfo(true);
 
     final Client client =
