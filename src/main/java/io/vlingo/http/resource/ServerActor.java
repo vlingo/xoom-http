@@ -7,6 +7,12 @@
 
 package io.vlingo.http.resource;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.Logger;
 import io.vlingo.actors.Returns;
@@ -16,7 +22,13 @@ import io.vlingo.common.Completes;
 import io.vlingo.common.Scheduled;
 import io.vlingo.common.completes.SinkAndSourceBasedCompletes;
 import io.vlingo.common.pool.ElasticResourcePool;
-import io.vlingo.http.*;
+import io.vlingo.http.Context;
+import io.vlingo.http.Filters;
+import io.vlingo.http.Header;
+import io.vlingo.http.Request;
+import io.vlingo.http.RequestHeader;
+import io.vlingo.http.RequestParser;
+import io.vlingo.http.Response;
 import io.vlingo.http.resource.Configuration.Sizing;
 import io.vlingo.http.resource.Configuration.Timing;
 import io.vlingo.wire.channel.RequestChannelConsumer;
@@ -26,12 +38,6 @@ import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
 import io.vlingo.wire.message.BasicConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBufferPool;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class ServerActor extends Actor implements Server, RequestChannelConsumerProvider, Scheduled<Object> {
   static final String ChannelName = "server-request-response-channel";
@@ -252,7 +258,9 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         Context context = null;
 
         while (parser.hasFullRequest()) {
-          final Request request = filters.process(parser.fullRequest());
+          final Request unfilteredRequest = parser.fullRequest();
+          determineKeepAlive(requestResponseContext, unfilteredRequest);
+          final Request request = filters.process(unfilteredRequest);
           final Completes<Response> completes = responseCompletes.of(requestResponseContext, request.headers.headerOf(RequestHeader.XCorrelationID));
           context = new Context(requestResponseContext, request, world.completesFor(Returns.value(completes)));
           dispatcher.dispatchFor(context);
@@ -274,6 +282,18 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         responseCompletes.of(requestResponseContext, null).with(Response.of(Response.Status.BadRequest, e.getMessage()));
       } finally {
         buffer.release();
+      }
+    }
+
+    private void determineKeepAlive(final RequestResponseContext<?> requestResponseContext, final Request unfilteredRequest) {
+      final boolean keepAlive = unfilteredRequest.headerMatches(RequestHeader.Connection, Header.ValueKeepAlive);
+      requestResponseContext.explicitClose(keepAlive);
+      if (keepAlive) {
+        System.out.println("/////////////////////////////////////////////");
+        System.out.println("///////// SERVER REQUEST KEEP ALIVE /////////");
+        System.out.println("/////////////////////////////////////////////");
+      } else {
+        System.out.println("///////// SERVER REQUEST EAGER CLOSE /////////");
       }
     }
   }
@@ -321,7 +341,9 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     @Override
     @SuppressWarnings("unchecked")
     public <O> Completes<O> with(final O response) {
-      final Response filtered = filters.process((Response) response);
+      final Response unfilteredResponse = (Response) response;
+      determineKeepAlive(unfilteredResponse);
+      final Response filtered = filters.process(unfilteredResponse);
       final ConsumerByteBuffer buffer = bufferFor(filtered);
       final Response completedResponse = filtered.include(correlationId);
       requestResponseContext.respondWith(completedResponse.into(buffer));
@@ -335,6 +357,18 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       }
 
       return BasicConsumerByteBuffer.allocate(0, size + 1024);
+    }
+
+    private void determineKeepAlive(final Response response) {
+      final boolean keepAlive = response.headerMatches(RequestHeader.Connection, Header.ValueKeepAlive);
+      requestResponseContext.explicitClose(keepAlive);
+      if (keepAlive) {
+        System.out.println("/////////////////////////////////////////////");
+        System.out.println("///////// SERVER RESPONSE KEEP ALIVE ////////");
+        System.out.println("/////////////////////////////////////////////");
+      } else {
+        System.out.println("///////// SERVER RESPONSE EAGER CLOSE /////////");
+      }
     }
   }
 
@@ -350,7 +384,9 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
     @Override
     public <O> Completes<O> with(final O response) {
-      final Response filtered = filters.process((Response) response);
+      final Response unfilteredResponse = (Response) response;
+      determineKeepAlive(unfilteredResponse);
+      final Response filtered = filters.process(unfilteredResponse);
       final ConsumerByteBuffer buffer = bufferFor(filtered);
       final Response completedResponse = filtered.include(correlationId);
       requestResponseContext.respondWith(completedResponse.into(buffer));
@@ -364,6 +400,18 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       }
 
       return BasicConsumerByteBuffer.allocate(0, size + 1024);
+    }
+
+    private void determineKeepAlive(final Response response) {
+      final boolean keepAlive = response.headerMatches(RequestHeader.Connection, Header.ValueKeepAlive);
+      requestResponseContext.explicitClose(keepAlive);
+      if (keepAlive) {
+        System.out.println("/////////////////////////////////////////////");
+        System.out.println("///////// SERVER RESPONSE KEEP ALIVE ////////");
+        System.out.println("/////////////////////////////////////////////");
+      } else {
+        System.out.println("///////// SERVER RESPONSE EAGER CLOSE /////////");
+      }
     }
   }
 }
