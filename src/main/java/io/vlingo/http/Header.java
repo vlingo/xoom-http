@@ -15,6 +15,17 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 public class Header {
+  public static final String ValueWildcardAny = "*";
+  public static final String ValueBr = "br";
+  public static final String ValueClose = "close";
+  public static final String ValueCompress = "compress";
+  public static final String ValueDeflate = "deflate";
+  public static final String ValueGZip = "gzip";
+  public static final String ValueIdentity = "identity";
+  public static final String ValueISO_8859_15 = "iso-8859-15";
+  public static final String ValueKeepAlive = "keep-alive";
+  public static final String ValueUTF_8 = "utf-8";
+
   public final String name;
   public final String value;
 
