@@ -13,6 +13,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -30,6 +32,10 @@ import io.vlingo.http.resource.Server;
 import io.vlingo.http.sample.user.ProfileResource;
 
 public class FiltersTest {
+  private static final Random random = new Random();
+  private static AtomicInteger PORT_TO_USE = new AtomicInteger(1_000 + random.nextInt(45_000));
+
+  private int port;
 
   @Test
   public void testThatRequestFiltersProcess() throws Exception {
@@ -99,12 +105,14 @@ public class FiltersTest {
                       .also("GET", "/users/{userId}/profile", "query(String userId)", "io.vlingo.http.sample.user.ProfileDataMapper")
                       .thatsAll());
 
+    port = PORT_TO_USE.incrementAndGet();
+
     Server server =
             Server.startWith(
                     world.stage(),
                     Resources.are(resource),
                     Filters.are(Arrays.asList(new RequestFilter1()), Filters.noResponseFilters()),
-                    8081,
+                    port,
                     Sizing.define(),
                     Timing.define());
 
