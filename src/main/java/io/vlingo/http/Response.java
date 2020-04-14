@@ -94,6 +94,11 @@ public class Response {
     return null;
   }
 
+  public boolean headerMatches(final String name, final String value) {
+    final Header header = headerOf(name);
+    return header == null ? false : header.matchesValueOf(value);
+  }
+
   public String headerValueOr(final String headerName, final String defaultValue) {
     final Header header = headerOf(headerName);
     return header == null ? defaultValue : header.value;
