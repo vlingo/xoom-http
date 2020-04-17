@@ -45,6 +45,11 @@ public class MockResponseSenderChannel implements ResponseSenderChannel {
 
   @Override
   public void respondWith(final RequestResponseContext<?> context, final ConsumerByteBuffer buffer) {
+    respondWith(context, buffer, false);
+  }
+
+  @Override
+  public void respondWith(final RequestResponseContext<?> context, final ConsumerByteBuffer buffer, final boolean closeFollowing) {
     final ResponseParser parser = receivedStatus ?
             ResponseParser.parserForBodyOnly(buffer.asByteBuffer()) :
             ResponseParser.parserFor(buffer.asByteBuffer());
