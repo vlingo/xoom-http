@@ -7,15 +7,7 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.World;
-import io.vlingo.http.sample.user.ContactData;
-import io.vlingo.http.sample.user.NameData;
-import io.vlingo.http.sample.user.UserData;
-import io.vlingo.http.sample.user.model.UserRepository;
-import io.vlingo.wire.message.ByteBufferAllocator;
-import io.vlingo.wire.message.Converters;
-import org.junit.After;
-import org.junit.Before;
+import static io.vlingo.common.serialization.JsonSerialization.serialized;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -23,7 +15,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.vlingo.common.serialization.JsonSerialization.serialized;
+import org.junit.After;
+import org.junit.Before;
+
+import io.vlingo.actors.World;
+import io.vlingo.http.sample.user.ContactData;
+import io.vlingo.http.sample.user.NameData;
+import io.vlingo.http.sample.user.UserData;
+import io.vlingo.http.sample.user.model.UserRepository;
+import io.vlingo.wire.message.ByteBufferAllocator;
+import io.vlingo.wire.message.Converters;
 
 public abstract class ResourceTestFixtures {
   public static final String WORLD_NAME = "resource-test";
@@ -76,16 +77,20 @@ public abstract class ResourceTestFixtures {
     return "HTTP/1.1 201 CREATED\nContent-Length: " + body.length() + "\n\n" + body;
   }
 
-  protected String postRequest(final String body) {
+  protected String postRequestCloseFollowing(final String body) {
     return "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + body.length() + "\n\n" + body;
   }
 
+  protected String postRequest(final String body) {
+    return "POST /users HTTP/1.1\nHost: vlingo.io\nConnection: keep-alive\nContent-Length: " + body.length() + "\n\n" + body;
+  }
+
   protected String putRequest(final String userId, final String body) {
-    return "PUT /users/" + userId + " HTTP/1.1\nHost: vlingo.io\nContent-Length: " + body.length() + "\n\n" + body;
+    return "PUT /users/" + userId + " HTTP/1.1\nHost: vlingo.io\nConnection: keep-alive\nContent-Length: " + body.length() + "\n\n" + body;
   }
 
   protected String getExceptionRequest(final String userId) {
-    return "GET /users/" + userId + "/error HTTP/1.1\nHost: vlingo.io\n\n";
+    return "GET /users/" + userId + "/error HTTP/1.1\nHost: vlingo.io\nConnection: keep-alive\n\n";
   }
 
   protected String janeDoeCreated() {
