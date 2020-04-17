@@ -15,6 +15,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import org.junit.Test;
 
@@ -101,15 +102,20 @@ public class RequestParserTest extends ResourceTestFixtures {
 
     final int totalLength = manyRequests.length();
 
+    final Random random = new Random();
+
     int alteringEndIndex = 1024;
     final RequestParser parser = RequestParser.parserFor(toByteBuffer(manyRequests.substring(0, alteringEndIndex)));
     int startingIndex = alteringEndIndex;
 
     while (startingIndex < totalLength) {
-      alteringEndIndex = startingIndex + 1024 + (int)(System.currentTimeMillis() % startingIndex);
+      final int randomLength = random.nextInt(512) + 1;
+      System.out.println("RANDOM: " + randomLength);
+      alteringEndIndex = startingIndex + randomLength + (int)(System.currentTimeMillis() % startingIndex);
       if (alteringEndIndex > totalLength) {
         alteringEndIndex = totalLength;
       }
+      System.out.println("START: " + startingIndex + " RANDOM: " + randomLength + " END: " + alteringEndIndex);
       parser.parseNext(toByteBuffer(manyRequests.substring(startingIndex, alteringEndIndex)));
       startingIndex = alteringEndIndex;
     }
