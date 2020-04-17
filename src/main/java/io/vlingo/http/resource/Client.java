@@ -13,7 +13,9 @@ import io.vlingo.actors.Definition;
 import io.vlingo.actors.RouterSpecification;
 import io.vlingo.actors.Stage;
 import io.vlingo.common.Completes;
+import io.vlingo.http.Header;
 import io.vlingo.http.Request;
+import io.vlingo.http.RequestHeader;
 import io.vlingo.http.Response;
 import io.vlingo.http.resource.ClientConsumer.CorrelatingClientConsumerInstantiator;
 import io.vlingo.http.resource.ClientConsumer.LoadBalancingClientRequestConsumerInstantiator;
@@ -126,6 +128,7 @@ public class Client {
             configuration.keepAlive ?
                     Completes.repeatableUsing(configuration.stage.scheduler()) :
                     Completes.using(configuration.stage.scheduler());
+    request.headers.and(RequestHeader.Connection, (configuration.keepAlive ? Header.ValueKeepAlive : Header.ValueClose));
     consumer.requestWith(request, completes);
     return completes;
   }
