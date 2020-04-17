@@ -7,15 +7,25 @@
 
 package io.vlingo.http;
 
+import java.net.URI;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.StringTokenizer;
+
 import io.vlingo.http.Header.Headers;
 import io.vlingo.wire.message.Converters;
 
-import java.net.URI;
-import java.nio.ByteBuffer;
-import java.util.*;
-
 public class RequestParser {
   private final VirtualStateParser virtualStateParser;
+
+  public String currentRequestText() {
+    return virtualStateParser.requestText;
+  }
 
   public static RequestParser parserFor(final ByteBuffer requestContent) {
     return new RequestParser(requestContent);
@@ -76,7 +86,7 @@ public class RequestParser {
     private long outOfContentTime;
     private URI uri;
     private Version version;
-    
+
     VirtualStateParser() {
       this.contentQueue = new LinkedList<>();
       this.currentStep = Step.NotStarted;
