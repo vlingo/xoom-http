@@ -115,6 +115,10 @@ public class RequestHeader extends Header {
     return new RequestHeader(Host, value);
   }
 
+  public static RequestHeader keepAlive() {
+    return new RequestHeader(Connection, Header.ValueKeepAlive);
+  }
+
   public static RequestHeader of(final String name, final String value) {
     return new RequestHeader(name, value);
   }
