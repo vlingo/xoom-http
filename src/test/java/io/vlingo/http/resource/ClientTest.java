@@ -10,6 +10,7 @@ package io.vlingo.http.resource;
 import static io.vlingo.http.Method.POST;
 import static io.vlingo.http.RequestHeader.contentLength;
 import static io.vlingo.http.RequestHeader.host;
+import static io.vlingo.http.RequestHeader.keepAlive;
 import static io.vlingo.http.Response.Status.Created;
 import static io.vlingo.http.Response.Status.RequestTimeout;
 import static io.vlingo.http.ResponseHeader.Location;
@@ -69,6 +70,7 @@ public class ClientTest extends ResourceTestFixtures {
               .and(URI.create("/users"))
               .and(host("localhost"))
               .and(contentLength(user))
+              .and(keepAlive())
               .and(Body.from(user)))
           .andThenConsume(5000, Response.of(RequestTimeout), response -> expectedResponse = response)
           .andThenConsume(response -> expectedHeaderCount = response.headers.size())
@@ -111,6 +113,7 @@ public class ClientTest extends ResourceTestFixtures {
                 .and(URI.create("/users"))
                 .and(host("localhost"))
                 .and(contentLength(user))
+                .and(keepAlive())
                 .and(Body.from(user)))
             .andFinallyConsume(response -> known.consume(response) );
     }
@@ -155,6 +158,7 @@ public class ClientTest extends ResourceTestFixtures {
                 .and(URI.create("/users"))
                 .and(host("localhost"))
                 .and(contentLength(user))
+                .and(keepAlive())
                 .and(Body.from(user)))
             .andFinallyConsume(known::consume);
     }
