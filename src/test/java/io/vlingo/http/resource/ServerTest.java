@@ -7,6 +7,18 @@
 
 package io.vlingo.http.resource;
 
+import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.Response.Status.PermanentRedirect;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.testkit.AccessSafely;
 import io.vlingo.http.Response;
@@ -21,17 +33,6 @@ import io.vlingo.wire.fdx.bidirectional.netty.client.NettyClientRequestResponseC
 import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static io.vlingo.http.Response.Status.Ok;
-import static io.vlingo.http.Response.Status.PermanentRedirect;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 public class ServerTest extends ResourceTestFixtures {
   private static final int TOTAL_REQUESTS_RESPONSES = 1_000;
@@ -47,6 +48,7 @@ public class ServerTest extends ResourceTestFixtures {
 
   @Test
   public void testThatServerHandlesThrowables() {
+    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerHandlesThrowables");
     final String request = getExceptionRequest("1");
     client.requestWith(toByteBuffer(request));
 
@@ -64,6 +66,7 @@ public class ServerTest extends ResourceTestFixtures {
 
   @Test
   public void testThatServerDispatchesRequests() throws Exception {
+    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerDispatchesRequests");
     final String request = postRequest(uniqueJohnDoe());
     client.requestWith(toByteBuffer(request));
 
@@ -78,7 +81,7 @@ public class ServerTest extends ResourceTestFixtures {
     assertEquals(1, progress.consumeCount.get());
     assertNotNull(createdResponse.headers.headerOf(ResponseHeader.Location));
 
-    final String getUserMessage = "GET " + createdResponse.headerOf(ResponseHeader.Location).value + " HTTP/1.1\nHost: vlingo.io\n\n";
+    final String getUserMessage = "GET " + createdResponse.headerOf(ResponseHeader.Location).value + " HTTP/1.1\nHost: vlingo.io\nConnection: keep-alive\n\n";
 
     client.requestWith(toByteBuffer(getUserMessage));
 
@@ -99,6 +102,7 @@ public class ServerTest extends ResourceTestFixtures {
 
   @Test
   public void testThatServerDispatchesManyRequests() throws Exception {
+    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerDispatchesManyRequests");
     final long startTime = System.currentTimeMillis();
 
     final AccessSafely consumeCalls = progress.expectConsumeTimes(TOTAL_REQUESTS_RESPONSES);
@@ -112,6 +116,8 @@ public class ServerTest extends ResourceTestFixtures {
         client.probeChannel();
       }
       currentConsumeCount = expected;
+
+      Thread.sleep(100);
     }
 
     while (consumeCalls.totalWrites() < TOTAL_REQUESTS_RESPONSES) {
@@ -129,6 +135,7 @@ public class ServerTest extends ResourceTestFixtures {
 
   @Test
   public void testThatServerRespondsPermanentRedirectWithNoContentLengthHeader() {
+    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerRespondsPermanentRedirectWithNoContentLengthHeader");
     final String request = putRequest("u-123", uniqueJohnDoe());
     client.requestWith(toByteBuffer(request));
 
@@ -147,6 +154,7 @@ public class ServerTest extends ResourceTestFixtures {
 
   @Test
   public void testThatServerRespondsOkWithNoContentLengthHeader() {
+    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerRespondsOkWithNoContentLengthHeader");
     final String request = putRequest("u-456", uniqueJohnDoe());
     client.requestWith(toByteBuffer(request));
 
@@ -163,6 +171,31 @@ public class ServerTest extends ResourceTestFixtures {
     assertEquals(1, progress.consumeCount.get());
   }
 
+  @Test
+  public void testThatServerClosesChannelAfterSingleRequest() {
+    int totalResponses = 0;
+    final int maxRequests = 10;
+
+    for (int count = 0; count < maxRequests; ++count) {
+      final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+      if (count % 2 == 0) {
+        client.requestWith(toByteBuffer(postRequestCloseFollowing(uniqueJohnDoe())));
+      } else {
+        client.requestWith(toByteBuffer(postRequestCloseFollowing(uniqueJaneDoe())));
+      }
+      while (consumeCalls.totalWrites() < 1) {
+        client.probeChannel();
+      }
+      totalResponses += (int) consumeCalls.readFrom("completed");
+
+      client.close();
+
+      client = new NettyClientRequestResponseChannel(Address.from(Host.of("localhost"), serverPort, AddressType.NONE), consumer, 100, 10240);
+    }
+
+    assertEquals(maxRequests, totalResponses);
+  }
+
   @Override
   @Before
   public void setUp() throws Exception {
@@ -171,7 +204,7 @@ public class ServerTest extends ResourceTestFixtures {
     User.resetId();
 
     serverPort = baseServerPort.getAndIncrement();
-    server = Server.startWith(world.stage(), resources, serverPort, new Sizing(1, 1, 100, 10240), new Timing(1, 1, 100));
+    server = Server.startWith(world.stage(), resources, serverPort, new Sizing(1, 1, 100, 10240), new Timing(1, 1, 1000));
     assertTrue(server.startUp().await(500L));
 
     progress = new Progress();
@@ -187,7 +220,7 @@ public class ServerTest extends ResourceTestFixtures {
     client.close();
 
     server.shutDown();
-    
+
     super.tearDown();
   }
 }
