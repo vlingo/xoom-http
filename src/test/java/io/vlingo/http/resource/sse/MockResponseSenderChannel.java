@@ -39,11 +39,6 @@ public class MockResponseSenderChannel implements ResponseSenderChannel {
   }
 
   @Override
-  public void explicitClose(final RequestResponseContext<?> requestResponseContext, final boolean option) {
-    // unused in tests
-  }
-
-  @Override
   public void respondWith(final RequestResponseContext<?> context, final ConsumerByteBuffer buffer) {
     respondWith(context, buffer, false);
   }
