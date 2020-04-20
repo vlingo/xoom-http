@@ -309,7 +309,10 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     }
 
     private boolean determineKeepAlive(final RequestResponseContext<?> requestResponseContext, final Request unfilteredRequest) {
-      final boolean keepAlive = unfilteredRequest.headerMatches(RequestHeader.Connection, Header.ValueKeepAlive);
+      final boolean keepAlive =
+              unfilteredRequest
+                .headerValueOr(RequestHeader.Connection, Header.ValueKeepAlive)
+                .equalsIgnoreCase(Header.ValueKeepAlive);
 
 //      if (keepAlive) {
 //        logger().debug("///////// SERVER REQUEST KEEP ALIVE /////////(" + instanceId + ")");
@@ -399,7 +402,11 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         return keepAlive;
       }
 
-      final boolean keepAliveAfterResponse = keepAlive || response.headerMatches(RequestHeader.Connection, Header.ValueKeepAlive);
+      final boolean keepAliveAfterResponse =
+              keepAlive ||
+              response
+                .headerValueOr(RequestHeader.Connection, Header.ValueKeepAlive)
+                .equalsIgnoreCase(Header.ValueKeepAlive);
 
 //      if (keepAliveAfterResponse) {
 //        logger().debug("///////// SERVER RESPONSE KEEP ALIVE ////////");
@@ -458,7 +465,11 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         return keepAlive;
       }
 
-      final boolean keepAliveAfterResponse = keepAlive || response.headerMatches(RequestHeader.Connection, Header.ValueKeepAlive);
+      final boolean keepAliveAfterResponse =
+              keepAlive ||
+              response
+                .headerValueOr(RequestHeader.Connection, Header.ValueKeepAlive)
+                .equalsIgnoreCase(Header.ValueKeepAlive);
 
 //      if (keepAliveAfterResponse) {
 //        logger().debug("///////// SERVER RESPONSE KEEP ALIVE ////////");
