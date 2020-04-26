@@ -82,11 +82,11 @@ public class HttpAgent {
 
     switch (optimalTransport) {
     case Epoll:
-      logger.info("HttpAgent using EpollEventLoopGroup");
+      logger.debug("HttpAgent using EpollEventLoopGroup");
       return new EpollEventLoopGroup();
     case NIO:
     default:
-      logger.info("HttpAgent using NioEventLoopGroup");
+      logger.debug("HttpAgent using NioEventLoopGroup");
       return new NioEventLoopGroup();
     }
   }
@@ -98,11 +98,11 @@ public class HttpAgent {
 
     switch (optimalTransport) {
     case Epoll:
-      logger.info("HttpAgent using EpollEventLoopGroup " + processorPoolSize);
+      logger.debug("HttpAgent using EpollEventLoopGroup " + processorPoolSize);
       return new EpollEventLoopGroup(processorPoolSize);
     case NIO:
     default:
-      logger.info("HttpAgent using NioEventLoopGroup " + processorPoolSize);
+      logger.debug("HttpAgent using NioEventLoopGroup " + processorPoolSize);
       return new NioEventLoopGroup(processorPoolSize);
     }
   }
@@ -110,7 +110,7 @@ public class HttpAgent {
   private static OptimalTransport optimalTransport(final Logger logger) {
     final String osName = System.getProperty("os.name");
 
-    logger.info("HttpAgent running on " + osName);
+    logger.debug("HttpAgent running on " + osName);
 
     if (osName.toLowerCase().contains("linux")) {
       return OptimalTransport.Epoll;
@@ -125,11 +125,11 @@ public class HttpAgent {
 
     switch (optimalTransport) {
     case Epoll:
-      logger.info("HttpAgent using EpollServerSocketChannel");
+      logger.debug("HttpAgent using EpollServerSocketChannel");
       return EpollServerSocketChannel.class;
     case NIO:
     default:
-      logger.info("HttpAgent using NioServerSocketChannel");
+      logger.debug("HttpAgent using NioServerSocketChannel");
       return NioServerSocketChannel.class;
     }
   }
