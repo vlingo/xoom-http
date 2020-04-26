@@ -140,6 +140,48 @@ public interface Server extends Stoppable {
     return server;
   }
 
+  public static Server startWithAgent(
+          final Stage stage,
+          final Resources resources,
+          final int port,
+          final int dispatcherPoolSize) {
+
+    return startWithAgent(stage, resources, Filters.none(), port, dispatcherPoolSize);
+  }
+
+  public static Server startWithAgent(
+          final Stage stage,
+          final Resources resources,
+          final Filters filters,
+          final int port,
+          final int dispatcherPoolSize) {
+
+    return startWithAgent(stage, resources, filters, port, dispatcherPoolSize, "queueMailbox");
+  }
+
+  public static Server startWithAgent(
+          final Stage stage,
+          final Resources resources,
+          final Filters filters,
+          final int port,
+          final int dispatcherPoolSize,
+          final String severMailboxTypeName) {
+
+    final Server server = stage.actorFor(
+            Server.class,
+            Definition.has(
+                    ServerActor.class,
+                    new ServerWithAgentInstantiator(resources, filters, port, dispatcherPoolSize),
+                    severMailboxTypeName,
+                    ServerActor.ServerName),
+            stage.world().addressFactory().withHighId(),
+            stage.world().defaultLogger());
+
+    server.startUp();
+
+    return server;
+  }
+
   Completes<Boolean> shutDown();
   Completes<Boolean> startUp();
 
@@ -172,6 +214,36 @@ public interface Server extends Stoppable {
     public ServerActor instantiate() {
       try {
         return new ServerActor(resources, filters, port, sizing, timing, channelMailboxTypeName);
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Failed to instantiate " + type() + " because: " + e.getMessage(), e);
+      }
+    }
+
+    @Override
+    public Class<ServerActor> type() {
+      return ServerActor.class;
+    }
+  }
+
+  static class ServerWithAgentInstantiator implements ActorInstantiator<ServerActor> {
+    private static final long serialVersionUID = 9035408940262040413L;
+
+    private final Resources resources;
+    private final Filters filters;
+    private final int port;
+    private final int dispatcherPoolSize;
+
+    public ServerWithAgentInstantiator(final Resources resources, final Filters filters, final int port, final int dispatcherPoolSize) {
+      this.resources = resources;
+      this.filters = filters;
+      this.port = port;
+      this.dispatcherPoolSize = dispatcherPoolSize;
+    }
+
+    @Override
+    public ServerActor instantiate() {
+      try {
+        return new ServerActor(resources, filters, port, dispatcherPoolSize);
       } catch (Exception e) {
         throw new IllegalArgumentException("Failed to instantiate " + type() + " because: " + e.getMessage(), e);
       }

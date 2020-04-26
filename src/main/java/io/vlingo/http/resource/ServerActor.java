@@ -31,18 +31,21 @@ import io.vlingo.http.RequestParser;
 import io.vlingo.http.Response;
 import io.vlingo.http.resource.Configuration.Sizing;
 import io.vlingo.http.resource.Configuration.Timing;
+import io.vlingo.http.resource.agent.HttpAgent;
+import io.vlingo.http.resource.agent.HttpRequestChannelConsumer;
+import io.vlingo.http.resource.agent.HttpRequestChannelConsumerProvider;
 import io.vlingo.wire.channel.RequestChannelConsumer;
-import io.vlingo.wire.channel.RequestChannelConsumerProvider;
 import io.vlingo.wire.channel.RequestResponseContext;
 import io.vlingo.wire.fdx.bidirectional.ServerRequestResponseChannel;
 import io.vlingo.wire.message.BasicConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBufferPool;
 
-public class ServerActor extends Actor implements Server, RequestChannelConsumerProvider, Scheduled<Object> {
+public class ServerActor extends Actor implements Server, HttpRequestChannelConsumerProvider, Scheduled<Object> {
   static final String ChannelName = "server-request-response-channel";
   static final String ServerName = "vlingo-http-server";
 
+  private final HttpAgent agent;
   private final ServerRequestResponseChannel channel;
   private final Dispatcher[] dispatcherPool;
   private int dispatcherPoolIndex;
@@ -52,6 +55,39 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   private final long requestMissingContentTimeout;
   private final ConsumerByteBufferPool responseBufferPool;
   private final World world;
+
+
+  public ServerActor(
+          final Resources resources,
+          final Filters filters,
+          final int port,
+          final int dispatcherPoolSize)
+  throws Exception {
+    final long start = Instant.now().toEpochMilli();
+
+    this.agent = HttpAgent.initialize(this, port, false, logger());
+
+    this.channel = null;                            // unused
+    this.filters = filters;
+    this.dispatcherPoolIndex = 0;
+    this.world = stage().world();
+    this.requestsMissingContent = new HashMap<>();  // unused
+    this.maxMessageSize = 0;                        // unused
+    this.responseBufferPool = null;                 // unused
+    this.requestMissingContentTimeout = -1;         // unused
+
+    this.dispatcherPool = new Dispatcher[dispatcherPoolSize];
+
+    for (int idx = 0; idx < dispatcherPoolSize; ++idx) {
+      dispatcherPool[idx] = Dispatcher.startWith(stage(), resources);
+    }
+
+    final long end = Instant.now().toEpochMilli();
+
+    logger().info("Server " + ServerName + " is listening on port: " + port + " started in " + (end - start) + " ms");
+
+    logResourceMappings(resources);
+  }
 
   public ServerActor(
           final Resources resources,
@@ -63,6 +99,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   throws Exception {
     final long start = Instant.now().toEpochMilli();
 
+    this.agent = null;                              // unused
     this.filters = filters;
     this.dispatcherPoolIndex = 0;
     this.world = stage().world();
@@ -122,7 +159,9 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   @Override
   @SuppressWarnings("unchecked")
   public Completes<Boolean> startUp() {
-    stage().scheduler().schedule(selfAs(Scheduled.class), null, 1000L, requestMissingContentTimeout);
+    if (requestMissingContentTimeout > 0) {
+      stage().scheduler().schedule(selfAs(Scheduled.class), null, 1000L, requestMissingContentTimeout);
+    }
 
     return completes().with(true);
   }
@@ -134,6 +173,11 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
   @Override
   public RequestChannelConsumer requestChannelConsumer() {
+    return httpRequestChannelConsumer();
+  }
+
+  @Override
+  public HttpRequestChannelConsumer httpRequestChannelConsumer() {
     return new ServerRequestChannelConsumer(pooledDispatcher());
   }
 
@@ -156,16 +200,20 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
   public void stop() {
     logger().info("Server stopping...");
 
-    failTimedOutMissingContentRequests();
+    if (agent != null) {
+      agent.close();
+    } else {
+      failTimedOutMissingContentRequests();
 
-    channel.stop();
-    channel.close();
+      channel.stop();
+      channel.close();
 
-    for (final Dispatcher dispatcher : dispatcherPool) {
-      dispatcher.stop();
+      for (final Dispatcher dispatcher : dispatcherPool) {
+        dispatcher.stop();
+      }
+
+      filters.stop();
     }
-
-    filters.stop();
 
     logger().info("Server stopped.");
 
@@ -229,7 +277,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 //  private int missingCount = 0;
 //  private final long instanceId = nextInstanceId.incrementAndGet();
 
-  private class ServerRequestChannelConsumer implements RequestChannelConsumer {
+  private class ServerRequestChannelConsumer implements HttpRequestChannelConsumer {
     private final Dispatcher dispatcher;
 
     ServerRequestChannelConsumer(final Dispatcher dispatcher) {
@@ -249,12 +297,11 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
     @Override
     public void consume(final RequestResponseContext<?> requestResponseContext, final ConsumerByteBuffer buffer) {
+      boolean wasIncompleteContent = false;
       boolean missingContent = false;
-      Request unfilteredRequest = null;
 
       try {
         final RequestParser parser;
-        boolean wasIncompleteContent = false;
 
         if (!requestResponseContext.hasConsumerData()) {
           parser = RequestParser.parserFor(buffer.asByteBuffer());
@@ -262,50 +309,66 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
         } else {
           parser = requestResponseContext.consumerData();
           wasIncompleteContent = parser.isMissingContent();
-//          logger().debug("============== (" + instanceId + ") WAS MISSING CONTENT FOR (" + (missingCount) + "): " + wasIncompleteContent);
-//          if (wasIncompleteContent) {
-//            logger().debug(
-//                    parser.currentRequestText() +
-//                    "\nNOW CONSUMING:\n" +
-//                    Converters.bytesToText(buffer.array(), 0, buffer.limit()));
-//          }
+//        logger().debug("============== (" + instanceId + ") WAS MISSING CONTENT FOR (" + (missingCount) + "): " + wasIncompleteContent);
+//        if (wasIncompleteContent) {
+//          logger().debug(
+//                  parser.currentRequestText() +
+//                  "\nNOW CONSUMING:\n" +
+//                  Converters.bytesToText(buffer.array(), 0, buffer.limit()));
+//        }
           parser.parseNext(buffer.asByteBuffer());
         }
 
         Context context = null;
 
         while (parser.hasFullRequest()) {
-          unfilteredRequest = parser.fullRequest();
-//          logger().debug("==============(" + instanceId + ") FULL REQUEST (" + (++fullCount) + "): \n" + unfilteredRequest);
-          final boolean keepAlive = determineKeepAlive(requestResponseContext, unfilteredRequest);
-          final Request request = filters.process(unfilteredRequest);
-          final Completes<Response> completes = responseCompletes.of(requestResponseContext, /*unfilteredRequest,*/ false, request.headers.headerOf(RequestHeader.XCorrelationID), keepAlive);
-          context = new Context(requestResponseContext, request, world.completesFor(Returns.value(completes)));
-          dispatcher.dispatchFor(context);
-          if (wasIncompleteContent) {
-            requestsMissingContent.remove(requestResponseContext.id());
-          }
+          context = consume(requestResponseContext, parser.fullRequest(), wasIncompleteContent);
         }
 
         if (parser.isMissingContent() && !requestsMissingContent.containsKey(requestResponseContext.id())) {
-//          logger().debug("==============(" + instanceId + ") MISSING REQUEST CONTENT FOR (" + (++missingCount) + "): \n" + parser.currentRequestText());
+//        logger().debug("==============(" + instanceId + ") MISSING REQUEST CONTENT FOR (" + (++missingCount) + "): \n" + parser.currentRequestText());
           missingContent = true;
           if (context == null) {
-            final Completes<Response> completes = responseCompletes.of(requestResponseContext, /*unfilteredRequest,*/ true, null, true);
+            final Completes<Response> completes = responseCompletes.of(requestResponseContext.typed(), /*unfilteredRequest,*/ true, null, true);
             context = new Context(world.completesFor(Returns.value(completes)));
           }
           requestsMissingContent.put(requestResponseContext.id(), new RequestResponseHttpContext(requestResponseContext, context));
         }
 
       } catch (Exception e) {
-//        logger().debug("=====================(" + instanceId + ") BAD REQUEST (1): " + unfilteredRequest);
-//        final String requestContentText = Converters.bytesToText(buffer.array(), 0, buffer.limit());
-//        logger().debug("=====================(" + instanceId + ") BAD REQUEST (2): " + requestContentText);
+//      logger().debug("=====================(" + instanceId + ") BAD REQUEST (1): " + unfilteredRequest);
+//      final String requestContentText = Converters.bytesToText(buffer.array(), 0, buffer.limit());
+//      logger().debug("=====================(" + instanceId + ") BAD REQUEST (2): " + requestContentText);
         logger().error("Request parsing failed.", e);
         responseCompletes.of(requestResponseContext, /*unfilteredRequest,*/ missingContent, null, false).with(Response.of(Response.Status.BadRequest, e.getMessage()));
       } finally {
         buffer.release();
       }
+    }
+
+    @Override
+    public void consume(final RequestResponseContext<?> requestResponseContext, final Request request) {
+      consume(requestResponseContext, request, false);
+    }
+
+    private Context consume(
+            final RequestResponseContext<?> requestResponseContext,
+            final Request request,
+            final boolean wasIncompleteContent) {
+
+//    logger().debug("==============(" + instanceId + ") FULL REQUEST (" + (++fullCount) + "): \n" + unfilteredRequest);
+
+      final boolean keepAlive = determineKeepAlive(requestResponseContext, request);
+      final Request filteredRequest = filters.process(request);
+      final Completes<Response> completes = responseCompletes.of(requestResponseContext, /*unfilteredRequest,*/ false, filteredRequest.headers.headerOf(RequestHeader.XCorrelationID), keepAlive);
+      final Context context = new Context(requestResponseContext, filteredRequest, world.completesFor(Returns.value(completes)));
+      dispatcher.dispatchFor(context);
+
+      if (wasIncompleteContent) {
+        requestsMissingContent.remove(requestResponseContext.id());
+      }
+
+      return context;
     }
 
     private boolean determineKeepAlive(final RequestResponseContext<?> requestResponseContext, final Request unfilteredRequest) {
@@ -314,11 +377,11 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
                 .headerValueOr(RequestHeader.Connection, Header.ValueKeepAlive)
                 .equalsIgnoreCase(Header.ValueKeepAlive);
 
-//      if (keepAlive) {
-//        logger().debug("///////// SERVER REQUEST KEEP ALIVE /////////(" + instanceId + ")");
-//      } else {
-//        logger().debug("///////// SERVER REQUEST EAGER CLOSE /////////(" + instanceId + ")");
-//      }
+//    if (keepAlive) {
+//      logger().debug("///////// SERVER REQUEST KEEP ALIVE /////////(" + instanceId + ")");
+//    } else {
+//      logger().debug("///////// SERVER REQUEST EAGER CLOSE /////////(" + instanceId + ")");
+//    }
 
       return keepAlive;
     }
@@ -350,7 +413,6 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
       } else {
         return new BasicCompletedBasedResponseCompletes(requestResponseContext, /*request,*/ missingContent, correlationId, keepAlive);
       }
-
     }
   }
 
@@ -358,13 +420,13 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     final Header correlationId;
     final boolean keepAlive;
     final boolean missingContent;
-//    final Request request;
+//  final Request request;
     final RequestResponseContext<?> requestResponseContext;
 
     BasicCompletedBasedResponseCompletes(final RequestResponseContext<?> requestResponseContext, /*final Request request,*/ final boolean missingContent, final Header correlationId, final boolean keepAlive) {
       super(stage().scheduler());
       this.requestResponseContext = requestResponseContext;
-//      this.request = request;
+//    this.request = request;
       this.missingContent = missingContent;
       this.correlationId = correlationId;
       this.keepAlive = keepAlive;
@@ -375,9 +437,15 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     public <O> Completes<O> with(final O response) {
       final Response unfilteredResponse = (Response) response;
       final Response filtered = filters.process(unfilteredResponse);
-      final ConsumerByteBuffer buffer = bufferFor(filtered);
       final Response completedResponse = filtered.include(correlationId);
-      requestResponseContext.respondWith(completedResponse.into(buffer), closeAfterResponse(unfilteredResponse));
+      final boolean closeAfterResponse = closeAfterResponse(unfilteredResponse);
+      if (agent == null) {
+        final ConsumerByteBuffer buffer = bufferFor(completedResponse);
+        requestResponseContext.respondWith(completedResponse.into(buffer), closeAfterResponse);
+      } else {
+//      System.out.println("============> SERVER RESPONSE: \n" + completedResponse);
+        requestResponseContext.respondWith(completedResponse, closeAfterResponse);
+      }
       return (Completes<O>) this;
     }
 
@@ -395,10 +463,10 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
 
       final char statusCategory = response.statusCode.charAt(0);
       if (statusCategory == '4' || statusCategory == '5') {
-//        logger().debug(
-//                "///////// SERVER RESPONSE CLOSED FOLLOWING ///////// KEEP-ALIVE: " + keepAlive +
-//                "\n///////// REQUEST\n" + request +
-//                "\n///////// RESPONSE\n" + response);
+//      logger().debug(
+//              "///////// SERVER RESPONSE CLOSED FOLLOWING ///////// KEEP-ALIVE: " + keepAlive +
+//              "\n///////// REQUEST\n" + request +
+//              "\n///////// RESPONSE\n" + response);
         return keepAlive;
       }
 
@@ -408,11 +476,11 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
                 .headerValueOr(RequestHeader.Connection, Header.ValueKeepAlive)
                 .equalsIgnoreCase(Header.ValueKeepAlive);
 
-//      if (keepAliveAfterResponse) {
-//        logger().debug("///////// SERVER RESPONSE KEEP ALIVE ////////");
-//      } else {
-//        logger().debug("///////// SERVER RESPONSE CLOSED FOLLOWING /////////\n" + response);
-//      }
+//   if (keepAliveAfterResponse) {
+//      logger().debug("///////// SERVER RESPONSE KEEP ALIVE ////////");
+//    } else {
+//      logger().debug("///////// SERVER RESPONSE CLOSED FOLLOWING /////////\n" + response);
+//    }
 
       return !keepAliveAfterResponse;
     }
@@ -428,7 +496,7 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     SinkBasedBasedResponseCompletes(final RequestResponseContext<?> requestResponseContext, /* final Request request,*/ final boolean missingContent, final Header correlationId, final boolean keepAlive) {
       super(stage().scheduler());
       this.requestResponseContext = requestResponseContext;
-//      this.request = request;
+//    this.request = request;
       this.missingContent = missingContent;
       this.correlationId = correlationId;
       this.keepAlive = keepAlive;
@@ -438,9 +506,14 @@ public class ServerActor extends Actor implements Server, RequestChannelConsumer
     public <O> Completes<O> with(final O response) {
       final Response unfilteredResponse = (Response) response;
       final Response filtered = filters.process(unfilteredResponse);
-      final ConsumerByteBuffer buffer = bufferFor(filtered);
       final Response completedResponse = filtered.include(correlationId);
-      requestResponseContext.respondWith(completedResponse.into(buffer), closeAfterResponse(unfilteredResponse));
+      final boolean closeAfterResponse = closeAfterResponse(unfilteredResponse);
+      if (agent == null) {
+        final ConsumerByteBuffer buffer = bufferFor(completedResponse);
+        requestResponseContext.respondWith(completedResponse.into(buffer), closeAfterResponse);
+      } else {
+        requestResponseContext.respondWith(completedResponse, closeAfterResponse);
+      }
       return super.with(response);
     }
 
