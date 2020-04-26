@@ -15,7 +15,9 @@ import io.vlingo.http.Response;
 import io.vlingo.http.ResponseParser;
 import io.vlingo.wire.channel.RequestResponseContext;
 import io.vlingo.wire.channel.ResponseSenderChannel;
+import io.vlingo.wire.message.BasicConsumerByteBuffer;
 import io.vlingo.wire.message.ConsumerByteBuffer;
+import io.vlingo.wire.message.Converters;
 
 public class MockResponseSenderChannel implements ResponseSenderChannel {
   public AtomicInteger abandonCount = new AtomicInteger(0);
@@ -57,6 +59,26 @@ public class MockResponseSenderChannel implements ResponseSenderChannel {
     receivedStatus = true;
   }
 
+  @Override
+  public void respondWith(final RequestResponseContext<?> context, final Object response, final boolean closeFollowing) {
+    final String textResponse = response.toString();
+
+    final ConsumerByteBuffer buffer =
+            new BasicConsumerByteBuffer(0, textResponse.length() + 1024)
+            .put(Converters.textToBytes(textResponse)).flip();
+
+    final ResponseParser parser = receivedStatus ?
+            ResponseParser.parserForBodyOnly(buffer.asByteBuffer()) :
+            ResponseParser.parserFor(buffer.asByteBuffer());
+
+    if (!receivedStatus) {
+      this.response.set(parser.fullResponse());
+    } else {
+      respondWithSafely.writeUsing("events", parser.fullResponse());
+    }
+    receivedStatus = true;
+  }
+
   /**
    * Answer with an AccessSafely which
    *  writes the abandon call count using "count" every time abandon(...) is called, and
@@ -85,5 +107,4 @@ public class MockResponseSenderChannel implements ResponseSenderChannel {
         .readingWith("eventsResponse", () -> eventsResponse.get());
     return respondWithSafely;
   }
-
 }
