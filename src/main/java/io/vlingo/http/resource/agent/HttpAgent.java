@@ -10,7 +10,10 @@ package io.vlingo.http.resource.agent;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
@@ -28,18 +31,20 @@ public class HttpAgent {
           final HttpRequestChannelConsumerProvider provider,
           final int port,
           final boolean useSSL,
+          final int numberOfThreads,
           final Logger logger)
   throws Exception {
 
     final SslContext sslContext = useSSL ? sslContext() : null;
 
-    final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-    final EventLoopGroup workerGroup = new NioEventLoopGroup();
+    final OptimalTransport optimalTransport = optimalTransport(logger);
+    final EventLoopGroup bossGroup = eventLoopGroup(optimalTransport, numberOfThreads, logger);
+    final EventLoopGroup workerGroup = eventLoopGroup(optimalTransport, logger);
 
     ServerBootstrap bootstrap =
             new ServerBootstrap()
               .group(bossGroup, workerGroup)
-              .channel(NioServerSocketChannel.class)
+              .channel(serverSocketChannelType(optimalTransport, logger))
               .handler(new LoggingHandler(LogLevel.INFO))
               .childHandler(new AgentInitializer(provider, sslContext, logger));
 
@@ -67,5 +72,65 @@ public class HttpAgent {
     this.channel = channel;
     this.bossGroup = bossGroup;
     this.workerGroup = workerGroup;
+  }
+
+  private enum OptimalTransport { NIO, Epoll };
+
+  private static EventLoopGroup eventLoopGroup(
+          final OptimalTransport optimalTransport,
+          final Logger logger) {
+
+    switch (optimalTransport) {
+    case Epoll:
+      logger.info("HttpAgent using EpollEventLoopGroup");
+      return new EpollEventLoopGroup();
+    case NIO:
+    default:
+      logger.info("HttpAgent using NioEventLoopGroup");
+      return new NioEventLoopGroup();
+    }
+  }
+
+  private static EventLoopGroup eventLoopGroup(
+          final OptimalTransport optimalTransport,
+          final int processorPoolSize,
+          final Logger logger) {
+
+    switch (optimalTransport) {
+    case Epoll:
+      logger.info("HttpAgent using EpollEventLoopGroup " + processorPoolSize);
+      return new EpollEventLoopGroup(processorPoolSize);
+    case NIO:
+    default:
+      logger.info("HttpAgent using NioEventLoopGroup " + processorPoolSize);
+      return new NioEventLoopGroup(processorPoolSize);
+    }
+  }
+
+  private static OptimalTransport optimalTransport(final Logger logger) {
+    final String osName = System.getProperty("os.name");
+
+    logger.info("HttpAgent running on " + osName);
+
+    if (osName.toLowerCase().contains("linux")) {
+      return OptimalTransport.Epoll;
+    }
+
+    return OptimalTransport.NIO;
+  }
+
+  private static Class<? extends ServerSocketChannel> serverSocketChannelType(
+          final OptimalTransport optimalTransport,
+          final Logger logger) {
+
+    switch (optimalTransport) {
+    case Epoll:
+      logger.info("HttpAgent using EpollServerSocketChannel");
+      return EpollServerSocketChannel.class;
+    case NIO:
+    default:
+      logger.info("HttpAgent using NioServerSocketChannel");
+      return NioServerSocketChannel.class;
+    }
   }
 }
