@@ -44,20 +44,6 @@ public class AgentInitializer extends ChannelInitializer<SocketChannel> {
     // remove the following comment if you want automatic content compression
     // p.addLast(new HttpContentCompressor());
 
-    System.out.println("CHANNEL PIPELINE: " + channelPipeline);
-    System.out.println("        PROVIDER: " + provider);
-    System.out.println("          LOGGER: " + logger);
-
-    final AgentHandler agentHandler = new AgentHandler(provider, logger);
-
-    try {
-      channelPipeline.addLast(agentHandler);
-    } catch (Exception e) {
-      System.out.println("     EXCEPTION: " + e.getMessage());
-      e.printStackTrace();
-      throw e;
-    }
-
-    System.out.println("            DONE: " + agentHandler);
+    channelPipeline.addLast(new AgentHandler(provider, logger));
   }
 }

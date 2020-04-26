@@ -71,7 +71,7 @@ public class AgentHandler extends SimpleChannelInboundHandler<FullHttpRequest> i
 
   @Override
   public void channelActive(final ChannelHandlerContext context) throws Exception {
-  logger.debug(">>>>> AgentHandler::channelActive(): " + instanceId + " NAME: " + contextInstanceId(context));
+//  logger.debug(">>>>> AgentHandler::channelActive(): " + instanceId + " NAME: " + contextInstanceId(context));
     if (context.channel().isActive()) {
       agentChannelContext(context);
     }
@@ -79,7 +79,7 @@ public class AgentHandler extends SimpleChannelInboundHandler<FullHttpRequest> i
 
   @Override
   public void channelReadComplete(final ChannelHandlerContext context) {
-  logger.debug(">>>>> AgentHandler::channelReadComplete(): " + instanceId + " NAME: " + contextInstanceId(context));
+//  logger.debug(">>>>> AgentHandler::channelReadComplete(): " + instanceId + " NAME: " + contextInstanceId(context));
   }
 
   @Override
@@ -99,7 +99,7 @@ public class AgentHandler extends SimpleChannelInboundHandler<FullHttpRequest> i
 
   @Override
   public void channelUnregistered(final ChannelHandlerContext context) throws Exception {
-  logger.debug(">>>>> AgentHandler::channelUnregistered(): " + instanceId + " NAME: " + contextInstanceId(context));
+//  logger.debug(">>>>> AgentHandler::channelUnregistered(): " + instanceId + " NAME: " + contextInstanceId(context));
     super.channelUnregistered(context);
   }
 
