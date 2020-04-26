@@ -78,7 +78,7 @@ public abstract class ResourceTestFixtures {
   }
 
   protected String postRequestCloseFollowing(final String body) {
-    return "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + body.length() + "\n\n" + body;
+    return "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + body.length() + "\nConnection: close" + "\n\n" + body;
   }
 
   protected String postRequest(final String body) {
