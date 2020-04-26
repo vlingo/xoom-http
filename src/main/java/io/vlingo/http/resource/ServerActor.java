@@ -65,7 +65,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
   throws Exception {
     final long start = Instant.now().toEpochMilli();
 
-    this.agent = HttpAgent.initialize(this, port, false, logger());
+    this.agent = HttpAgent.initialize(this, port, false, dispatcherPoolSize, logger());
 
     this.channel = null;                            // unused
     this.filters = filters;
