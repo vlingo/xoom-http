@@ -13,6 +13,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
@@ -37,14 +38,15 @@ import io.vlingo.wire.node.Host;
 public class ServerTest extends ResourceTestFixtures {
   private static final int TOTAL_REQUESTS_RESPONSES = 200;
 
-  private static final AtomicInteger baseServerPort = new AtomicInteger(18080);
+  private static final Random random = new Random();
+  private static final AtomicInteger baseServerPort = new AtomicInteger(10_000 + random.nextInt(50_000));
+
+  protected int serverPort;
 
   private ClientRequestResponseChannel client;
   private ResponseChannelConsumer consumer;
-  private int serverPort;
   private Progress progress;
   private Server server;
-
 
   @Test
   public void testThatServerHandlesThrowables() {
@@ -183,10 +185,12 @@ public class ServerTest extends ResourceTestFixtures {
       } else {
         client.requestWith(toByteBuffer(postRequestCloseFollowing(uniqueJaneDoe())));
       }
+      System.out.println("1");
       while (consumeCalls.totalWrites() < 1) {
         client.probeChannel();
       }
       totalResponses += (int) consumeCalls.readFrom("completed");
+      System.out.println("2: " + totalResponses);
 
       client.close();
 
@@ -204,7 +208,7 @@ public class ServerTest extends ResourceTestFixtures {
     User.resetId();
 
     serverPort = baseServerPort.getAndIncrement();
-    server = Server.startWith(world.stage(), resources, serverPort, new Sizing(1, 1, 100, 10240), new Timing(1, 1, 1000));
+    server = startServer();
     assertTrue(server.startUp().await(500L));
 
     progress = new Progress();
@@ -212,6 +216,10 @@ public class ServerTest extends ResourceTestFixtures {
     consumer = world.actorFor(ResponseChannelConsumer.class, Definition.has(TestResponseChannelConsumer.class, Definition.parameters(progress)));
 
     client = new NettyClientRequestResponseChannel(Address.from(Host.of("localhost"), serverPort, AddressType.NONE), consumer, 100, 10240);
+  }
+
+  protected Server startServer() {
+    return Server.startWith(world.stage(), resources, serverPort, new Sizing(1, 1, 100, 10240), new Timing(1, 1, 1000));
   }
 
   @Override
