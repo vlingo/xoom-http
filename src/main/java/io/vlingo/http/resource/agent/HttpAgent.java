@@ -38,6 +38,8 @@ public class HttpAgent {
     final SslContext sslContext = useSSL ? sslContext() : null;
 
     final OptimalTransport optimalTransport = optimalTransport(logger);
+    System.out.println("================ OPTIMAL: " + optimalTransport.name());
+
     final EventLoopGroup bossGroup = eventLoopGroup(optimalTransport, numberOfThreads, logger);
     final EventLoopGroup workerGroup = eventLoopGroup(optimalTransport, logger);
 
