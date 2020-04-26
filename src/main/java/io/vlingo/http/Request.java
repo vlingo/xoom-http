@@ -29,6 +29,10 @@ public class Request {
     return RequestParser.parserFor(requestContent).fullRequest();
   }
 
+  public static Request from(final Method method, final URI uri, final Version version, final Headers<RequestHeader> headers, final Body body) {
+    return new Request(method, uri, version, headers, body);
+  }
+
   // ===========================================
   // fluent API follows
   // ===========================================
