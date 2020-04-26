@@ -124,7 +124,7 @@ public class Response {
       headersSize += (header.name.length() + 2 + header.value.length() + 1);
     }
     // HTTP/1.1 + 1 + status + "\n" + headers + "\n" + entity + just-in-case
-    return 9 + status.value.length() + 1 + headersSize + 1 + entity.content().length() + 5;
+    return 9 + status.toString().length() + 1 + headersSize + 1 + entity.content().length() + 5;
   }
 
   private <R> R into(Function<String,R> appender) {
@@ -148,7 +148,7 @@ public class Response {
   protected Response(final Version version, final Status status, final Headers<ResponseHeader> headers, final Body entity) {
     this.version = version;
     this.status = status;
-    this.statusCode = status.value.substring(0, status.value.indexOf(' '));
+    this.statusCode = String.valueOf(status.code);
     this.entity = entityFrom(headers, entity);
     this.headers = addMissingContentLengthHeader(headers);
   }
@@ -187,91 +187,92 @@ public class Response {
 
   public enum Status {
     // 1xx Informational responses
-    Continue("100 Continue"),
-    SwitchingProtocols("101 Switching Protocols"),
-    Processing("102 Processing"),
-    EarlyHints ("103 Early Hints"),
+    Continue(100, "Continue"),
+    SwitchingProtocols(101, "Switching Protocols"),
+    Processing(102, "Processing"),
+    EarlyHints (103, "Early Hints"),
 
     // 2xx Success
-    Ok("200 OK"),
-    Created("201 Created"),
-    Accepted("202 Accepted"),
-    NonAuthoritativeInformation("203 Non-Authoritative Information"),
-    NoContent("204 No Content"),
-    ResetContent("205 Reset Content"),
-    PartialContent("206 Partial Content"),
-    MultiStatus("207 Multi-Status"),
-    AlreadyReported("208 Already Reported"),
-    IMUsed("226 IM Used"),
+    Ok(200, "OK"),
+    Created(201, "Created"),
+    Accepted(202, "Accepted"),
+    NonAuthoritativeInformation(203, "Non-Authoritative Information"),
+    NoContent(204, "No Content"),
+    ResetContent(205, "Reset Content"),
+    PartialContent(206, "Partial Content"),
+    MultiStatus(207, "Multi-Status"),
+    AlreadyReported(208, "Already Reported"),
+    IMUsed(226, "IM Used"),
 
     // 3xx Redirection
-    MultipleChoices("300 Multiple Choices"),
-    MovedPermanently("301 Moved Permanently"),
-    Found("302 Found"),
-    SeeOther("303 See Other"),
-    NotModified("304 Not Modified"),
-    UseProxy("305 Use Proxy"),
-    SwitchProxy("306 Switch Proxy"),
-    TemporaryRedirect("307 Temporary Redirect"),
-    PermanentRedirect("308 Permanent Redirect"),
+    MultipleChoices(300, "Multiple Choices"),
+    MovedPermanently(301, "Moved Permanently"),
+    Found(302, "Found"),
+    SeeOther(303, "See Other"),
+    NotModified(304, "Not Modified"),
+    UseProxy(305, "Use Proxy"),
+    SwitchProxy(306, "Switch Proxy"),
+    TemporaryRedirect(307, "Temporary Redirect"),
+    PermanentRedirect(308, "Permanent Redirect"),
 
     // 4xx Client errors
-    BadRequest("400 Bad Request"),
-    Unauthorized("401 Unauthorized"),
-    PaymentRequired("402 Payment Required"),
-    Forbidden("403 Forbidden"),
-    NotFound("404 Not Found"),
-    MethodNotAllowed("405 Method Not Allowed"),
-    NotAcceptable("406 Not Acceptable"),
-    ProxyAuthenticationRequired("407 Proxy Authentication Required"),
-    RequestTimeout("408 Request Timeout"),
-    Conflict("409 Conflict"),
-    Gone("410 Gone"),
-    LengthRequired("411 Length Required"),
-    PreconditionFailed("412 Precondition Failed"),
-    PayloadTooLarge("413 Payload Too Large"),
-    URITooLong("414 URI Too Long"),
-    UnsupportedMediaType("415 Unsupported Media Type"),
-    RangeNotSatisfiable("416 Range Not Satisfiable"),
-    ExpectationFailed("417 Expectation Failed"),
-    Imateapot("418 I'm a teapot"),
-    MisdirectedRequest("421 Misdirected Request"),
-    UnprocessableEntity("422 Unprocessable Entity"),
-    Locked("423 Locked"),
-    FailedDependency("424 Failed Dependency"),
-    UpgradeRequired("426 Upgrade Required"),
-    PreconditionRequired("428 Precondition Required"),
-    TooManyRequests("429 Too Many Requests"),
-    RequestHeaderFieldsTooLarge("431 Request Header Fields Too Large"),
-    UnavailableForLegalReasons("451 Unavailable For Legal Reasons"),
+    BadRequest(400, "Bad Request"),
+    Unauthorized(401, "Unauthorized"),
+    PaymentRequired(402, "Payment Required"),
+    Forbidden(403, "Forbidden"),
+    NotFound(404, "Not Found"),
+    MethodNotAllowed(405, "Method Not Allowed"),
+    NotAcceptable(406, "Not Acceptable"),
+    ProxyAuthenticationRequired(407, "Proxy Authentication Required"),
+    RequestTimeout(408, "Request Timeout"),
+    Conflict(409, "Conflict"),
+    Gone(410, "Gone"),
+    LengthRequired(411, "Length Required"),
+    PreconditionFailed(412, "Precondition Failed"),
+    PayloadTooLarge(413, "Payload Too Large"),
+    URITooLong(414, "URI Too Long"),
+    UnsupportedMediaType(415, "Unsupported Media Type"),
+    RangeNotSatisfiable(416, "Range Not Satisfiable"),
+    ExpectationFailed(417, "Expectation Failed"),
+    Imateapot(418, "I'm a teapot"),
+    MisdirectedRequest(421, "Misdirected Request"),
+    UnprocessableEntity(422, "Unprocessable Entity"),
+    Locked(423, "Locked"),
+    FailedDependency(424, "Failed Dependency"),
+    UpgradeRequired(426, "Upgrade Required"),
+    PreconditionRequired(428, "Precondition Required"),
+    TooManyRequests(429, "Too Many Requests"),
+    RequestHeaderFieldsTooLarge(431, "Request Header Fields Too Large"),
+    UnavailableForLegalReasons(451, "Unavailable For Legal Reasons"),
 
     // 5xx Server errors
-    InternalServerError("500 Internal Server Error"),
-    NotImplemented("501 Not Implemented"),
-    BadGateway("502 Bad Gateway"),
-    ServiceUnavailable("503 Service Unavailable"),
-    GatewayTimeout("504 Gateway Timeout"),
-    HTTPVersionNotSupported("505 HTTP Version Not Supported"),
-    VariantAlsoNegotiates("506 Variant Also Negotiates"),
-    InsufficientStorage("507 Insufficient Storage"),
-    LoopDetected("508 Loop Detected"),
-    NotExtended("510 Not Extended"),
-    NetworkAuthenticationRequired("511 Network Authentication Required");
+    InternalServerError(500, "Internal Server Error"),
+    NotImplemented(501, "Not Implemented"),
+    BadGateway(502, "Bad Gateway"),
+    ServiceUnavailable(503, "Service Unavailable"),
+    GatewayTimeout(504, "Gateway Timeout"),
+    HTTPVersionNotSupported(505, "HTTP Version Not Supported"),
+    VariantAlsoNegotiates(506, "Variant Also Negotiates"),
+    InsufficientStorage(507, "Insufficient Storage"),
+    LoopDetected(508, "Loop Detected"),
+    NotExtended(510, "Not Extended"),
+    NetworkAuthenticationRequired(511, "Network Authentication Required");
 
-    private final String value;
-    Status(final String status) {
-      this.value = status;
+    public final int code;
+    public final String reason;
+    Status(final int code, final String reason) {
+      this.code = code;
+      this.reason = reason;
     }
-
 
     @Override
     public String toString() {
-      return this.value;
+      return new StringBuilder().append(code).append(' ').append(reason).toString();
     }
 
     public static Status valueOfRawState(final String value) {
       for(Status status: Status.values()) {
-        if (status.value.toLowerCase().equals(value.toLowerCase())) {
+        if (status.toString().toLowerCase().equals(value.toLowerCase())) {
           return status;
         }
       }
