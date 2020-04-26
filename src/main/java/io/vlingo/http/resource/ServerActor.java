@@ -86,7 +86,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 
     final long end = Instant.now().toEpochMilli();
 
-    logger().info("Server " + ServerName + " is listening on port: " + port + " started in " + (end - start) + " ms");
+    logger().info("Server " + ServerName + "[A] is listening on port: " + port + " started in " + (end - start) + " ms");
 
     logResourceMappings(resources);
   }
@@ -134,7 +134,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 
       final long end = Instant.now().toEpochMilli();
 
-      logger().info("Server " + ServerName + " is listening on port: " + port + " started in " + (end - start) + " ms");
+      logger().info("Server " + ServerName + "[N] is listening on port: " + port + " started in " + (end - start) + " ms");
 
       this.requestMissingContentTimeout = timing.requestMissingContentTimeout;
 
