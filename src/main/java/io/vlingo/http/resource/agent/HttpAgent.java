@@ -38,8 +38,6 @@ public class HttpAgent {
     final SslContext sslContext = useSSL ? sslContext() : null;
 
     final OptimalTransport optimalTransport = optimalTransport(logger);
-    System.out.println("================ OPTIMAL: " + optimalTransport.name());
-
     final EventLoopGroup bossGroup = eventLoopGroup(optimalTransport, numberOfThreads, logger);
     final EventLoopGroup workerGroup = eventLoopGroup(optimalTransport, logger);
 
@@ -84,12 +82,10 @@ public class HttpAgent {
 
     switch (optimalTransport) {
     case Epoll:
-      System.out.println("HttpAgent using EpollEventLoopGroup");
       logger.debug("HttpAgent using EpollEventLoopGroup");
       return new EpollEventLoopGroup();
     case NIO:
     default:
-      System.out.println("HttpAgent using NioEventLoopGroup");
       logger.debug("HttpAgent using NioEventLoopGroup");
       return new NioEventLoopGroup();
     }
@@ -102,12 +98,10 @@ public class HttpAgent {
 
     switch (optimalTransport) {
     case Epoll:
-      System.out.println("HttpAgent using EpollEventLoopGroup");
       logger.debug("HttpAgent using EpollEventLoopGroup " + processorPoolSize);
       return new EpollEventLoopGroup(processorPoolSize);
     case NIO:
     default:
-      System.out.println("HttpAgent using NioEventLoopGroup");
       logger.debug("HttpAgent using NioEventLoopGroup " + processorPoolSize);
       return new NioEventLoopGroup(processorPoolSize);
     }
@@ -116,7 +110,6 @@ public class HttpAgent {
   private static OptimalTransport optimalTransport(final Logger logger) {
     final String osName = System.getProperty("os.name");
 
-    System.out.println("HttpAgent running on " + osName);
     logger.debug("HttpAgent running on " + osName);
 
     if (osName.toLowerCase().contains("linux")) {
@@ -132,12 +125,10 @@ public class HttpAgent {
 
     switch (optimalTransport) {
     case Epoll:
-      System.out.println("HttpAgent using EpollServerSocketChannel");
       logger.debug("HttpAgent using EpollServerSocketChannel");
       return EpollServerSocketChannel.class;
     case NIO:
     default:
-      System.out.println("HttpAgent using NioServerSocketChannel");
       logger.debug("HttpAgent using NioServerSocketChannel");
       return NioServerSocketChannel.class;
     }

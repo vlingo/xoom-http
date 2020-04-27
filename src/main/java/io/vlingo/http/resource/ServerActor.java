@@ -65,9 +65,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
   throws Exception {
     final long start = Instant.now().toEpochMilli();
 
-    System.out.println("================ INIT AGENT BEGIN");
     this.agent = HttpAgent.initialize(this, port, false, dispatcherPoolSize, logger());
-    System.out.println("================ INIT AGENT END");
 
     this.channel = null;                            // unused
     this.filters = filters;
@@ -86,7 +84,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 
     final long end = Instant.now().toEpochMilli();
 
-    logger().info("Server " + ServerName + "[A] is listening on port: " + port + " started in " + (end - start) + " ms");
+    logger().info("Server " + ServerName + " is listening on port: " + port + " started in " + (end - start) + " ms");
 
     logResourceMappings(resources);
   }
@@ -134,7 +132,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 
       final long end = Instant.now().toEpochMilli();
 
-      logger().info("Server " + ServerName + "[N] is listening on port: " + port + " started in " + (end - start) + " ms");
+      logger().info("Server " + ServerName + " is listening on port: " + port + " started in " + (end - start) + " ms");
 
       this.requestMissingContentTimeout = timing.requestMissingContentTimeout;
 
@@ -288,7 +286,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 
     @Override
     public void closeWith(final RequestResponseContext<?> requestResponseContext, final Object data) {
-//      logger().debug("===================== CLOSE WITH: " + data);
+//    logger().debug("===================== CLOSE WITH: " + data);
       if (data != null) {
         final Request request = filters.process((Request) data);
         final Completes<Response> completes = responseCompletes.of(requestResponseContext, /*request,*/ false, request.headers.headerOf(RequestHeader.XCorrelationID), true);
