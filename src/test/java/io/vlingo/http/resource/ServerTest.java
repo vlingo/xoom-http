@@ -24,8 +24,6 @@ import io.vlingo.actors.Definition;
 import io.vlingo.actors.testkit.AccessSafely;
 import io.vlingo.http.Response;
 import io.vlingo.http.ResponseHeader;
-import io.vlingo.http.resource.Configuration.Sizing;
-import io.vlingo.http.resource.Configuration.Timing;
 import io.vlingo.http.resource.TestResponseChannelConsumer.Progress;
 import io.vlingo.http.sample.user.model.User;
 import io.vlingo.wire.channel.ResponseChannelConsumer;
@@ -35,13 +33,14 @@ import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
 
-public class ServerTest extends ResourceTestFixtures {
+public abstract class ServerTest extends ResourceTestFixtures {
   private static final int TOTAL_REQUESTS_RESPONSES = 200;
 
   private static final Random random = new Random();
   private static final AtomicInteger baseServerPort = new AtomicInteger(10_000 + random.nextInt(50_000));
 
   protected int serverPort;
+  protected boolean skipTests;
 
   private ClientRequestResponseChannel client;
   private ResponseChannelConsumer consumer;
@@ -51,6 +50,12 @@ public class ServerTest extends ResourceTestFixtures {
   @Test
   public void testThatServerHandlesThrowables() {
     System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerHandlesThrowables");
+
+    if (skipTests) {
+      System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
+      return;
+    }
+
     final String request = getExceptionRequest("1");
     client.requestWith(toByteBuffer(request));
 
@@ -69,6 +74,12 @@ public class ServerTest extends ResourceTestFixtures {
   @Test
   public void testThatServerDispatchesRequests() throws Exception {
     System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerDispatchesRequests");
+
+    if (skipTests) {
+      System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
+      return;
+    }
+
     final String request = postRequest(uniqueJohnDoe());
     client.requestWith(toByteBuffer(request));
 
@@ -105,6 +116,12 @@ public class ServerTest extends ResourceTestFixtures {
   @Test
   public void testThatServerDispatchesManyRequests() throws Exception {
     System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerDispatchesManyRequests");
+
+    if (skipTests) {
+      System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
+      return;
+    }
+
     final long startTime = System.currentTimeMillis();
 
     final AccessSafely consumeCalls = progress.expectConsumeTimes(TOTAL_REQUESTS_RESPONSES);
@@ -138,6 +155,12 @@ public class ServerTest extends ResourceTestFixtures {
   @Test
   public void testThatServerRespondsPermanentRedirectWithNoContentLengthHeader() {
     System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerRespondsPermanentRedirectWithNoContentLengthHeader");
+
+    if (skipTests) {
+      System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
+      return;
+    }
+
     final String request = putRequest("u-123", uniqueJohnDoe());
     client.requestWith(toByteBuffer(request));
 
@@ -157,6 +180,12 @@ public class ServerTest extends ResourceTestFixtures {
   @Test
   public void testThatServerRespondsOkWithNoContentLengthHeader() {
     System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerRespondsOkWithNoContentLengthHeader");
+
+    if (skipTests) {
+      System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
+      return;
+    }
+
     final String request = putRequest("u-456", uniqueJohnDoe());
     client.requestWith(toByteBuffer(request));
 
@@ -175,6 +204,13 @@ public class ServerTest extends ResourceTestFixtures {
 
   @Test
   public void testThatServerClosesChannelAfterSingleRequest() {
+    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerClosesChannelAfterSingleRequest");
+
+    if (skipTests) {
+      System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
+      return;
+    }
+
     int totalResponses = 0;
     final int maxRequests = 10;
 
@@ -207,6 +243,7 @@ public class ServerTest extends ResourceTestFixtures {
 
     User.resetId();
 
+    skipTests = false;
     serverPort = baseServerPort.getAndIncrement();
     server = startServer();
     assertTrue(server.startUp().await(500L));
@@ -218,9 +255,7 @@ public class ServerTest extends ResourceTestFixtures {
     client = new NettyClientRequestResponseChannel(Address.from(Host.of("localhost"), serverPort, AddressType.NONE), consumer, 100, 10240);
   }
 
-  protected Server startServer() {
-    return Server.startWith(world.stage(), resources, serverPort, new Sizing(1, 1, 100, 10240), new Timing(1, 1, 1000));
-  }
+  protected abstract Server startServer();
 
   @Override
   @After
