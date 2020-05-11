@@ -11,6 +11,7 @@ public class ServerAgentTest extends ServerTest {
 
   @Override
   protected Server startServer() {
+    System.out.println(">>>>>>>>>>>>>>>>>>>>> ServerAgentTest");
     return Server.startWithAgent(world.stage(), resources, serverPort, 100);
   }
 }

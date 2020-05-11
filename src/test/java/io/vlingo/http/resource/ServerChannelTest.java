@@ -14,6 +14,7 @@ public class ServerChannelTest extends ServerTest {
 
   @Override
   protected Server startServer() {
+    System.out.println(">>>>>>>>>>>>>>>>>>>>> ServerChannelTest");
 
     // tests using ServerRequestResponseChannel have
     // intermittent failures on Travis-CI
