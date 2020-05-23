@@ -7,13 +7,13 @@
 
 package io.vlingo.http.resource;
 
+import java.util.function.Consumer;
+
 import io.vlingo.actors.Actor;
 import io.vlingo.http.Context;
 import io.vlingo.http.Response;
 import io.vlingo.http.Response.Status;
 import io.vlingo.http.resource.Action.MappedParameters;
-
-import java.util.function.Consumer;
 
 public class ResourceRequestHandlerActor extends Actor implements ResourceRequestHandler {
   private final ResourceHandler resourceHandler;
@@ -44,7 +44,7 @@ public class ResourceRequestHandlerActor extends Actor implements ResourceReques
       handler
         .execute(context.request, mappedParameters, resource.logger())
         .andThen(outcome -> respondWith(context, outcome))
-        .otherwise(failure -> respondWith(context, failure))
+        .otherwise((Response failure) -> respondWith(context, failure))
         .recoverFrom(exception -> Response.of(Status.BadRequest, exception.getMessage()))
         .andFinally();
 
