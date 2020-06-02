@@ -2,7 +2,7 @@
 
 [![Javadocs](http://javadoc.io/badge/io.vlingo/vlingo-http.svg?color=brightgreen)](http://javadoc.io/doc/io.vlingo/vlingo-http) [![Build Status](https://travis-ci.org/vlingo/vlingo-http.svg?branch=master)](https://travis-ci.org/vlingo/vlingo-http) [ ![Download](https://api.bintray.com/packages/vlingo/vlingo-platform-java/vlingo-http/images/download.svg) ](https://bintray.com/vlingo/vlingo-platform-java/vlingo-http/_latestVersion) [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/vlingo-platform-java/http)
 
-The vlingo/PLATFORM reactive, scalable, and resilient HTTP server supporting RESTful services running on vlingo/cluster and vlingo/actors.
+The VLINGO/PLATFORM reactive, scalable, and resilient HTTP server supporting RESTful services running on VLINGO/LATTICE and VLINGO/ACTORS.
 
 ### Bintray
 
@@ -17,7 +17,7 @@ The vlingo/PLATFORM reactive, scalable, and resilient HTTP server supporting RES
     <dependency>
       <groupId>io.vlingo</groupId>
       <artifactId>vlingo-http</artifactId>
-      <version>1.2.9</version>
+      <version>1.3.0</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>
@@ -25,7 +25,7 @@ The vlingo/PLATFORM reactive, scalable, and resilient HTTP server supporting RES
 
 ```gradle
 dependencies {
-    compile 'io.vlingo:vlingo-http:1.2.9'
+    compile 'io.vlingo:vlingo-http:1.3.0'
 }
 
 repositories {
@@ -35,7 +35,7 @@ repositories {
 
 ### Usage
 
-Reactive, scalable, and resilient HTTP servers and RESTful services running on vlingo/cluster and vlingo/actors.
+Reactive, scalable, and resilient HTTP servers and RESTful services running on VLINGO/LATTICE and VLINGO/ACTORS.
 
 1. Feature complete
   * Fully actor-based asynchronous requests and responses.
