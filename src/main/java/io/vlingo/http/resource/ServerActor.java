@@ -16,6 +16,7 @@ import java.util.Map;
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.Logger;
 import io.vlingo.actors.Returns;
+import io.vlingo.actors.Stage;
 import io.vlingo.actors.World;
 import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
@@ -31,6 +32,8 @@ import io.vlingo.http.RequestParser;
 import io.vlingo.http.Response;
 import io.vlingo.http.resource.Configuration.Sizing;
 import io.vlingo.http.resource.Configuration.Timing;
+import io.vlingo.http.resource.DispatcherPool.AbstractDispatcherPool;
+import io.vlingo.http.resource.agent.AgentDispatcherPool;
 import io.vlingo.http.resource.agent.HttpAgent;
 import io.vlingo.http.resource.agent.HttpRequestChannelConsumer;
 import io.vlingo.http.resource.agent.HttpRequestChannelConsumerProvider;
@@ -47,8 +50,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 
   private final HttpAgent agent;
   private final ServerRequestResponseChannel channel;
-  private final Dispatcher[] dispatcherPool;
-  private int dispatcherPoolIndex;
+  private final DispatcherPool dispatcherPool;
   private final Filters filters;
   private final int maxMessageSize;
   private final Map<String,RequestResponseHttpContext> requestsMissingContent;
@@ -69,18 +71,12 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 
     this.channel = null;                            // unused
     this.filters = filters;
-    this.dispatcherPoolIndex = 0;
     this.world = stage().world();
+    this.dispatcherPool = new AgentDispatcherPool(stage(), resources, dispatcherPoolSize);
     this.requestsMissingContent = new HashMap<>();  // unused
     this.maxMessageSize = 0;                        // unused
     this.responseBufferPool = null;                 // unused
     this.requestMissingContentTimeout = -1;         // unused
-
-    this.dispatcherPool = new Dispatcher[dispatcherPoolSize];
-
-    for (int idx = 0; idx < dispatcherPoolSize; ++idx) {
-      dispatcherPool[idx] = Dispatcher.startWith(stage(), resources);
-    }
 
     final long end = Instant.now().toEpochMilli();
 
@@ -101,7 +97,6 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 
     this.agent = null;                              // unused
     this.filters = filters;
-    this.dispatcherPoolIndex = 0;
     this.world = stage().world();
     this.requestsMissingContent = new HashMap<>();
     this.maxMessageSize = sizing.maxMessageSize;
@@ -110,11 +105,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
       responseBufferPool = new ConsumerByteBufferPool(
         ElasticResourcePool.Config.of(sizing.maxBufferPoolSize), sizing.maxMessageSize);
 
-      this.dispatcherPool = new Dispatcher[sizing.dispatcherPoolSize];
-
-      for (int idx = 0; idx < sizing.dispatcherPoolSize; ++idx) {
-        dispatcherPool[idx] = Dispatcher.startWith(stage(), resources);
-      }
+      this.dispatcherPool = new ServerDispatcherPool(stage(), resources, sizing.dispatcherPoolSize);
 
       this.channel =
               ServerRequestResponseChannel.start(
@@ -178,7 +169,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 
   @Override
   public HttpRequestChannelConsumer httpRequestChannelConsumer() {
-    return new ServerRequestChannelConsumer(pooledDispatcher());
+    return new ServerRequestChannelConsumer(dispatcherPool.dispatcher());
   }
 
 
@@ -208,9 +199,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
       channel.stop();
       channel.close();
 
-      for (final Dispatcher dispatcher : dispatcherPool) {
-        dispatcher.stop();
-      }
+      dispatcherPool.close();
 
       filters.stop();
     }
@@ -259,13 +248,24 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
     }
   }
 
-  private Dispatcher pooledDispatcher() {
-    if (dispatcherPoolIndex >= dispatcherPool.length) {
-      dispatcherPoolIndex = 0;
-    }
-    return dispatcherPool[dispatcherPoolIndex++];
-  }
 
+  private static class ServerDispatcherPool extends AbstractDispatcherPool {
+    private int dispatcherPoolIndex;
+
+    ServerDispatcherPool(final Stage stage, final Resources resources, final int dispatcherPoolSize) {
+      super(stage, resources, dispatcherPoolSize);
+
+      this.dispatcherPoolIndex = 0;
+    }
+
+    @Override
+    public Dispatcher dispatcher() {
+      if (dispatcherPoolIndex >= dispatcherPool.length) {
+        dispatcherPoolIndex = 0;
+      }
+      return dispatcherPool[dispatcherPoolIndex++];
+    }
+  }
 
   //=========================================
   // RequestChannelConsumer
