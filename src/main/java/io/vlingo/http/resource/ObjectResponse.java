@@ -7,6 +7,8 @@
 
 package io.vlingo.http.resource;
 
+import java.util.function.Function;
+
 import io.vlingo.http.Body;
 import io.vlingo.http.Header;
 import io.vlingo.http.Header.Headers;
@@ -58,6 +60,11 @@ public class ObjectResponse<T> {
   }
 
 
+  @Override
+  public String toString() {
+    return into(new StringBuilder()::append).toString();
+  }
+
   public Response responseFrom(Request request, MediaTypeMapper mapper) {
     final String acceptedMediaTypes = request.headerValueOr(RequestHeader.Accept, DEFAULT_MEDIA_TYPE.toString());
     final ResponseMediaTypeSelector responseMediaTypeSelector = new ResponseMediaTypeSelector(acceptedMediaTypes);
@@ -66,5 +73,26 @@ public class ObjectResponse<T> {
     final Body body = Body.from(bodyContent);
     headers.add(ResponseHeader.of(ResponseHeader.ContentType, responseContentMediaType.toString()));
     return Response.of(version, status, headers, body);
+  }
+
+  private <R> R into(Function<String,R> appender) {
+    // TODO: currently supports only HTTP/1.1
+    appender.apply(Version.HTTP_1_1);
+    appender.apply(" ");
+    appender.apply(status.toString());
+    appender.apply("\n");
+
+    appendAllHeadersTo(appender);
+    appender.apply("\n");
+    return appender.apply(entity.toString());
+  }
+
+  private <R> void appendAllHeadersTo(Function<String, R> appender) {
+    for (final ResponseHeader header : headers) {
+      appender.apply(header.name);
+      appender.apply(": ");
+      appender.apply(header.value);
+      appender.apply("\n");
+    }
   }
 }
