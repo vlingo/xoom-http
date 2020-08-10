@@ -44,4 +44,9 @@ public class MockCompletesEventuallyResponse implements CompletesEventually {
   public void with(final Object outcome) {
     withCalls.writeUsing("with", outcome);
   }
+
+  @Override
+  public String toString() {
+    return "MockCompletesEventuallyResponse [response=" + response + ", withCalls=" + withCalls + "]";
+  }
 }
