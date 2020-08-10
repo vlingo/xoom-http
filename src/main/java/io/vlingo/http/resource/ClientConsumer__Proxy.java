@@ -7,8 +7,12 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.actors.*;
-import io.vlingo.common.BasicCompletes;
+import io.vlingo.actors.Actor;
+import io.vlingo.actors.DeadLetter;
+import io.vlingo.actors.LocalMessage;
+import io.vlingo.actors.Mailbox;
+import io.vlingo.actors.Returns;
+import io.vlingo.actors.Stoppable;
 import io.vlingo.common.Completes;
 import io.vlingo.common.SerializableConsumer;
 import io.vlingo.http.Response;
@@ -20,7 +24,7 @@ public class ClientConsumer__Proxy implements ClientConsumer {
   private static final String consumeRepresentation2 = "consume(io.vlingo.wire.message.ConsumerByteBuffer)";
   private static final String intervalSignalRepresentation3 = "intervalSignal(io.vlingo.actors.Scheduled, java.lang.Object)";
   private static final String stopRepresentation4 = "stop()";
-  
+
   private final Actor actor;
   private final Mailbox mailbox;
 
@@ -33,7 +37,7 @@ public class ClientConsumer__Proxy implements ClientConsumer {
   public Completes<Response> requestWith(io.vlingo.http.Request arg0, io.vlingo.common.Completes<Response> arg1) {
     if (!actor.isStopped()) {
       final SerializableConsumer<ClientConsumer> consumer = (actor) -> actor.requestWith(arg0, arg1);
-      final Completes<Response> completes = new BasicCompletes<>(actor.scheduler());
+      final Completes<Response> completes = Completes.using(actor.scheduler());
       if (mailbox.isPreallocated()) { mailbox.send(actor, ClientConsumer.class, consumer, Returns.value(completes), requestWithRepresentation1); }
       else { mailbox.send(new LocalMessage<ClientConsumer>(actor, ClientConsumer.class, consumer, Returns.value(completes), requestWithRepresentation1)); }
       return completes;
