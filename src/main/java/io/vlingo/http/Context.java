@@ -85,4 +85,9 @@ public class Context {
   public Request request() {
     return request;
   }
+
+  @Override
+  public String toString() {
+    return "Context [completes=" + completes + ", request=\n" + request + "]";
+  }
 }
