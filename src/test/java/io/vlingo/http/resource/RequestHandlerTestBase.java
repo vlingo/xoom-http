@@ -9,11 +9,11 @@
 
 package io.vlingo.http.resource;
 
+import static org.junit.Assert.assertEquals;
+
 import io.vlingo.actors.Logger;
 import io.vlingo.http.Response;
 import io.vlingo.http.media.ContentMediaType;
-
-import static org.junit.Assert.assertEquals;
 
 public class RequestHandlerTestBase {
 
@@ -24,6 +24,10 @@ public class RequestHandlerTestBase {
   }
 
   void assertResponsesAreEquals(final Response expected, final Response actual) {
+    assertEquals(expected.toString(), actual.toString());
+  }
+
+  void assertResponsesAreEquals(final ObjectResponse<?> expected, final ObjectResponse<?> actual) {
     assertEquals(expected.toString(), actual.toString());
   }
 

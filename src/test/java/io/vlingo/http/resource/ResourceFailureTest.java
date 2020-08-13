@@ -7,8 +7,17 @@
 
 package io.vlingo.http.resource;
 
+import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import io.vlingo.actors.World;
 import io.vlingo.actors.testkit.AccessSafely;
+import io.vlingo.common.Completes;
 import io.vlingo.http.Filters;
 import io.vlingo.http.Request;
 import io.vlingo.http.Response;
@@ -21,13 +30,6 @@ import io.vlingo.wire.message.Converters;
 import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.nio.ByteBuffer;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ResourceFailureTest {
   private static final AtomicInteger nextPort = new AtomicInteger(14000);
@@ -59,14 +61,12 @@ public class ResourceFailureTest {
 
     count = 0;
 
-    client.requestWith(request).andThenConsume(response -> {
-      ++count;
-      this.response = response;
-    }).await();
+    final Completes<Response> completes1 = client.requestWith(request);
 
-    Assert.assertEquals(1, count);
+    final Response response = completes1.await();
 
     Assert.assertNotNull(response);
+    Assert.assertEquals(response.status, Response.Status.BadRequest);
   }
 
   @Before
@@ -89,7 +89,7 @@ public class ResourceFailureTest {
   @After
   public void tearDown() throws InterruptedException {
     client.close();
-    
+
     server.shutDown();
 
     Thread.sleep(200);

@@ -9,7 +9,7 @@ public class ResourceErrorProcessor {
     return Response.of(Response.Status.InternalServerError);
   }
 
-  static Response resourceHandlerError(ErrorHandler errorHandler, Logger logger, Exception exception) {
+  static Response resourceHandlerError(ErrorHandler errorHandler, Logger logger, Throwable exception) {
     Response response;
     try {
       logger.error("Exception thrown by Resource execution", exception);

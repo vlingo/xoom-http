@@ -10,7 +10,7 @@ package io.vlingo.http.resource.sse;
 import io.vlingo.actors.CompletesEventually;
 import io.vlingo.actors.Returns;
 import io.vlingo.actors.World;
-import io.vlingo.common.BasicCompletes;
+import io.vlingo.common.Completes;
 import io.vlingo.http.Context;
 import io.vlingo.http.Request;
 
@@ -22,7 +22,7 @@ public class MockSseStreamResource extends SseStreamResource {
   public MockSseStreamResource(final World world) {
     super(world);
 
-    this.completes = world.completesFor(Returns.value(new BasicCompletes<>(world.stage().scheduler())));
+    this.completes = world.completesFor(Returns.value(Completes.using(world.stage().scheduler())));
     this.requestResponseContext = new MockRequestResponseContext(new MockResponseSenderChannel());
   }
 

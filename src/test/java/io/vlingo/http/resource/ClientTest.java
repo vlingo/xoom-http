@@ -72,9 +72,9 @@ public class ClientTest extends ResourceTestFixtures {
               .and(contentLength(user))
               .and(keepAlive())
               .and(Body.from(user)))
-          .andThenConsume(5000, Response.of(RequestTimeout), response -> expectedResponse = response)
-          .andThenConsume(response -> expectedHeaderCount = response.headers.size())
-          .andThenConsume(response -> location = response.headers.headerOf(Location))
+          .andThen(5000, Response.of(RequestTimeout), response -> expectedResponse = response)
+          .andThen(response -> { expectedHeaderCount = response.headers.size(); return response; })
+          .andThen(response -> { location = response.headers.headerOf(Location); return response; })
           .andFinallyConsume(known::consume);
 
     final int responseCount = access.readFrom("responseCount");
