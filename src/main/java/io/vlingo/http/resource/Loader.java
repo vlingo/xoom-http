@@ -22,8 +22,10 @@ import io.vlingo.actors.Actor;
 import io.vlingo.actors.ActorFactory;
 import io.vlingo.http.Method;
 import io.vlingo.http.resource.Action.MappedParameter;
+import io.vlingo.http.resource.feed.FeedConfiguration;
 import io.vlingo.http.resource.feed.FeedProducer;
 import io.vlingo.http.resource.feed.FeedResource;
+import io.vlingo.http.resource.sse.SseConfiguration;
 import io.vlingo.http.resource.sse.SseFeed;
 import io.vlingo.http.resource.sse.SseStreamResource;
 
@@ -80,6 +82,45 @@ public class Loader {
     return new Resources(namedResources);
   }
 
+  public static Map<String, Resource<?>> resourcesFrom(final FeedConfiguration configuration) {
+    final Map<String, Resource<?>> namedResources = new HashMap<>();
+
+    if (configuration.isConfigured()) {
+      final Map<String, ConfigurationResource<?>> feedResources = new HashMap<>();
+      loadFeedResources(feedResources, configuration.name(), configuration.feedClass().getName(), configuration.elements(), configuration.poolSize(), configuration.feedURI());
+      namedResources.putAll(feedResources);
+    }
+
+    return namedResources;
+  }
+
+  public static Map<String, Resource<?>> resourcesFrom(final SseConfiguration configuration) {
+    final Map<String, Resource<?>> namedResources = new HashMap<>();
+
+    if (configuration.isConfigured()) {
+      final Map<String, ConfigurationResource<?>> sseResources = new HashMap<>();
+      final String streamResourceName = ssePublisherNamePrefix + "." + configuration.name();
+      loadSseResources(sseResources, streamResourceName, configuration.name(), configuration.feedClass().getName(),
+              configuration.payloadCount(), configuration.interval(),
+              configuration.defaultId(), configuration.poolSize(), configuration.streamURI(), configuration.streamURI());
+      namedResources.putAll(sseResources);
+    }
+
+    return namedResources;
+  }
+
+  public static Map<String, Resource<?>> resourcesFrom(final StaticFilesConfiguration configuration) {
+    final Map<String, Resource<?>> namedResources = new HashMap<>();
+
+    if (configuration.isConfigured()) {
+      final Map<String, ConfigurationResource<?>> staticFilesResourceActions = new HashMap<>();
+      loadStaticFileResource(staticFilesResourceActions, configuration.rootPath(), configuration.poolSize(), configuration.subpathsAsPropertyValue(), configuration.subpathsAsArray());
+      namedResources.putAll(staticFilesResourceActions);
+    }
+
+    return namedResources;
+  }
+
   private static Set<String> findResources(final java.util.Properties properties, final String namePrefix) {
     final Set<String> resource = new HashSet<String>();
 
@@ -117,7 +158,7 @@ public class Loader {
   }
 
   private static Map<String, ConfigurationResource<?>> loadFeedResources(final Properties properties) {
-    final Map<String, ConfigurationResource<?>> feedResourceActions = new HashMap<>();
+    final Map<String, ConfigurationResource<?>> feedResources = new HashMap<>();
 
     for (final String feedResourceName : findResources(properties, feedProducerNamePrefix)) {
       final String feedURI = properties.getProperty(feedResourceName);
@@ -132,29 +173,39 @@ public class Loader {
       final int handlerPoolSize = maybePoolSize <= 0 ? 1 : maybePoolSize;
       final String feedRequestURI = feedURI.replaceAll(resourceName, feedNamePathParameter) + "/" + feedProductIdPathParameter;
 
-      try {
-        final Class<? extends Actor> feedClass = ActorFactory.actorClassWithProtocol(feedProducerClassname, FeedProducer.class);
-        final MappedParameter mappedParameterProducerClass = new MappedParameter("Class<? extends Actor>", feedClass);
-        final MappedParameter mappedParameterProductElements = new MappedParameter("int", feedElements);
-
-        final List<Action> actions = new ArrayList<>(1);
-        final List<MappedParameter> additionalParameters = Arrays.asList(mappedParameterProducerClass, mappedParameterProductElements);
-        actions.add(new Action(0, Method.GET.name, feedRequestURI, feedProducerFeed, null, additionalParameters));
-        final ConfigurationResource<?> resource = resourceFor(resourceName, FeedResource.class, handlerPoolSize, actions);
-        feedResourceActions.put(resourceName, resource);
-      } catch (Exception e) {
-        final String message = "vlingo/http: Failed to load feed resource: " + resourceName + " because: " + e.getMessage();
-        System.out.println(message);
-        e.printStackTrace();
-        throw new IllegalArgumentException(message, e);
-      }
+      loadFeedResources(feedResources, resourceName, feedProducerClassname, feedElements, handlerPoolSize, feedRequestURI);
     }
 
-    return feedResourceActions;
+    return feedResources;
+  }
+
+  private static void loadFeedResources(
+          final Map<String, ConfigurationResource<?>> feedResources,
+          final String resourceName,
+          final String feedProducerClassname,
+          final int feedElements,
+          final int handlerPoolSize,
+          final String feedRequestURI) {
+    try {
+      final Class<? extends Actor> feedClass = ActorFactory.actorClassWithProtocol(feedProducerClassname, FeedProducer.class);
+      final MappedParameter mappedParameterProducerClass = new MappedParameter("Class<? extends Actor>", feedClass);
+      final MappedParameter mappedParameterProductElements = new MappedParameter("int", feedElements);
+
+      final List<Action> actions = new ArrayList<>(1);
+      final List<MappedParameter> additionalParameters = Arrays.asList(mappedParameterProducerClass, mappedParameterProductElements);
+      actions.add(new Action(0, Method.GET.name, feedRequestURI, feedProducerFeed, null, additionalParameters));
+      final ConfigurationResource<?> resource = resourceFor(resourceName, FeedResource.class, handlerPoolSize, actions);
+      feedResources.put(resourceName, resource);
+    } catch (Exception e) {
+      final String message = "vlingo/http: Failed to load feed resource: " + resourceName + " because: " + e.getMessage();
+      System.out.println(message);
+      e.printStackTrace();
+      throw new IllegalArgumentException(message, e);
+    }
   }
 
   private static Map<String, ConfigurationResource<?>> loadSseResources(final Properties properties) {
-    final Map<String, ConfigurationResource<?>> sseResourceActions = new HashMap<>();
+    final Map<String, ConfigurationResource<?>> sseResources = new HashMap<>();
 
     for (final String streamResourceName : findResources(properties, ssePublisherNamePrefix)) {
       final String streamURI = properties.getProperty(streamResourceName);
@@ -175,41 +226,69 @@ public class Loader {
       final String subscribeURI = streamURI.replaceAll(resourceName, ssePublisherNamePathParameter);
       final String unsubscribeURI = subscribeURI + "/" + ssePublisherIdPathParameter;
 
-      try {
-        final Class<? extends Actor> feedClass = ActorFactory.actorClassWithProtocol(feedClassname, SseFeed.class);
-        final MappedParameter mappedParameterClass = new MappedParameter("Class<? extends Actor>", feedClass);
-        final MappedParameter mappedParameterPayload = new MappedParameter("int", feedPayload);
-        final MappedParameter mappedParameterInterval = new MappedParameter("int", feedInterval);
-        final MappedParameter mappedParameterDefaultId = new MappedParameter("String", feedDefaultId);
-
-        final List<Action> actions = new ArrayList<>(2);
-        final List<MappedParameter> additionalParameters = Arrays.asList(mappedParameterClass, mappedParameterPayload, mappedParameterInterval, mappedParameterDefaultId);
-        actions.add(new Action(0, Method.GET.name, subscribeURI, ssePublisherSubscribeTo, null, additionalParameters));
-        actions.add(new Action(1, Method.DELETE.name, unsubscribeURI, ssePublisherUnsubscribeTo, null));
-        final ConfigurationResource<?> resource = resourceFor(resourceName, SseStreamResource.class, handlerPoolSize, actions);
-        sseResourceActions.put(resourceName, resource);
-      } catch (Exception e) {
-        System.out.println("vlingo/http: Failed to load SSE resource: " + streamResourceName + " because: " + e.getMessage());
-        e.printStackTrace();
-        throw e;
-      }
+      loadSseResources(sseResources, streamResourceName, resourceName, feedClassname, feedPayload, feedInterval,
+              feedDefaultId, handlerPoolSize, subscribeURI, unsubscribeURI);
     }
 
-    return sseResourceActions;
+    return sseResources;
+  }
+
+  private static void loadSseResources(
+          final Map<String, ConfigurationResource<?>> sseResources,
+          final String streamResourceName,
+          final String resourceName,
+          final String feedClassname,
+          final int feedPayload,
+          final int feedInterval,
+          final String feedDefaultId,
+          final int handlerPoolSize,
+          final String subscribeURI,
+          final String unsubscribeURI) {
+    try {
+      final Class<? extends Actor> feedClass = ActorFactory.actorClassWithProtocol(feedClassname, SseFeed.class);
+      final MappedParameter mappedParameterClass = new MappedParameter("Class<? extends Actor>", feedClass);
+      final MappedParameter mappedParameterPayload = new MappedParameter("int", feedPayload);
+      final MappedParameter mappedParameterInterval = new MappedParameter("int", feedInterval);
+      final MappedParameter mappedParameterDefaultId = new MappedParameter("String", feedDefaultId);
+
+      final List<Action> actions = new ArrayList<>(2);
+      final List<MappedParameter> additionalParameters = Arrays.asList(mappedParameterClass, mappedParameterPayload, mappedParameterInterval, mappedParameterDefaultId);
+      actions.add(new Action(0, Method.GET.name, subscribeURI, ssePublisherSubscribeTo, null, additionalParameters));
+      actions.add(new Action(1, Method.DELETE.name, unsubscribeURI, ssePublisherUnsubscribeTo, null));
+      final ConfigurationResource<?> resource = resourceFor(resourceName, SseStreamResource.class, handlerPoolSize, actions);
+      sseResources.put(resourceName, resource);
+    } catch (Exception e) {
+      System.out.println("vlingo/http: Failed to load SSE resource: " + streamResourceName + " because: " + e.getMessage());
+      e.printStackTrace();
+      throw e;
+    }
   }
 
   private static Map<String, ConfigurationResource<?>> loadStaticFilesResource(final Properties properties) {
-    final Map<String, ConfigurationResource<?>> staticFilesResourceActions = new HashMap<>();
+    final Map<String, ConfigurationResource<?>> staticFilesResources = new HashMap<>();
 
     final String root = properties.getProperty(staticFilesResourceRoot);
 
     if (root == null) {
-      return staticFilesResourceActions;
+      return staticFilesResources;
     }
 
     final String poolSize = properties.getProperty(staticFilesResourcePool, "5");
     final String validSubPaths = properties.getProperty(staticFilesResourceSubPaths);
     final String[] actionSubPaths = actionNamesFrom(validSubPaths, staticFilesResourceSubPaths);
+
+    loadStaticFileResource(staticFilesResources, root, Integer.parseInt(poolSize), validSubPaths, actionSubPaths);
+
+    return staticFilesResources;
+  }
+
+  private static void loadStaticFileResource(
+          final Map<String, ConfigurationResource<?>> staticFilesResources,
+          final String root,
+          final int poolSize,
+          final String validSubPaths,
+          final String[] actionSubPaths) {
+
     Arrays.sort(actionSubPaths, new Comparator<String>() {
       @Override
       public int compare(final String path1, final String path2) {
@@ -230,16 +309,14 @@ public class Loader {
         final List<Action> actions = new ArrayList<>(1);
         final List<MappedParameter> additionalParameters = Arrays.asList(mappedParameterRoot, mappedParameterValidSubPaths);
         actions.add(new Action(0, Method.GET.name, actionSubPath + slash + staticFilesResourcePathParameter, staticFilesResourceServeFile, null, additionalParameters));
-        final ConfigurationResource<?> resource = resourceFor(resourceName, StaticFilesResource.class, Integer.parseInt(poolSize), actions);
-        staticFilesResourceActions.put(resourceName, resource);
+        final ConfigurationResource<?> resource = resourceFor(resourceName, StaticFilesResource.class, poolSize, actions);
+        staticFilesResources.put(resourceName, resource);
       }
     } catch (Exception e) {
       System.out.println("vlingo/http: Failed to load static files resource: " + staticFilesResource + " because: " + e.getMessage());
       e.printStackTrace();
       throw e;
     }
-
-    return staticFilesResourceActions;
   }
 
   private static ConfigurationResource<?> resourceFor(
