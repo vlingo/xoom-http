@@ -7,16 +7,16 @@
 
 package io.vlingo.http.resource;
 
-import static io.vlingo.http.Response.Status.InternalServerError;
-import static io.vlingo.http.Response.Status.NotFound;
-import static io.vlingo.http.Response.Status.Ok;
+import io.vlingo.http.*;
 
+import javax.activation.MimetypesFileTypeMap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 
-import io.vlingo.http.Body;
-import io.vlingo.http.Response;
+import static io.vlingo.http.Response.Status.*;
+import static io.vlingo.http.ResponseHeader.ContentLength;
 
 /**
  * Serves static file resources. Note that the current limit of 2GB file sizes.
@@ -45,7 +45,11 @@ public class StaticFilesResource extends ResourceHandler {
 
     try {
       final byte[] fileContent = readFile(contentPath);
-      completes().with(Response.of(Ok, Body.from(fileContent, Body.Encoding.UTF8).content()));
+
+      completes().with(Response.of(Ok, Header.Headers.of(
+          ResponseHeader.of(RequestHeader.ContentType, guessContentType(contentPath)),
+          ResponseHeader.of(ContentLength, fileContent.length)),
+        Body.from(fileContent, Body.Encoding.UTF8).content()));
     } catch (IOException e) {
       completes().with(Response.of(InternalServerError));
     } catch (IllegalArgumentException e) {
@@ -59,5 +63,11 @@ public class StaticFilesResource extends ResourceHandler {
       return Files.readAllBytes(file.toPath());
     }
     throw new IllegalArgumentException("File not found.");
+  }
+
+  private String guessContentType(final String path) {
+    final String contentType =
+      new MimetypesFileTypeMap().getContentType(Paths.get(path).toFile());
+    return (contentType != null) ? contentType : "application/octet-stream";
   }
 }
