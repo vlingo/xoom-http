@@ -133,6 +133,11 @@
       <artifactId>javax.activation</artifactId>
       <version>1.2.0</version>
     </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.6</version>
+    </dependency>
   </dependencies>
 
   <repositories>

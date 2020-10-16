@@ -20,12 +20,14 @@ import io.vlingo.wire.message.Converters;
 import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
+import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -145,7 +147,7 @@ public class StaticFilesResourceTest {
     properties.setProperty("server.request.missing.content.timeout", "100");
 
     properties.setProperty("static.files.resource.pool", "5");
-    contentRoot = System.getProperty("user.dir") + "/src/test/resources/content";
+    contentRoot = "content";
     properties.setProperty("static.files.resource.root", contentRoot);
     properties.setProperty("static.files.resource.subpaths", "[/, /css, /js, /views]");
 
@@ -202,9 +204,9 @@ public class StaticFilesResourceTest {
   }
 
   private byte[] readFile(final String path) throws IOException {
-    final File file = new File(path);
-    if (file.exists()) {
-      return Files.readAllBytes(file.toPath());
+    final InputStream contentStream = StaticFilesResource.class.getResourceAsStream(path);
+    if (contentStream != null && contentStream.available() > 0) {
+      return IOUtils.toByteArray(contentStream);
     }
     throw new IllegalArgumentException("File not found.");
   }

@@ -8,11 +8,11 @@
 package io.vlingo.http.resource;
 
 import io.vlingo.http.*;
+import org.apache.commons.io.IOUtils;
 
 import javax.activation.MimetypesFileTypeMap;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStream;
 import java.nio.file.Paths;
 
 import static io.vlingo.http.Response.Status.*;
@@ -37,15 +37,14 @@ public class StaticFilesResource extends ResourceHandler {
    */
   public void serveFile(final String contentFile, final String root, final String validSubPaths) {
     if (rootPath == null) {
-      final String slash = root.endsWith("/") ? "" : "/";
-      rootPath = root + slash;
+      final String initialSlash = root.startsWith("/") ? "" : "/";
+      rootPath = initialSlash + (root.endsWith("/") ? root.substring(0, root.length() - 1) : root);
     }
 
     final String contentPath = rootPath + context.request.uri;
 
     try {
       final byte[] fileContent = readFile(contentPath);
-
       completes().with(Response.of(Ok, Header.Headers.of(
           ResponseHeader.of(RequestHeader.ContentType, guessContentType(contentPath)),
           ResponseHeader.of(ContentLength, fileContent.length)),
@@ -58,9 +57,9 @@ public class StaticFilesResource extends ResourceHandler {
   }
 
   private byte[] readFile(final String path) throws IOException {
-    final File file = new File(path);
-    if (file.exists()) {
-      return Files.readAllBytes(file.toPath());
+    final InputStream contentStream = StaticFilesResource.class.getResourceAsStream(path);
+    if (contentStream != null && contentStream.available() > 0) {
+      return IOUtils.toByteArray(contentStream);
     }
     throw new IllegalArgumentException("File not found.");
   }
