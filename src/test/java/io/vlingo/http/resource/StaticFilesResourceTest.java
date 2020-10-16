@@ -25,12 +25,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
@@ -204,7 +202,7 @@ public class StaticFilesResourceTest {
   }
 
   private byte[] readFile(final String path) throws IOException {
-    final InputStream contentStream = StaticFilesResource.class.getResourceAsStream(path);
+    final InputStream contentStream = StaticFilesResource.class.getResourceAsStream("/" + path);
     if (contentStream != null && contentStream.available() > 0) {
       return IOUtils.toByteArray(contentStream);
     }
