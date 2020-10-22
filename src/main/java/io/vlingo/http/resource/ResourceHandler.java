@@ -48,6 +48,14 @@ public abstract class ResourceHandler {
   }
 
   /**
+   * Construct my default state with a {@code Stage}.
+   * @param stage the Stage to set as my stage
+   */
+  protected ResourceHandler(Stage stage) {
+    this.stage = stage;
+  }
+
+  /**
    * Answer my {@code completes}.
    * @return CompletesEventually
    */
