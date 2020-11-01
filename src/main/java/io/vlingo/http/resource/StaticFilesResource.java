@@ -7,16 +7,25 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.http.*;
-import org.apache.commons.io.IOUtils;
+import static io.vlingo.http.Response.Status.InternalServerError;
+import static io.vlingo.http.Response.Status.NotFound;
+import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.ResponseHeader.ContentLength;
 
-import javax.activation.MimetypesFileTypeMap;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
 
-import static io.vlingo.http.Response.Status.*;
-import static io.vlingo.http.ResponseHeader.ContentLength;
+import javax.activation.MimetypesFileTypeMap;
+
+import org.apache.commons.io.IOUtils;
+
+import io.vlingo.http.Body;
+import io.vlingo.http.Header;
+import io.vlingo.http.RequestHeader;
+import io.vlingo.http.Response;
+import io.vlingo.http.ResponseHeader;
 
 /**
  * Serves static file resources. Note that the current limit of 2GB file sizes.
@@ -41,7 +50,9 @@ public class StaticFilesResource extends ResourceHandler {
       rootPath = initialSlash + (root.endsWith("/") ? root.substring(0, root.length() - 1) : root);
     }
 
-    final String contentPath = rootPath + context.request.uri;
+    final String uri = contentFile.isEmpty() ? "/index.html" : context.request.uri.toString();
+
+    final String contentPath = contentFilePath(rootPath + uri);
 
     try {
       final byte[] fileContent = readFile(contentPath);
@@ -54,6 +65,24 @@ public class StaticFilesResource extends ResourceHandler {
     } catch (IllegalArgumentException e) {
       completes().with(Response.of(NotFound));
     }
+  }
+
+  private String contentFilePath(final String path) {
+    final File maybeContent = new File(path);
+
+    if (maybeContent.isDirectory()) {
+      final StringBuilder builder = new StringBuilder(path);
+
+      if (!path.endsWith("/")) {
+        builder.append("/");
+      }
+
+      builder.append("index.html");
+
+      return builder.toString();
+    }
+
+    return path;
   }
 
   private byte[] readFile(final String path) throws IOException {
