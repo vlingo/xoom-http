@@ -30,7 +30,9 @@ public class StaticFilesResourceDispatcher extends ConfigurationResource<StaticF
     try {
       switch (mappedParameters.actionId) {
       case 0: // GET %root%{path} serveFile(String root, String paths, String contentFilePath)
-        consumer = (handler) -> handler.serveFile((String) mappedParameters.mapped.get(0).value, (String) mappedParameters.mapped.get(1).value, (String) mappedParameters.mapped.get(2).value);
+        consumer = mappedParameters.mapped.size() == 3 ?
+                (handler) -> handler.serveFile((String) mappedParameters.mapped.get(0).value, (String) mappedParameters.mapped.get(1).value, (String) mappedParameters.mapped.get(2).value) :
+                (handler) -> handler.serveFile("", (String) mappedParameters.mapped.get(0).value, (String) mappedParameters.mapped.get(1).value);
         pooledHandler().handleFor(context, consumer);
         break;
       }
