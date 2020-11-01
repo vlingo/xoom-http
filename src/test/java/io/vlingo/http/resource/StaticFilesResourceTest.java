@@ -7,6 +7,20 @@
 
 package io.vlingo.http.resource;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.commons.io.IOUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import io.vlingo.actors.Definition;
 import io.vlingo.actors.World;
 import io.vlingo.actors.testkit.AccessSafely;
@@ -20,19 +34,6 @@ import io.vlingo.wire.message.Converters;
 import io.vlingo.wire.node.Address;
 import io.vlingo.wire.node.AddressType;
 import io.vlingo.wire.node.Host;
-import org.apache.commons.io.IOUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class StaticFilesResourceTest {
   private static final AtomicInteger baseServerPort = new AtomicInteger(19001);
@@ -46,6 +47,26 @@ public class StaticFilesResourceTest {
   private Server server;
   private int serverPort;
   private World world;
+
+  @Test
+  public void testThatServesRootDefaultStaticFile() throws IOException {
+    final String resource = "/index.html";
+    final String content = readTextFile(contentRoot + resource);
+    final String request = getRequest("/");
+    client.requestWith(toByteBuffer(request));
+
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+    while (consumeCalls.totalWrites() < 1) {
+      client.probeChannel();
+    }
+    consumeCalls.readFrom("completed");
+
+    final Response contentResponse = progress.responses.poll();
+
+    assertEquals(1, progress.consumeCount.get());
+    assertEquals(Response.Status.Ok, contentResponse.status);
+    assertEquals(content, contentResponse.entity.content());
+  }
 
   @Test
   public void testThatServesRootStaticFile() throws IOException {
@@ -193,7 +214,7 @@ public class StaticFilesResourceTest {
     this.server.shutDown();
 
     Thread.sleep(200);
-    
+
     this.world.terminate();
   }
 
