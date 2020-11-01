@@ -63,6 +63,8 @@ public class Loader {
   private static final String staticFilesResourceSubPaths = "static.files.resource.subpaths";
   private static final String staticFilesResourceServeFile = "serveFile(String contentFile, String root, String validSubPaths)";
   private static final String staticFilesResourcePathParameter = "{contentFile}";
+  private static final String staticFilesResourceRoot1 = "//";
+  private static final String staticFilesResourceRoot2 = "///";
 
   public static Resources loadResources(final java.util.Properties properties) {
     final Map<String, Resource<?>> namedResources = new HashMap<>();
@@ -289,17 +291,10 @@ public class Loader {
           final String validSubPaths,
           final String[] actionSubPaths) {
 
-    Arrays.sort(actionSubPaths, new Comparator<String>() {
-      @Override
-      public int compare(final String path1, final String path2) {
-        return path2.length() - path1.length();
-      }
-    });
-
     try {
       int resourceSequence = 0;
 
-      for (final String actionSubPath : actionSubPaths) {
+      for (final String actionSubPath : listOfSorted(actionSubPaths)) {
         final MappedParameter mappedParameterRoot = new MappedParameter("String", root);
         final MappedParameter mappedParameterValidSubPaths = new MappedParameter("String", validSubPaths);
 
@@ -308,7 +303,8 @@ public class Loader {
 
         final List<Action> actions = new ArrayList<>(1);
         final List<MappedParameter> additionalParameters = Arrays.asList(mappedParameterRoot, mappedParameterValidSubPaths);
-        actions.add(new Action(0, Method.GET.name, actionSubPath + slash + staticFilesResourcePathParameter, staticFilesResourceServeFile, null, additionalParameters));
+
+        actions.add(new Action(0, Method.GET.name, patternFrom(actionSubPath, slash), staticFilesResourceServeFile, null, additionalParameters));
         final ConfigurationResource<?> resource = resourceFor(resourceName, StaticFilesResource.class, poolSize, actions);
         staticFilesResources.put(resourceName, resource);
       }
@@ -317,6 +313,35 @@ public class Loader {
       e.printStackTrace();
       throw e;
     }
+  }
+
+  private static List<String> listOfSorted(final String[] actionSubPaths) {
+    Arrays.sort(actionSubPaths, new Comparator<String>() {
+      @Override
+      public int compare(final String path1, final String path2) {
+        return path2.length() - path1.length();
+      }
+    });
+
+    final List<String> list = new ArrayList<>(2 + actionSubPaths.length);
+
+    list.add(staticFilesResourceRoot1);
+    list.add(staticFilesResourceRoot2);
+    list.addAll(Arrays.asList(actionSubPaths));
+
+    return list;
+  }
+
+  private static String patternFrom(final String path, final String slash) {
+
+    switch (path) {
+    case staticFilesResourceRoot1:
+      return "";
+    case staticFilesResourceRoot2:
+      return "/";
+    }
+
+    return path + slash + staticFilesResourcePathParameter;
   }
 
   private static ConfigurationResource<?> resourceFor(
