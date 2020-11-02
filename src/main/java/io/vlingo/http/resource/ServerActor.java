@@ -289,7 +289,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 //    logger().debug("===================== CLOSE WITH: " + data);
       if (data != null) {
         final Request request = filters.process((Request) data);
-        final Completes<Response> completes = responseCompletes.of(requestResponseContext, /*request,*/ false, request.headers.headerOf(RequestHeader.XCorrelationID), true);
+        final Completes<Response> completes = responseCompletes.of(requestResponseContext, request, false, request.headers.headerOf(RequestHeader.XCorrelationID), true);
         final Context context = new Context(requestResponseContext, request, world.completesFor(Returns.value(completes)));
         dispatcher.dispatchFor(context);
       }
@@ -329,7 +329,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 //        logger().debug("==============(" + instanceId + ") MISSING REQUEST CONTENT FOR (" + (++missingCount) + "): \n" + parser.currentRequestText());
           missingContent = true;
           if (context == null) {
-            final Completes<Response> completes = responseCompletes.of(requestResponseContext.typed(), /*unfilteredRequest,*/ true, null, true);
+            final Completes<Response> completes = responseCompletes.of(requestResponseContext.typed(), null, true, null, true);
             context = new Context(world.completesFor(Returns.value(completes)));
           }
           requestsMissingContent.put(requestResponseContext.id(), new RequestResponseHttpContext(requestResponseContext, context));
@@ -340,7 +340,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 //      final String requestContentText = Converters.bytesToText(buffer.array(), 0, buffer.limit());
 //      logger().debug("=====================(" + instanceId + ") BAD REQUEST (2): " + requestContentText);
         logger().error("Request parsing failed.", e);
-        responseCompletes.of(requestResponseContext, /*unfilteredRequest,*/ missingContent, null, false).with(Response.of(Response.Status.BadRequest, e.getMessage()));
+        responseCompletes.of(requestResponseContext, null, missingContent, null, false).with(Response.of(Response.Status.BadRequest, e.getMessage()));
       } finally {
         buffer.release();
       }
