@@ -148,6 +148,26 @@ public class StaticFilesResourceTest {
     assertEquals(content, contentResponse.entity.content());
   }
 
+  @Test
+  public void testThatServesBiggerThenMaxFileSize() throws IOException {
+    final String resource = "/css/big.css";
+    final String content = readTextFile(contentRoot + resource);
+    final String request = getRequest(resource);
+    client.requestWith(toByteBuffer(request));
+
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+    while (consumeCalls.totalWrites() < 1) {
+      client.probeChannel();
+    }
+    consumeCalls.readFrom("completed");
+
+    final Response contentResponse = progress.responses.poll();
+
+    assertEquals(1, progress.consumeCount.get());
+    assertEquals(Response.Status.Ok, contentResponse.status);
+    assertEquals(content, contentResponse.entity.content());
+  }
+
   @Before
   public void setUp() throws Exception {
 
@@ -159,7 +179,7 @@ public class StaticFilesResourceTest {
     properties.setProperty("server.http.port", ""+serverPort);
     properties.setProperty("server.dispatcher.pool", "10");
     properties.setProperty("server.buffer.pool.size", "100");
-    properties.setProperty("server.message.buffer.size", "65535");
+    properties.setProperty("server.message.buffer.size", "4096");
     properties.setProperty("server.probe.interval", "2");
     properties.setProperty("server.probe.timeout", "2");
     properties.setProperty("server.processor.pool.size", "10");

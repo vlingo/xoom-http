@@ -451,11 +451,18 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 
     private ConsumerByteBuffer bufferFor(final Response response) {
       final int size = response.size();
-      if (size < maxMessageSize) {
-        return responseBufferPool.acquire("ServerActor#BasicCompletedBasedResponseCompletes#bufferFor");
+      try {
+        if (size < maxMessageSize) {
+          return responseBufferPool.acquire("ServerActor#BasicCompletedBasedResponseCompletes#bufferFor");
+        }
+        final int difference = size - maxMessageSize;
+        throw new IllegalStateException("Response exceeds maxMessageSize(" + maxMessageSize + ") by " + difference + ".");
+        
+      } catch (IllegalStateException e) {
+        final String message = e.getMessage() + "\nAllocating size " + size + " instead.";
+        logger().error(message, e);
+        return BasicConsumerByteBuffer.allocate(0, size);
       }
-
-      return BasicConsumerByteBuffer.allocate(0, size + 1024);
     }
 
     private boolean closeAfterResponse(final Response response) {
