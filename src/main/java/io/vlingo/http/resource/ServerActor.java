@@ -360,7 +360,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 
       final boolean keepAlive = determineKeepAlive(requestResponseContext, request);
       final Request filteredRequest = filters.process(request);
-      final Completes<Response> completes = responseCompletes.of(requestResponseContext, /*unfilteredRequest,*/ false, filteredRequest.headers.headerOf(RequestHeader.XCorrelationID), keepAlive);
+      final Completes<Response> completes = responseCompletes.of(requestResponseContext, filteredRequest, false, filteredRequest.headers.headerOf(RequestHeader.XCorrelationID), keepAlive);
       final Context context = new Context(requestResponseContext, filteredRequest, world.completesFor(Returns.value(completes)));
       dispatcher.dispatchFor(context);
 
@@ -407,11 +407,11 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 
   ResponseCompletes responseCompletes = new ResponseCompletes();
   private class ResponseCompletes {
-    public Completes<Response> of(final RequestResponseContext<?> requestResponseContext, /*final Request request,*/ final boolean missingContent, final Header correlationId, final boolean keepAlive) {
+    public Completes<Response> of(final RequestResponseContext<?> requestResponseContext, final Request request, final boolean missingContent, final Header correlationId, final boolean keepAlive) {
       if (SinkAndSourceBasedCompletes.isToggleActive()) {
         return new SinkBasedBasedResponseCompletes(requestResponseContext, /*request,*/ missingContent, correlationId, keepAlive);
       } else {
-        return new BasicCompletedBasedResponseCompletes(requestResponseContext, /*request,*/ missingContent, correlationId, keepAlive);
+        return new BasicCompletedBasedResponseCompletes(requestResponseContext, request, missingContent, correlationId, keepAlive);
       }
     }
   }
@@ -420,13 +420,13 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
     final Header correlationId;
     final boolean keepAlive;
     final boolean missingContent;
-//  final Request request;
+    final Request request;
     final RequestResponseContext<?> requestResponseContext;
 
-    BasicCompletedBasedResponseCompletes(final RequestResponseContext<?> requestResponseContext, /*final Request request,*/ final boolean missingContent, final Header correlationId, final boolean keepAlive) {
+    BasicCompletedBasedResponseCompletes(final RequestResponseContext<?> requestResponseContext, final Request request, final boolean missingContent, final Header correlationId, final boolean keepAlive) {
       super(stage().scheduler());
       this.requestResponseContext = requestResponseContext;
-//    this.request = request;
+      this.request = request;
       this.missingContent = missingContent;
       this.correlationId = correlationId;
       this.keepAlive = keepAlive;
@@ -435,16 +435,27 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
     @Override
     @SuppressWarnings("unchecked")
     public <O> Completes<O> with(final O response) {
-      final Response unfilteredResponse = (Response) response;
-      final Response filtered = filters.process(unfilteredResponse);
-      final Response completedResponse = filtered.include(correlationId);
-      final boolean closeAfterResponse = closeAfterResponse(unfilteredResponse);
-      if (agent == null) {
-        final ConsumerByteBuffer buffer = bufferFor(completedResponse);
-        requestResponseContext.respondWith(completedResponse.into(buffer), closeAfterResponse);
-      } else {
-//      System.out.println("============> SERVER RESPONSE: \n" + completedResponse);
-        requestResponseContext.respondWith(completedResponse, closeAfterResponse);
+      Response debugResponse = null;
+      try {
+        final Response unfilteredResponse = (Response) response;
+        final Response filtered = filters.process(unfilteredResponse);
+        final Response completedResponse = filtered.include(correlationId);
+        debugResponse = completedResponse;
+        final boolean closeAfterResponse = closeAfterResponse(unfilteredResponse);
+        if (agent == null) {
+          final ConsumerByteBuffer buffer = bufferFor(completedResponse);
+          requestResponseContext.respondWith(completedResponse.into(buffer), closeAfterResponse);
+        } else {
+  //      System.out.println("============> SERVER RESPONSE: \n" + completedResponse);
+          requestResponseContext.respondWith(completedResponse, closeAfterResponse);
+        }
+      } catch (Exception e) {
+        final String message =
+                "Failure responding to request because: " + e.getMessage() +
+                "\nREQUEST:\n" + request +
+                "\nRESPONSE:\n" + debugResponse;
+
+        logger().error(message, e);
       }
       return (Completes<O>) this;
     }
