@@ -49,6 +49,7 @@ public class DynamicResourceHandlerTest {
     Assert.assertNotNull(resource);
     Assert.assertNotNull(resource.stage());
     Assert.assertNotNull(resource.logger());
+    Assert.assertNotNull(resource.scheduler());
     Assert.assertNull(resource.context());
   }
 
