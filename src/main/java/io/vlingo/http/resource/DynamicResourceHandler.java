@@ -9,8 +9,10 @@ package io.vlingo.http.resource;
 
 import io.vlingo.actors.Logger;
 import io.vlingo.actors.Stage;
+import io.vlingo.http.Context;
 
 public abstract class DynamicResourceHandler {
+  private Context context;
   private final Logger logger;
   private final Stage stage;
 
@@ -29,4 +31,11 @@ public abstract class DynamicResourceHandler {
     return stage;
   }
 
+  protected Context context() {
+    return context;
+  }
+
+  void context(final Context context) {
+    this.context = context;
+  }
 }

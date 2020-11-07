@@ -20,11 +20,13 @@ import io.vlingo.http.Context;
 import io.vlingo.http.Method;
 
 public class DynamicResource extends Resource<ResourceHandler> {
+  final DynamicResourceHandler dynamicResourceHandler;
   final List<RequestHandler> handlers;
   private final List<Action> actions = new ArrayList<>();
 
-  protected DynamicResource(final String name, final int handlerPoolSize, final List<RequestHandler> unsortedHandlers) {
+  protected DynamicResource(final String name, final DynamicResourceHandler dynamicResourceHandler, final int handlerPoolSize, final List<RequestHandler> unsortedHandlers) {
     super(name, handlerPoolSize);
+    this.dynamicResourceHandler = dynamicResourceHandler;
     this.handlers = sortHandlersBySlashes(unsortedHandlers);
     int currentId = 0;
     for(RequestHandler predicate: this.handlers) {
@@ -36,10 +38,15 @@ public class DynamicResource extends Resource<ResourceHandler> {
     }
   }
 
+  protected DynamicResource(final String name, final int handlerPoolSize, final List<RequestHandler> unsortedHandlers) {
+    this(name, null, handlerPoolSize, unsortedHandlers);
+  }
+
   @Override
   public void dispatchToHandlerWith(final Context context, final Action.MappedParameters mappedParameters) {
     try {
       final RequestHandler handler = handlers.get(mappedParameters.actionId);
+      if (dynamicResourceHandler != null) dynamicResourceHandler.context(context);
       pooledHandler().handleFor(context, mappedParameters, handler);
     } catch (Exception e) {
       throw new IllegalArgumentException("Action mismatch: Request: " + context.request + "Parameters: " + mappedParameters);

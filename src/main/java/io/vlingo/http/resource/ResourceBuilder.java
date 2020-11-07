@@ -9,18 +9,26 @@
 
 package io.vlingo.http.resource;
 
-import io.vlingo.http.Method;
-
 import java.util.Arrays;
+
+import io.vlingo.http.Method;
 
 public interface ResourceBuilder {
 
   static Resource<?> resource(final String name, RequestHandler... requestHandlers) {
-    return resource(name, 10, requestHandlers);
+    return resource(name, null, 10, requestHandlers);
   }
 
   static Resource<?> resource(final String name, final int handlerPoolSize, RequestHandler... requestHandlers) {
-    return new DynamicResource(name, handlerPoolSize, Arrays.asList(requestHandlers));
+    return resource(name, null, handlerPoolSize, requestHandlers);
+  }
+
+  static Resource<?> resource(final String name, final DynamicResourceHandler dynamicResourceHandler, RequestHandler... requestHandlers) {
+    return resource(name, dynamicResourceHandler, 10, requestHandlers);
+  }
+
+  static Resource<?> resource(final String name, final DynamicResourceHandler dynamicResourceHandler, final int handlerPoolSize, RequestHandler... requestHandlers) {
+    return new DynamicResource(name, dynamicResourceHandler, handlerPoolSize, Arrays.asList(requestHandlers));
   }
 
   static RequestHandler0 get(final String uri) {
