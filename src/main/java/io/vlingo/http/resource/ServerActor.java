@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import io.vlingo.actors.Actor;
 import io.vlingo.actors.Logger;
@@ -250,20 +251,21 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 
 
   private static class ServerDispatcherPool extends AbstractDispatcherPool {
-    private int dispatcherPoolIndex;
+    private AtomicLong dispatcherPoolIndex;
+    private int dispatcherPoolSize;
 
     ServerDispatcherPool(final Stage stage, final Resources resources, final int dispatcherPoolSize) {
       super(stage, resources, dispatcherPoolSize);
 
-      this.dispatcherPoolIndex = 0;
+      this.dispatcherPoolIndex = new AtomicLong(0);
+      this.dispatcherPoolSize = dispatcherPool.length;
     }
 
     @Override
     public Dispatcher dispatcher() {
-      if (dispatcherPoolIndex >= dispatcherPool.length) {
-        dispatcherPoolIndex = 0;
-      }
-      return dispatcherPool[dispatcherPoolIndex++];
+      final int index = (int) (dispatcherPoolIndex.incrementAndGet() % dispatcherPoolSize);
+
+      return dispatcherPool[index];
     }
   }
 
