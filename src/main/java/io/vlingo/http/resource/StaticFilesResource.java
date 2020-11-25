@@ -57,10 +57,10 @@ public class StaticFilesResource extends ResourceHandler {
 
     try {
       final byte[] fileContent = readFile(contentPath);
-      completes().with(Response.of(Ok, Header.Headers.of(
-          ResponseHeader.of(RequestHeader.ContentType, guessContentType(contentPath)),
-          ResponseHeader.of(ContentLength, fileContent.length)),
-        Body.from(fileContent, Body.Encoding.UTF8).content()));
+      completes().with(Response.of(Ok,
+          Header.Headers.of(ResponseHeader.of(RequestHeader.ContentType, guessContentType(contentPath)),
+              ResponseHeader.of(ContentLength, fileContent.length)),
+          Body.from(fileContent, Body.Encoding.UTF8).content()));
     } catch (IOException e) {
       completes().with(Response.of(InternalServerError));
     } catch (IllegalArgumentException e) {
@@ -69,8 +69,9 @@ public class StaticFilesResource extends ResourceHandler {
   }
 
   private String contentFilePath(final String path) {
-    if (isDirectory(path)) {
-      return withIndexHtmlAppended(path);
+    final String fileSystemPath = String.join(" ", path.split("%20"));
+    if (isDirectory(fileSystemPath)) {
+      return withIndexHtmlAppended(fileSystemPath);
     }
     return path;
   }
@@ -78,7 +79,7 @@ public class StaticFilesResource extends ResourceHandler {
   private boolean isDirectory(final String path) {
     URL url = getClass().getResource(path);
     if(url==null) return false;
-    return new File(url.getPath()).isDirectory();
+    return new File(String.join(" ", url.getPath().split("%20"))).isDirectory();
   }
 
   private String withIndexHtmlAppended(final String path) {

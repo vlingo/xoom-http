@@ -70,9 +70,9 @@ public class StaticFilesResourceTest {
 
   @Test
   public void testThatServesDefaultStaticFile() throws IOException {
-    final String resource = "/views/index.html";
+    final String resource = "/views/test 2/index.html";
     final String content = readTextFile(contentRoot + resource);
-    final String request = getRequest("/views/");
+    final String request = getRequest("/views/test 2/");
     client.requestWith(toByteBuffer(request));
 
     final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
@@ -238,7 +238,7 @@ public class StaticFilesResourceTest {
   }
 
   private String getRequest(final String filePath) {
-    return "GET " + filePath + " HTTP/1.1\nHost: vlingo.io\n\n";
+    return "GET " + String.join("%20", filePath.split(" ")) + " HTTP/1.1\nHost: vlingo.io\n\n";
   }
 
   private byte[] readFile(final String path) throws IOException {
