@@ -15,6 +15,7 @@ import static io.vlingo.http.ResponseHeader.ContentLength;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Paths;
 
 import javax.activation.MimetypesFileTypeMap;
@@ -68,10 +69,20 @@ public class StaticFilesResource extends ResourceHandler {
   }
 
   private String contentFilePath(final String path) {
-    final File maybeContent = new File(path);
+    if (isDirectory(path)) {
+      return withIndexHtmlAppended(path);
+    }
+    return path;
+  }
 
-    if (maybeContent.isDirectory()) {
-      final StringBuilder builder = new StringBuilder(path);
+  private boolean isDirectory(final String path) {
+    URL url = getClass().getResource(path);
+    if(url==null) return false;
+    return new File(url.getPath()).isDirectory();
+  }
+
+  private String withIndexHtmlAppended(final String path) {
+    final StringBuilder builder = new StringBuilder(path);
 
       if (!path.endsWith("/")) {
         builder.append("/");
@@ -80,9 +91,6 @@ public class StaticFilesResource extends ResourceHandler {
       builder.append("index.html");
 
       return builder.toString();
-    }
-
-    return path;
   }
 
   private byte[] readFile(final String path) throws IOException {

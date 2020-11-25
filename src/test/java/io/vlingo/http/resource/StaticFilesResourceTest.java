@@ -69,6 +69,25 @@ public class StaticFilesResourceTest {
   }
 
   @Test
+  public void testThatServesDefaultStaticFile() throws IOException {
+    final String resource = "/views/index.html";
+    final String content = readTextFile(contentRoot + resource);
+    final String request = getRequest("/views/");
+    client.requestWith(toByteBuffer(request));
+
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+    while (consumeCalls.totalWrites() < 1) {
+      client.probeChannel();
+    }
+    consumeCalls.readFrom("completed");
+
+    final Response contentResponse = progress.responses.poll();
+    assertEquals(1, progress.consumeCount.get());
+    assertEquals(Response.Status.Ok, contentResponse.status);
+    assertEquals(content, contentResponse.entity.content());
+  }
+
+  @Test
   public void testThatServesRootStaticFile() throws IOException {
     final String resource = "/index.html";
     final String content = readTextFile(contentRoot + resource);
