@@ -86,23 +86,39 @@ public class StaticFilesResource extends ResourceHandler {
     String resource = path;
     URL res = getClass().getResource(resource);
     res = new URL(String.join(" ", res.toExternalForm().split("%20")));
-
+    InputStream in = null;
+    OutputStream out = null;
     if (res.getProtocol().equals("jar")) {
       //jar:file:/C:/.../some.jar!/...
       try {
-        InputStream input = getClass().getResourceAsStream(resource);
+        in = getClass().getResourceAsStream(resource);
         file = File.createTempFile("tempfile", ".tmp");
-        OutputStream out = new FileOutputStream(file);
+        out = new FileOutputStream(file);
 
         byte[] bytes = new byte[2];
         //read a char: if it's a directory, input.read returns -1
-        if (input.read(bytes) == -1) {
+        if (in.read(bytes) == -1) {
           isDirectory = true;
         }
-        out.close();
-        file.delete();
+        
       } catch (IOException e) {
           e.printStackTrace();
+      } finally {
+        if (out != null) {
+          try {
+            out.close();
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+        }
+        if (in != null) {
+          try {
+            in.close();
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+        }
+        file.delete();
       }
     } else {
         //from IDE, not from a JAR
