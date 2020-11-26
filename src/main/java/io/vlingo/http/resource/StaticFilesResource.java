@@ -17,6 +17,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Paths;
 
@@ -57,7 +58,7 @@ public class StaticFilesResource extends ResourceHandler {
 
     try {
       final String contentPath = String.join(" ", contentFilePath(rootPath + uri).split("%20"));
-      logger().debug("contentPath: "+contentPath);
+      // logger().debug("contentPath: "+contentPath);
       final byte[] fileContent = readFile(contentPath);
       completes().with(Response.of(Ok,
           Header.Headers.of(ResponseHeader.of(RequestHeader.ContentType, guessContentType(contentPath)),
@@ -78,48 +79,40 @@ public class StaticFilesResource extends ResourceHandler {
     return path;
   }
 
-  private boolean isDirectory(final String path) throws IOException {
+  private boolean isDirectory(final String path) throws MalformedURLException {
+    boolean isDirectory = false;
+
     File file = null;
-    // String resource = "/com/somedirectory" or "/com/somedirectory/somefile";
     String resource = path;
     URL res = getClass().getResource(resource);
-    // logger().debug("resource: "+resource+" res: "+res);
     res = new URL(String.join(" ", res.toExternalForm().split("%20")));
-    // logger().debug("res after split: "+res);
 
-    //jar:file:/C:/.../some.jar!/...
     if (res.getProtocol().equals("jar")) {
+      //jar:file:/C:/.../some.jar!/...
       try {
         InputStream input = getClass().getResourceAsStream(resource);
         file = File.createTempFile("tempfile", ".tmp");
         OutputStream out = new FileOutputStream(file);
 
-        int read;
         byte[] bytes = new byte[2];
-        //read a char, if it's a directory, input.read returns -1
-        if ((read = input.read(bytes)) != -1) {
-          // logger().debug("this is a file"); //TODO: this could be refactored to return right here
-          out.write(bytes, 0, read);
-          out.close();
-          file.deleteOnExit();
+        //read a char: if it's a directory, input.read returns -1
+        if (input.read(bytes) == -1) {
+          isDirectory = true;
         }
+        out.close();
+        file.delete();
       } catch (IOException e) {
           e.printStackTrace();
       }
     } else {
         //from IDE, not from a JAR
         file = new File(res.getFile());
+        if (file == null || !file.exists()) {
+          throw new RuntimeException("Error: File " + file + " not found!");
+        }
+        isDirectory = file.isDirectory();
     }
-
-    if (file == null || !file.exists()) {
-        throw new RuntimeException("Error: File " + file + " not found!");
-    }
-
-    logger().debug("File: " + file);
-
-    if(file.isDirectory()) return true;
-    if(file.length()<1) return true;
-    return false;
+    return isDirectory;
   }
 
   private String withIndexHtmlAppended(final String path) {
