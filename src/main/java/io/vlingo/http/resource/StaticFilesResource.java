@@ -13,8 +13,10 @@ import static io.vlingo.http.Response.Status.Ok;
 import static io.vlingo.http.ResponseHeader.ContentLength;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Paths;
 
@@ -53,9 +55,9 @@ public class StaticFilesResource extends ResourceHandler {
 
     final String uri = contentFile.isEmpty() ? "/index.html" : context.request.uri.toString();
 
-    final String contentPath = contentFilePath(rootPath + uri);
-
     try {
+      final String contentPath = String.join(" ", contentFilePath(rootPath + uri).split("%20"));
+      logger().debug("contentPath: "+contentPath);
       final byte[] fileContent = readFile(contentPath);
       completes().with(Response.of(Ok,
           Header.Headers.of(ResponseHeader.of(RequestHeader.ContentType, guessContentType(contentPath)),
@@ -68,7 +70,7 @@ public class StaticFilesResource extends ResourceHandler {
     }
   }
 
-  private String contentFilePath(final String path) {
+  private String contentFilePath(final String path) throws IOException {
     final String fileSystemPath = String.join(" ", path.split("%20"));
     if (isDirectory(fileSystemPath)) {
       return withIndexHtmlAppended(fileSystemPath);
@@ -76,10 +78,48 @@ public class StaticFilesResource extends ResourceHandler {
     return path;
   }
 
-  private boolean isDirectory(final String path) {
-    URL url = getClass().getResource(path);
-    if(url==null) return false;
-    return new File(String.join(" ", url.getPath().split("%20"))).isDirectory();
+  private boolean isDirectory(final String path) throws IOException {
+    File file = null;
+    // String resource = "/com/somedirectory" or "/com/somedirectory/somefile";
+    String resource = path;
+    URL res = getClass().getResource(resource);
+    // logger().debug("resource: "+resource+" res: "+res);
+    res = new URL(String.join(" ", res.toExternalForm().split("%20")));
+    // logger().debug("res after split: "+res);
+
+    //jar:file:/C:/.../some.jar!/...
+    if (res.getProtocol().equals("jar")) {
+      try {
+        InputStream input = getClass().getResourceAsStream(resource);
+        file = File.createTempFile("tempfile", ".tmp");
+        OutputStream out = new FileOutputStream(file);
+
+        int read;
+        byte[] bytes = new byte[2];
+        //read a char, if it's a directory, input.read returns -1
+        if ((read = input.read(bytes)) != -1) {
+          // logger().debug("this is a file"); //TODO: this could be refactored to return right here
+          out.write(bytes, 0, read);
+          out.close();
+          file.deleteOnExit();
+        }
+      } catch (IOException e) {
+          e.printStackTrace();
+      }
+    } else {
+        //from IDE, not from a JAR
+        file = new File(res.getFile());
+    }
+
+    if (file == null || !file.exists()) {
+        throw new RuntimeException("Error: File " + file + " not found!");
+    }
+
+    logger().debug("File: " + file);
+
+    if(file.isDirectory()) return true;
+    if(file.length()<1) return true;
+    return false;
   }
 
   private String withIndexHtmlAppended(final String path) {
