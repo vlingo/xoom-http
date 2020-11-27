@@ -158,8 +158,7 @@ public class StaticFilesResource extends ResourceHandler {
   }
 
   private void internalServerError(Exception e) {
-    logger().error(e.getMessage());
-    e.printStackTrace();
+    logger().error("Internal server error because: " + e.getMessage(), e);
     completes().with(Response.of(InternalServerError));
   }
 }
