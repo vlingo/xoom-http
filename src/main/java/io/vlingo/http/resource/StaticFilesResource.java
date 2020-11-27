@@ -65,7 +65,7 @@ public class StaticFilesResource extends ResourceHandler {
               ResponseHeader.of(ContentLength, fileContent.length)),
           Body.from(fileContent, Body.Encoding.UTF8).content()));
     } catch (IOException e) {
-      completes().with(Response.of(InternalServerError));
+      internalServerError(e);
     } catch (IllegalArgumentException e) {
       completes().with(Response.of(NotFound));
     }
@@ -102,20 +102,20 @@ public class StaticFilesResource extends ResourceHandler {
         }
         
       } catch (IOException e) {
-          e.printStackTrace();
+        internalServerError(e);
       } finally {
         if (out != null) {
           try {
             out.close();
           } catch (IOException e) {
-            e.printStackTrace();
+            internalServerError(e);
           }
         }
         if (in != null) {
           try {
             in.close();
           } catch (IOException e) {
-            e.printStackTrace();
+            internalServerError(e);
           }
         }
         file.delete();
@@ -155,5 +155,11 @@ public class StaticFilesResource extends ResourceHandler {
     final String contentType =
       new MimetypesFileTypeMap().getContentType(Paths.get(path).toFile());
     return (contentType != null) ? contentType : "application/octet-stream";
+  }
+
+  private void internalServerError(Exception e) {
+    logger().error(e.getMessage());
+    e.printStackTrace();
+    completes().with(Response.of(InternalServerError));
   }
 }
