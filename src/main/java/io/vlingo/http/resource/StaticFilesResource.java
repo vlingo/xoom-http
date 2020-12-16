@@ -13,10 +13,8 @@ import static io.vlingo.http.Response.Status.Ok;
 import static io.vlingo.http.ResponseHeader.ContentLength;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Paths;
@@ -81,48 +79,22 @@ public class StaticFilesResource extends ResourceHandler {
 
   private boolean isDirectory(final String path) throws MalformedURLException {
     boolean isDirectory = false;
+    URL res = new URL(String.join(" ", getClass().getResource(path).toExternalForm().split("%20")));
 
-    File file = null;
-    String resource = path;
-    URL res = getClass().getResource(resource);
-    res = new URL(String.join(" ", res.toExternalForm().split("%20")));
-    InputStream in = null;
-    OutputStream out = null;
     if (res.getProtocol().equals("jar")) {
       //jar:file:/C:/.../some.jar!/...
-      try {
-        in = getClass().getResourceAsStream(resource);
-        file = File.createTempFile("tempfile", ".tmp");
-        out = new FileOutputStream(file);
-
+      try(InputStream in = getClass().getResourceAsStream(path)) {
         byte[] bytes = new byte[2];
         //read a char: if it's a directory, input.read returns -1
         if (in.read(bytes) == -1) {
           isDirectory = true;
         }
-        
       } catch (IOException e) {
         internalServerError(e);
-      } finally {
-        if (out != null) {
-          try {
-            out.close();
-          } catch (IOException e) {
-            internalServerError(e);
-          }
-        }
-        if (in != null) {
-          try {
-            in.close();
-          } catch (IOException e) {
-            internalServerError(e);
-          }
-        }
-        file.delete();
       }
     } else {
         //from IDE, not from a JAR
-        file = new File(res.getFile());
+        File file = new File(res.getFile());
         if (file == null || !file.exists()) {
           throw new RuntimeException("Error: File " + file + " not found!");
         }
