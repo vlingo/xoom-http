@@ -17,8 +17,8 @@ public class ServerChannelTest extends ServerTest {
     System.out.println(">>>>>>>>>>>>>>>>>>>>> ServerChannelTest");
 
     // tests using ServerRequestResponseChannel have
-    // intermittent failures on Travis-CI
-    if (System.getenv().getOrDefault("GITHUB_TOKEN", null) != null) {
+    // intermittent failures on the CI
+    if (System.getenv().getOrDefault("CI", null) != null) {
       skipTests = true;
     }
 
