@@ -16,6 +16,7 @@ import java.nio.ByteBuffer;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import io.vlingo.actors.World;
@@ -44,6 +45,18 @@ public class DynamicResourceDispatcherTest {
   private final String postDataMessage =
           "POST /res HTTP/1.1\nHost: vlingo.io\nContent-Length: " + dataSerialized.length() + "\n\n" + dataSerialized;
 
+  // This test often fails on CI because there are a limited number of threads
+  // for build/test processing. The responseData.resourceHandlerId holds a thread
+  // id and is meant to change on each request/response. With only one thread this
+  // test will absolutely fail because the request will always be handled by the
+  // same thread. With only a few threads there is a high probability of failure,
+  // because the same thread could easily be used to handle two back-to-back requests.
+  // Actually even with any reasonable number of threads (8-12) it is still possible
+  // to occasionally experience a failure. We feel safe to disable this test until
+  // we identify a better way to safely guarantee that a different resource handler
+  // will always handle back-to-back requests. We have successfully run this test
+  // many times and also visually observed that the behavior does work correctly.
+  @Ignore
   @Test
   public void testThatDispatchesThroughPool() {
     for (int count = 0; count < 3; ++count) {
