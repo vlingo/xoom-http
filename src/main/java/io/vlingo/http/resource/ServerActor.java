@@ -21,7 +21,7 @@ import io.vlingo.actors.Stage;
 import io.vlingo.actors.World;
 import io.vlingo.common.Completes;
 import io.vlingo.common.Scheduled;
-import io.vlingo.common.completes.CFCompletes;
+import io.vlingo.common.completes.FutureCompletes;
 import io.vlingo.common.pool.ElasticResourcePool;
 import io.vlingo.http.Context;
 import io.vlingo.http.Filters;
@@ -413,7 +413,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
     }
   }
 
-  private class BasicCompletedBasedResponseCompletes extends CFCompletes<Response> {
+  private class BasicCompletedBasedResponseCompletes extends FutureCompletes<Response> {
     final Header correlationId;
     final boolean keepAlive;
     final boolean missingContent;
