@@ -56,10 +56,11 @@ public abstract class ServerTest extends ResourceTestFixtures {
       return;
     }
 
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+
     final String request = getExceptionRequest("1");
     client.requestWith(toByteBuffer(request));
 
-    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
     while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
@@ -80,10 +81,11 @@ public abstract class ServerTest extends ResourceTestFixtures {
       return;
     }
 
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+
     final String request = postRequest(uniqueJohnDoe());
     client.requestWith(toByteBuffer(request));
 
-    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
     while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
@@ -161,10 +163,11 @@ public abstract class ServerTest extends ResourceTestFixtures {
       return;
     }
 
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+
     final String request = putRequest("u-123", uniqueJohnDoe());
     client.requestWith(toByteBuffer(request));
 
-    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
     while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
@@ -186,10 +189,11 @@ public abstract class ServerTest extends ResourceTestFixtures {
       return;
     }
 
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+
     final String request = putRequest("u-456", uniqueJohnDoe());
     client.requestWith(toByteBuffer(request));
 
-    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
     while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }

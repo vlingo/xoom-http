@@ -13,6 +13,8 @@ import static io.vlingo.http.resource.ResourceBuilder.resource;
 import static org.junit.Assert.assertEquals;
 
 import java.nio.ByteBuffer;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -37,6 +39,8 @@ import io.vlingo.wire.node.Host;
 
 public class DynamicResourceHandlerTest {
   private final ByteBuffer buffer = ByteBufferAllocator.allocate(65535);
+  private static final Random random = new Random();
+  private static final AtomicInteger serverPort = new AtomicInteger(10_000 + random.nextInt(50_000));
   private ClientRequestResponseChannel client;
   private ResponseChannelConsumer consumer;
   private Progress progress;
@@ -76,17 +80,19 @@ public class DynamicResourceHandlerTest {
 
   @Before
   public void setUp() {
+    final int port = serverPort.getAndIncrement();
+
     world = World.startWithDefaults("test-dynamic-resource-handler");
 
     resource = new TestResource(world.stage());
 
-    server = Server.startWithAgent(world.stage(), Resources.are(resource.routes()), 18080, 2);
+    server = Server.startWithAgent(world.stage(), Resources.are(resource.routes()), port, 2);
 
     progress = new Progress();
 
     consumer = world.actorFor(ResponseChannelConsumer.class, Definition.has(TestResponseChannelConsumer.class, Definition.parameters(progress)));
 
-    client = new NettyClientRequestResponseChannel(Address.from(Host.of("localhost"), 18080, AddressType.NONE), consumer, 100, 10240);
+    client = new NettyClientRequestResponseChannel(Address.from(Host.of("localhost"), port, AddressType.NONE), consumer, 100, 10240);
   }
 
   @After
