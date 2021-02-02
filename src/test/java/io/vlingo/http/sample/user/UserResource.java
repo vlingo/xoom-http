@@ -79,12 +79,8 @@ public class UserResource extends ResourceHandler {
       .andThenTo(user -> user.withName(new Name(nameData.given, nameData.family)))
       .otherwiseConsume(noUser -> completes().with(Response.of(NotFound, userLocation(userId))))
       .andFinallyConsume(userState -> {
-            if (userState != null) {
-              repository.save(userState);
-              completes().with(Response.of(Ok, serialized(UserData.from(userState))));
-            } else {
-              completes().with(Response.of(Ok, "DOH!!!"));
-            }
+          repository.save(userState);
+          completes().with(Response.of(Ok, serialized(UserData.from(userState))));
       });
   }
 

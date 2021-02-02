@@ -22,7 +22,6 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.gson.reflect.TypeToken;
@@ -138,7 +137,7 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     assertEquals(janeDoeUserData.contactData.telephoneNumber, janeUserData.contactData.telephoneNumber);
   }
 
-  @Test @Ignore
+  @Test
   public void testThatPatchNameWorks() {
     System.out.println("testThatPatchNameWorks()");
     final Request postRequest1 = Request.from(toByteBuffer(postJohnDoeUserMessage));

@@ -26,8 +26,6 @@ public class UserActor extends Actor implements User {
   @Override
   public Completes<User.State> withName(final Name name) {
     state = state.withName(name);
-    completes().with(state);
-    System.out.println("USER: " + state.id + " WITH-NAME: " + name + " STATE: " + state + " INTO: " + completes());
-    return completes();
+    return completes().with(state);
   }
 }
