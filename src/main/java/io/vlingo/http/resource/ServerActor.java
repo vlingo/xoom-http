@@ -19,10 +19,9 @@ import io.vlingo.actors.Logger;
 import io.vlingo.actors.Returns;
 import io.vlingo.actors.Stage;
 import io.vlingo.actors.World;
-import io.vlingo.common.BasicCompletes;
 import io.vlingo.common.Completes;
 import io.vlingo.common.Scheduled;
-import io.vlingo.common.completes.SinkAndSourceBasedCompletes;
+import io.vlingo.common.completes.FutureCompletes;
 import io.vlingo.common.pool.ElasticResourcePool;
 import io.vlingo.http.Context;
 import io.vlingo.http.Filters;
@@ -410,15 +409,11 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
   ResponseCompletes responseCompletes = new ResponseCompletes();
   private class ResponseCompletes {
     public Completes<Response> of(final RequestResponseContext<?> requestResponseContext, final Request request, final boolean missingContent, final Header correlationId, final boolean keepAlive) {
-      if (SinkAndSourceBasedCompletes.isToggleActive()) {
-        return new SinkBasedBasedResponseCompletes(requestResponseContext, /*request,*/ missingContent, correlationId, keepAlive);
-      } else {
-        return new BasicCompletedBasedResponseCompletes(requestResponseContext, request, missingContent, correlationId, keepAlive);
-      }
+      return new BasicCompletedBasedResponseCompletes(requestResponseContext, request, missingContent, correlationId, keepAlive);
     }
   }
 
-  private class BasicCompletedBasedResponseCompletes extends BasicCompletes<Response> {
+  private class BasicCompletedBasedResponseCompletes extends FutureCompletes<Response> {
     final Header correlationId;
     final boolean keepAlive;
     final boolean missingContent;
@@ -494,74 +489,6 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 //    } else {
 //      logger().debug("///////// SERVER RESPONSE CLOSED FOLLOWING /////////\n" + response);
 //    }
-
-      return !keepAliveAfterResponse;
-    }
-  }
-
-  private class SinkBasedBasedResponseCompletes extends SinkAndSourceBasedCompletes<Response> {
-    final Header correlationId;
-    final boolean keepAlive;
-    final boolean missingContent;
-//    final Request request;
-    final RequestResponseContext<?> requestResponseContext;
-
-    SinkBasedBasedResponseCompletes(final RequestResponseContext<?> requestResponseContext, /* final Request request,*/ final boolean missingContent, final Header correlationId, final boolean keepAlive) {
-      super(stage().scheduler());
-      this.requestResponseContext = requestResponseContext;
-//    this.request = request;
-      this.missingContent = missingContent;
-      this.correlationId = correlationId;
-      this.keepAlive = keepAlive;
-    }
-
-    @Override
-    public <O> Completes<O> with(final O response) {
-      final Response unfilteredResponse = (Response) response;
-      final Response filtered = filters.process(unfilteredResponse);
-      final Response completedResponse = filtered.include(correlationId);
-      final boolean closeAfterResponse = closeAfterResponse(unfilteredResponse);
-      if (agent == null) {
-        final ConsumerByteBuffer buffer = bufferFor(completedResponse);
-        requestResponseContext.respondWith(completedResponse.into(buffer), closeAfterResponse);
-      } else {
-        requestResponseContext.respondWith(completedResponse, closeAfterResponse);
-      }
-      return super.with(response);
-    }
-
-    private ConsumerByteBuffer bufferFor(final Response response) {
-      final int size = response.size();
-      if (size < maxMessageSize) {
-        return responseBufferPool.acquire("ServerActor#SinkBasedBasedResponseCompletes#bufferFor");
-      }
-
-      return BasicConsumerByteBuffer.allocate(0, size + 1024);
-    }
-
-    private boolean closeAfterResponse(final Response response) {
-      if (missingContent) return false;
-
-      final char statusCategory = response.statusCode.charAt(0);
-      if (statusCategory == '4' || statusCategory == '5') {
-//        logger().debug(
-//                "///////// SERVER RESPONSE CLOSED FOLLOWING ///////// KEEP-ALIVE: " + keepAlive +
-//                "\n///////// REQUEST\n" + request +
-//                "\n///////// RESPONSE\n" + response);
-        return keepAlive;
-      }
-
-      final boolean keepAliveAfterResponse =
-              keepAlive ||
-              response
-                .headerValueOr(RequestHeader.Connection, Header.ValueKeepAlive)
-                .equalsIgnoreCase(Header.ValueKeepAlive);
-
-//      if (keepAliveAfterResponse) {
-//        logger().debug("///////// SERVER RESPONSE KEEP ALIVE ////////");
-//      } else {
-//        logger().debug("///////// SERVER RESPONSE CLOSED FOLLOWING /////////\n" + response);
-//      }
 
       return !keepAliveAfterResponse;
     }

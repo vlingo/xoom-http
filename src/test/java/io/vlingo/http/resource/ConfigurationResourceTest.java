@@ -147,7 +147,6 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     postCompletes1WithCalls.readFrom("completed");
 
     assertNotNull(postCompletes1.response);
-    System.out.println("1");
 
     final Request postRequest2 = Request.from(toByteBuffer(postJaneDoeUserMessage));
     final MockCompletesEventuallyResponse postCompletes2 = new MockCompletesEventuallyResponse();
@@ -157,7 +156,6 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     postCompletes2WithCalls.readFrom("completed");
 
     assertNotNull(postCompletes2.response);
-    System.out.println("2");
 
     // John Doe and Jane Doe marry and change their family name to, of course, Doe-Doe
     final NameData johnNameData = NameData.from("John", "Doe-Doe");
@@ -167,18 +165,12 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
             + "/name HTTP/1.1\nHost: vlingo.io\nContent-Length: " + johnNameSerialized.length()
             + "\n\n" + johnNameSerialized;
 
-    System.out.println("2.0: " + patchJohnDoeUserMessage);
     final Request patchRequest1 = Request.from(toByteBuffer(patchJohnDoeUserMessage));
-    System.out.println("2.1");
     final MockCompletesEventuallyResponse patchCompletes1 = new MockCompletesEventuallyResponse();
-    System.out.println("2.2");
 
     final AccessSafely patchCompletes1WithCalls = patchCompletes1.expectWithTimes(1);
-    System.out.println("2.3");
     dispatcher.dispatchFor(new Context(patchRequest1, patchCompletes1));
-    System.out.println("2.4");
     patchCompletes1WithCalls.readFrom("completed");
-    System.out.println("3");
 
     assertNotNull(patchCompletes1.response);
     assertEquals(Ok, patchCompletes1.response.get().status);
@@ -187,7 +179,6 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     assertEquals(johnNameData.family, getJohnDoeDoeUserData.nameData.family);
     assertEquals(johnDoeUserData.contactData.emailAddress, getJohnDoeDoeUserData.contactData.emailAddress);
     assertEquals(johnDoeUserData.contactData.telephoneNumber, getJohnDoeDoeUserData.contactData.telephoneNumber);
-    System.out.println("4");
 
     final NameData janeNameData = NameData.from("Jane", "Doe-Doe");
     final String janeNameSerialized = serialized(janeNameData);
@@ -202,7 +193,6 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     final AccessSafely patchCompletes2WithCalls = patchCompletes2.expectWithTimes(1);
     dispatcher.dispatchFor(new Context(patchRequest2, patchCompletes2));
     patchCompletes2WithCalls.readFrom("completed");
-    System.out.println("5");
 
     assertNotNull(patchCompletes2.response);
     assertEquals(Ok, patchCompletes2.response.get().status);
@@ -211,7 +201,6 @@ public class ConfigurationResourceTest extends ResourceTestFixtures {
     assertEquals(janeNameData.family, getJaneDoeDoeUserData.nameData.family);
     assertEquals(janeDoeUserData.contactData.emailAddress, getJaneDoeDoeUserData.contactData.emailAddress);
     assertEquals(janeDoeUserData.contactData.telephoneNumber, getJaneDoeDoeUserData.contactData.telephoneNumber);
-    System.out.println("6");
   }
 
   @Test

@@ -17,11 +17,13 @@ public class UserActor extends Actor implements User {
     this.state = state;
   }
 
+  @Override
   public Completes<User.State> withContact(final Contact contact) {
     state = state.withContact(contact);
     return completes().with(state);
   }
 
+  @Override
   public Completes<User.State> withName(final Name name) {
     state = state.withName(name);
     return completes().with(state);
