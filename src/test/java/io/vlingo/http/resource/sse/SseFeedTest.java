@@ -12,6 +12,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -72,5 +73,11 @@ public class SseFeedTest {
     Configuration.define();
     context = new MockRequestResponseContext(new MockResponseSenderChannel());
     client = new SseClient(context);
+  }
+
+  @After
+  public void tearDown() {
+    client.close();
+    world.terminate();
   }
 }
