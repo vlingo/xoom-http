@@ -48,9 +48,9 @@ public class FeedResourceTest {
   public void testThatFeedResourceFeeds() {
     final String request = requestFor(FeedURI + "/100");
 
-    client.requestWith(toByteBuffer(request));
-
     final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+
+    client.requestWith(toByteBuffer(request));
 
     while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();

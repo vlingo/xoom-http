@@ -53,9 +53,10 @@ public class StaticFilesResourceTest {
     final String resource = "/index.html";
     final String content = readTextFile(contentRoot + resource);
     final String request = getRequest("/");
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+
     client.requestWith(toByteBuffer(request));
 
-    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
     while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
@@ -73,9 +74,10 @@ public class StaticFilesResourceTest {
     final String resource = "/views/test 2/index.html";
     final String content = readTextFile(contentRoot + resource);
     final String request = getRequest("/views/test 2/");
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+
     client.requestWith(toByteBuffer(request));
 
-    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
     while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
@@ -92,9 +94,10 @@ public class StaticFilesResourceTest {
     final String resource = "/index.html";
     final String content = readTextFile(contentRoot + resource);
     final String request = getRequest(resource);
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+
     client.requestWith(toByteBuffer(request));
 
-    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
     while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
@@ -112,9 +115,10 @@ public class StaticFilesResourceTest {
     final String resource = "/css/styles.css";
     final String content = readTextFile(contentRoot + resource);
     final String request = getRequest(resource);
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+
     client.requestWith(toByteBuffer(request));
 
-    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
     while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
@@ -132,9 +136,10 @@ public class StaticFilesResourceTest {
     final String resource = "/js/vuetify.js";
     final String content = readTextFile(contentRoot + resource);
     final String request = getRequest(resource);
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+
     client.requestWith(toByteBuffer(request));
 
-    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
     while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
@@ -152,9 +157,10 @@ public class StaticFilesResourceTest {
     final String resource = "/views/About.vue";
     final String content = readTextFile(contentRoot + resource);
     final String request = getRequest(resource);
+    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
+
     client.requestWith(toByteBuffer(request));
 
-    final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
     while (consumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
