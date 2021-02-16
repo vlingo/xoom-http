@@ -10,6 +10,7 @@ package io.vlingo.http.resource.sse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -25,7 +26,10 @@ import io.vlingo.http.resource.Configuration;
 import io.vlingo.http.resource.MockCompletesEventuallyResponse;
 import io.vlingo.http.sample.user.AllSseFeedActor;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class SseStreamResourceTest {
+  private static final AtomicInteger nextStreamNumber = new AtomicInteger(0);
   @SuppressWarnings("unused")
   private SseClient client;
   private MockRequestResponseContext context;
@@ -34,10 +38,11 @@ public class SseStreamResourceTest {
 
   @Test
   public void testThatClientSubscribes() {
+    final String streamName = nextStreamName();
     final Request request =
             Request
               .method(Method.GET)
-              .uri("/eventstreams/all")
+              .uri("/eventstreams/" + streamName)
               .and(RequestHeader.host("StreamsRUs.co"))
               .and(RequestHeader.accept("text/event-stream"));
 
@@ -45,7 +50,7 @@ public class SseStreamResourceTest {
 
     resource.nextRequest(request);
 
-    resource.subscribeToStream("all", AllSseFeedActor.class, 10, 10, "1");
+    resource.subscribeToStream(streamName, AllSseFeedActor.class, 10, 10, "1");
 
     assertEquals(10, (int) respondWithSafely.readFrom("count"));
 
@@ -54,10 +59,11 @@ public class SseStreamResourceTest {
 
   @Test
   public void testThatClientUnsubscribes() {
+    final String streamName = nextStreamName();
     final Request subscribe =
             Request
               .method(Method.GET)
-              .uri("/eventstreams/all")
+              .uri("/eventstreams/" + streamName)
               .and(RequestHeader.host("StreamsRUs.co"))
               .and(RequestHeader.accept("text/event-stream"));
 
@@ -65,7 +71,7 @@ public class SseStreamResourceTest {
 
     resource.nextRequest(subscribe);
 
-    resource.subscribeToStream("all", AllSseFeedActor.class, 1, 10, "1");
+    resource.subscribeToStream(streamName, AllSseFeedActor.class, 1, 10, "1");
 
     assertTrue(1 <= (int) respondWithSafely.readFrom("count"));
     assertTrue(1 <= resource.requestResponseContext.channel.respondWithCount.get());
@@ -75,7 +81,7 @@ public class SseStreamResourceTest {
     final Request unsubscribe =
             Request
               .method(Method.DELETE)
-              .uri("/eventstreams/all/" + clientId)
+              .uri("/eventstreams/" + streamName +"/" + clientId)
               .and(RequestHeader.host("StreamsRUs.co"))
               .and(RequestHeader.accept("text/event-stream"));
 
@@ -83,7 +89,7 @@ public class SseStreamResourceTest {
 
     resource.nextRequest(unsubscribe);
 
-    resource.unsubscribeFromStream("all", clientId);
+    resource.unsubscribeFromStream(streamName, clientId);
 
     assertEquals(1, (int) abandonSafely.readFrom("count"));
     assertEquals(1, resource.requestResponseContext.channel.abandonCount.get());
@@ -91,6 +97,7 @@ public class SseStreamResourceTest {
 
   @Test
   public void testThatFeedWithInstantiatorFeeds() {
+    final String streamName = nextStreamName();
     final MockCompletesEventuallyResponse completes = new MockCompletesEventuallyResponse();
     final AccessSafely respondWithSafely = context.channel.expectRespondWith(1);
 
@@ -105,7 +112,7 @@ public class SseStreamResourceTest {
     final Request request =
             Request
               .method(Method.GET)
-              .uri("/eventstreams/all")
+              .uri("/eventstreams/" + streamName)
               .and(RequestHeader.host("StreamsRUs.co"))
               .and(RequestHeader.accept("text/event-stream"));
 
@@ -115,14 +122,18 @@ public class SseStreamResourceTest {
 
     final ActorInstantiator<?> instantiator = ActorInstantiatorRegistry.instantiatorFor(AllSseFeedActor.class);
     instantiator.set("feedClass", AllSseFeedActor.class);
-    instantiator.set("streamName", "all");
+    instantiator.set("streamName", streamName);
     instantiator.set("feedPayload", 1);
     instantiator.set("feedDefaultId", "123");
 
-    sseStreamResource.subscribeToStream("all", AllSseFeedActor.class, 1, 100, "123");
+    sseStreamResource.subscribeToStream(streamName, AllSseFeedActor.class, 1, 100, "123");
 
     final int completedCount = respondWithSafely.readFrom("count");
     assertEquals(1, completedCount);
+  }
+
+  private String nextStreamName() {
+    return "all" + "-" + nextStreamNumber.incrementAndGet();
   }
 
   @Before
@@ -130,9 +141,14 @@ public class SseStreamResourceTest {
     world = World.startWithDefaults("test-stream-userResource");
     Configuration.define();
     resource = new MockSseStreamResource(world);
-    Configuration.define();
     context = new MockRequestResponseContext(new MockResponseSenderChannel());
     client = new SseClient(context);
     AllSseFeedActor.registerInstantiator();
+  }
+
+  @After
+  public void tearDown() {
+    client.close();
+    world.terminate();
   }
 }

@@ -24,13 +24,14 @@ public class MockResponseSenderChannel implements ResponseSenderChannel {
   public AtomicReference<Response> eventsResponse = new AtomicReference<>();
   public AtomicInteger respondWithCount = new AtomicInteger(0);
   public AtomicReference<Response> response = new AtomicReference<>();
-  private AccessSafely abandonSafely = AccessSafely.afterCompleting(0);
-  private AccessSafely respondWithSafely = AccessSafely.afterCompleting(0);
+  private AccessSafely abandonSafely;
+  private AccessSafely respondWithSafely;
 
   private boolean receivedStatus;
 
   public MockResponseSenderChannel() {
     respondWithSafely = expectRespondWith(0);
+    abandonSafely = expectAbandon(0);
     receivedStatus = false;
   }
 
