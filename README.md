@@ -19,7 +19,7 @@ The VLINGO/PLATFORM reactive, scalable, and resilient HTTP server supporting RES
     <dependency>
       <groupId>io.vlingo</groupId>
       <artifactId>vlingo-http</artifactId>
-      <version>1.3.0</version>
+      <version>1.5.0</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>
@@ -27,7 +27,7 @@ The VLINGO/PLATFORM reactive, scalable, and resilient HTTP server supporting RES
 
 ```gradle
 dependencies {
-    compile 'io.vlingo:vlingo-http:1.3.0'
+    compile 'io.vlingo:vlingo-http:1.5.0'
 }
 
 repositories {
