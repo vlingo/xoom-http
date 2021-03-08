@@ -7,27 +7,19 @@
 
 package io.vlingo.http.resource;
 
-import static io.vlingo.http.Response.Status.InternalServerError;
-import static io.vlingo.http.Response.Status.NotFound;
-import static io.vlingo.http.Response.Status.Ok;
-import static io.vlingo.http.ResponseHeader.ContentLength;
+import io.vlingo.http.*;
+import org.apache.commons.io.IOUtils;
 
+import javax.activation.MimetypesFileTypeMap;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
-import javax.activation.MimetypesFileTypeMap;
-
-import org.apache.commons.io.IOUtils;
-
-import io.vlingo.http.Body;
-import io.vlingo.http.Header;
-import io.vlingo.http.RequestHeader;
-import io.vlingo.http.Response;
-import io.vlingo.http.ResponseHeader;
+import static io.vlingo.http.Response.Status.*;
+import static io.vlingo.http.ResponseHeader.ContentLength;
 
 /**
  * Serves static file resources. Note that the current limit of 2GB file sizes.
@@ -54,53 +46,47 @@ public class StaticFilesResource extends ResourceHandler {
 
     final String uri = contentFile.isEmpty() ? "/index.html" : context.request.uri.toString();
 
+    Response response = Arrays.asList(
+      rootPath + uri,
+      withIndexHtmlAppended(rootPath + uri)
+    ).stream()
+      .map(this::cleanPath)
+      .filter(this::isFile)
+      .findFirst()
+      .map(this::fileResponse)
+      .orElseGet(this::notFound);
+
+    completes().with(response);
+  }
+
+  private String cleanPath(String path) {
+    return String.join(" ", path.split("%20"));
+  }
+
+  private boolean isFile(String path) {
     try {
-      final String contentPath = String.join(" ", contentFilePath(rootPath + uri).split("%20"));
-      // logger().debug("contentPath: "+contentPath);
-      final byte[] fileContent = readFile(contentPath);
-      completes().with(Response.of(Ok,
-          Header.Headers.of(ResponseHeader.of(RequestHeader.ContentType, guessContentType(contentPath)),
-              ResponseHeader.of(ContentLength, fileContent.length)),
-          Body.from(fileContent, Body.Encoding.UTF8).content()));
-    } catch (IOException e) {
-      internalServerError(e);
-    } catch (IllegalArgumentException e) {
-      completes().with(Response.of(NotFound));
-    }
-  }
+      URL res = StaticFilesResource.class.getResource(path);
+      if (res == null) {
+        return false;
+      }
 
-  private String contentFilePath(final String path) throws IOException {
-    final String fileSystemPath = String.join(" ", path.split("%20"));
-    if (isDirectory(fileSystemPath)) {
-      return withIndexHtmlAppended(fileSystemPath);
-    }
-    return path;
-  }
+      if (!res.getProtocol().equals("jar")) {
+        return new File(res.toURI()).isFile();
+      }
 
-  private boolean isDirectory(final String path) throws MalformedURLException {
-    boolean isDirectory = false;
-    URL res = new URL(String.join(" ", getClass().getResource(path).toExternalForm().split("%20")));
-
-    if (res.getProtocol().equals("jar")) {
       //jar:file:/C:/.../some.jar!/...
       try(InputStream in = getClass().getResourceAsStream(path)) {
         byte[] bytes = new byte[2];
         //read a char: if it's a directory, input.read returns -1
         if (in.read(bytes) == -1) {
-          isDirectory = true;
+          return false;
         }
-      } catch (IOException e) {
-        internalServerError(e);
       }
-    } else {
-        //from IDE, not from a JAR
-        File file = new File(res.getFile());
-        if (file == null || !file.exists()) {
-          throw new RuntimeException("Error: File " + file + " not found!");
-        }
-        isDirectory = file.isDirectory();
+
+      return true;
+    } catch (Throwable e) {
+      return false;
     }
-    return isDirectory;
   }
 
   private String withIndexHtmlAppended(final String path) {
@@ -129,8 +115,28 @@ public class StaticFilesResource extends ResourceHandler {
     return (contentType != null) ? contentType : "application/octet-stream";
   }
 
-  private void internalServerError(Exception e) {
+  private Response fileResponse(String path) {
+    try {
+      final byte[] fileContent = readFile(path);
+      return Response.of(
+        Ok,
+        Header.Headers.of(
+          ResponseHeader.of(RequestHeader.ContentType, guessContentType(path)),
+          ResponseHeader.of(ContentLength, fileContent.length)),
+        Body.from(fileContent, Body.Encoding.UTF8).content());
+    } catch (IOException e) {
+      return internalServerError(e);
+    } catch (IllegalArgumentException e) {
+      return notFound();
+    }
+  }
+
+  private Response internalServerError(Exception e) {
     logger().error("Internal server error because: " + e.getMessage(), e);
-    completes().with(Response.of(InternalServerError));
+    return Response.of(InternalServerError);
+  }
+
+  private Response notFound() {
+    return Response.of(NotFound);
   }
 }
