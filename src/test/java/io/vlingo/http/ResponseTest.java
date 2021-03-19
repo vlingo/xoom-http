@@ -7,7 +7,7 @@
 
 package io.vlingo.http;
 
-import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.Response.Status.*;
 import static io.vlingo.http.ResponseHeader.*;
 import static io.vlingo.http.ResponseHeader.ContentLength;
 import static org.junit.Assert.assertEquals;
@@ -20,7 +20,7 @@ public class ResponseTest {
   public void testResponseWithOneHeaderNoEntity() {
     final Response response = Response.of(Version.Http1_1, Ok, headers(CacheControl, "max-age=3600"));
 
-    final String facsimile = "HTTP/1.1 200 OK\nCache-Control: max-age=3600\n\n";
+    final String facsimile = "HTTP/1.1 200 OK\nCache-Control: max-age=3600\nContent-Length: 0\n\n";
 
     assertEquals(facsimile, response.toString());
   }
@@ -52,7 +52,7 @@ public class ResponseTest {
   public void testResponseWithMultipleHeadersNoEntity() {
     final Response response = Response.of(Version.Http1_1, Ok, headers(of(ETag, "123ABC")).and(of(CacheControl, "max-age=3600")));
 
-    final String facsimile = "HTTP/1.1 200 OK\nETag: 123ABC\nCache-Control: max-age=3600\n\n";
+    final String facsimile = "HTTP/1.1 200 OK\nETag: 123ABC\nCache-Control: max-age=3600\nContent-Length: 0\n\n";
 
     assertEquals(facsimile, response.toString());
   }
@@ -84,6 +84,33 @@ public class ResponseTest {
                     Body.beginChunked().appendChunk(Chunk1).appendChunk(Chunk2).end());
 
     assertEquals(responseMultiHeadersWithChunkedBody, response.toString());
+  }
+
+  @Test
+  public void testItShouldSendNoContentLengthWithInformationalStatusCodes() {
+    final Response response = Response.of(Version.Http1_1, Continue);
+
+    final String facsimile = "HTTP/1.1 100 Continue\n\n";
+
+    assertEquals(facsimile, response.toString());
+  }
+
+  @Test
+  public void testItShouldSendNoContentLengthWithNoContentStatusCode() {
+    final Response response = Response.of(Version.Http1_1, NoContent);
+
+    final String facsimile = "HTTP/1.1 204 No Content\n\n";
+
+    assertEquals(facsimile, response.toString());
+  }
+
+  @Test
+  public void testItShouldSendNoContentLengthWithNotModifiedStatusCode() {
+    final Response response = Response.of(Version.Http1_1, NotModified);
+
+    final String facsimile = "HTTP/1.1 304 Not Modified\n\n";
+
+    assertEquals(facsimile, response.toString());
   }
 }
 

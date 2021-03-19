@@ -155,10 +155,9 @@ public class Response {
 
   private Headers<ResponseHeader> addMissingContentLengthHeader(final Headers<ResponseHeader> headers) {
     if (!entity.isComplex()) {
-      final int contentLength = entity.content().length();
       final Header header = headers.headerOf(ResponseHeader.ContentLength);
-      if (header == null && contentLength > 0) {
-        headers.add(ResponseHeader.of(ResponseHeader.ContentLength, Integer.toString(contentLength)));
+      if (header == null && !status.isInformational() && status != Status.NoContent && status != Status.NotModified) {
+        headers.add(ResponseHeader.of(ResponseHeader.ContentLength, Integer.toString(entity.content().length())));
       }
     }
     return headers;
@@ -277,6 +276,10 @@ public class Response {
         }
       }
       throw new IllegalArgumentException("status " + value + " is not valid");
+    }
+
+    private boolean isInformational() {
+      return String.valueOf(code).startsWith("1");
     }
   }
 }
