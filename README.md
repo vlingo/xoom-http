@@ -2,9 +2,12 @@
 
 [![Javadocs](http://javadoc.io/badge/io.vlingo/vlingo-http.svg?color=brightgreen)](http://javadoc.io/doc/io.vlingo/vlingo-http) [![Build](https://github.com/vlingo/vlingo-http/workflows/Build/badge.svg)](https://github.com/vlingo/vlingo-http/actions?query=workflow%3ABuild) [ ![Download](https://api.bintray.com/packages/vlingo/vlingo-platform-java/vlingo-http/images/download.svg) ](https://bintray.com/vlingo/vlingo-platform-java/vlingo-http/_latestVersion) [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/vlingo-platform-java/http)
 
+The VLINGO XOOM platform SDK Reactive, scalable, high-throughput, and resilient HTTP server supporting RESTful services running on XOOM LATTICE and XOOM ACTORS.
+
 Docs: https://docs.vlingo.io/vlingo-http
 
-The VLINGO/PLATFORM reactive, scalable, and resilient HTTP server supporting RESTful services running on VLINGO/LATTICE and VLINGO/ACTORS.
+### Important
+If using snapshot builds [follow these instructions](https://github.com/vlingo/vlingo-platform#snapshots-repository) or you will experience failures.
 
 ### Bintray
 
@@ -37,7 +40,7 @@ repositories {
 
 ### Usage
 
-Reactive, scalable, and resilient HTTP servers and RESTful services running on VLINGO/LATTICE and VLINGO/ACTORS.
+Reactive, scalable, and resilient HTTP servers and RESTful services running on XOOM LATTICE and XOOM ACTORS.
 
 1. Feature complete
   * Fully actor-based asynchronous requests and responses.
