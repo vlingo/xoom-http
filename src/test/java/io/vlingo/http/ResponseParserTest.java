@@ -19,6 +19,7 @@ import java.util.List;
 import org.junit.Test;
 
 import io.vlingo.http.resource.ResourceTestFixtures;
+import io.vlingo.wire.message.Converters;
 
 public class ResponseParserTest extends ResourceTestFixtures {
   private List<String> uniqueBodies = new ArrayList<>();
@@ -126,6 +127,36 @@ public class ResponseParserTest extends ResourceTestFixtures {
     }
 
     assertEquals(200, count);
+  }
+
+  private static final String asciiWithExtendedCharacters = "ABC: æøåé";
+  private static final byte[] asciiWithExtendedCharactersSerialized = Converters.textToBytes(asciiWithExtendedCharacters);
+  private static final String responseWithHeader =
+          "HTTP/1.1 201 Created\nContent-Length: " + asciiWithExtendedCharactersSerialized.length + "\n\n";
+  private static final String responseWithExtendedCharacters = responseWithHeader + asciiWithExtendedCharacters;
+
+  @Test
+  public void testThatExtendedCharacterSetParses() {
+    final ResponseParser parser = ResponseParser.parserFor(toByteBuffer(responseWithExtendedCharacters));
+
+    assertTrue(parser.hasFullResponse());
+    assertTrue(parser.hasCompleted());
+    assertEquals(responseWithExtendedCharacters, parser.fullResponse().toString());
+  }
+
+  @Test
+  public void testThatShortRequestWithExtendedCharacterSetParses() {
+    final int responseFullLength = responseWithExtendedCharacters.length();
+    final String shortResponse = responseWithExtendedCharacters.substring(0, responseFullLength - 2);
+    final String remainingRequest = responseWithExtendedCharacters.substring(responseFullLength - 2);
+
+    final ResponseParser parser = ResponseParser.parserFor(toByteBuffer(shortResponse));
+
+    parser.parseNext(toByteBuffer(remainingRequest));
+
+    assertTrue(parser.hasFullResponse());
+    assertTrue(parser.hasCompleted());
+    assertEquals(responseWithExtendedCharacters, parser.fullResponse().toString());
   }
 
   private String multipleResponseBuilder(final int amount) {

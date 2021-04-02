@@ -79,7 +79,7 @@ public class ResponseParser {
 
     // DO NOT RESET: (1) contentQueue, (2) position, (3) requestText (4) currentResponseTextLength
 
-    private final Queue<String> contentQueue;
+    private final Queue<ContentPacket> contentQueue;
     private int position;
     private String responseText;
     private int currentResponseTextLength;
@@ -90,6 +90,7 @@ public class ResponseParser {
     private Body body;
     private boolean bodyOnly;
     private int contentLength;
+    private int contentExtraLength;
     private boolean continuation;
     private Step currentStep;
     private List<Response> fullResponses;
@@ -164,11 +165,13 @@ public class ResponseParser {
     VirtualStateParser includes(final ByteBuffer responseContent) {
       outOfContentTime = 0;
       final String responseContentText = Converters.bytesToText(responseContent.array(), 0, responseContent.limit());
+      final int utf8ExtraLength = responseContent.remaining() - responseContentText.length();
       if (contentQueue.isEmpty()) {
+        contentExtraLength += utf8ExtraLength;
         responseText = responseText + responseContentText;
         currentResponseTextLength = responseText.length();
       } else {
-        contentQueue.add(responseContentText);
+        contentQueue.add(new ContentPacket(responseContentText, utf8ExtraLength));
       }
       return this;
     }
@@ -241,7 +244,9 @@ public class ResponseParser {
           responseText = compact();
           throw new OutOfContentException();
         }
-        responseText = compact() + contentQueue.poll();
+        final ContentPacket packet = contentQueue.poll();
+        contentExtraLength += packet.utf8ExtraLength;
+        responseText = compact() + packet.content;
         return nextLine(mayBeBlank, errorMessage);
       } else if (lineBreak == 0) {
         possibleCarriageReturnIndex = 0;
@@ -294,17 +299,19 @@ public class ResponseParser {
       continuation = false;
       if (contentLength > 0) {
         final int endIndex = position + contentLength;
-        if (currentResponseTextLength < endIndex) {
+        if (currentResponseTextLength + contentExtraLength < endIndex) {
           if (contentQueue.isEmpty()) {
             responseText = compact();
             throw new OutOfContentException();
           }
-          responseText = compact() + contentQueue.poll();
+          final ContentPacket packet = contentQueue.poll();
+          responseText = compact() + packet.content;
+          contentExtraLength += packet.utf8ExtraLength;
           parseBody();
           return;
         }
-        body = Body.from(responseText.substring(position, endIndex));
-        position += contentLength;
+        body = Body.from(responseText.substring(position, endIndex - contentExtraLength));
+        position += (contentLength - contentExtraLength);
       } else if (transferEncodingChunked) {
         body = Body.from(parseChunks());
       } else {
@@ -420,6 +427,7 @@ public class ResponseParser {
 
       this.body = null;
       this.contentLength = 0;
+      this.contentExtraLength = 0;
       this.continuation = false;
       this.outOfContentTime = 0;
       this.status = null;

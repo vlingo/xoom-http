@@ -20,6 +20,7 @@ import java.util.Random;
 import org.junit.Test;
 
 import io.vlingo.http.resource.ResourceTestFixtures;
+import io.vlingo.wire.message.Converters;
 
 public class RequestParserTest extends ResourceTestFixtures {
   private List<String> uniqueBodies = new ArrayList<>();
@@ -141,6 +142,36 @@ public class RequestParserTest extends ResourceTestFixtures {
     }
 
     assertEquals(200, count);
+  }
+
+  private static final String asciiWithExtendedCharacters = "ABC: æøåé";
+  private static final byte[] asciiWithExtendedCharactersSerialized = Converters.textToBytes(asciiWithExtendedCharacters);
+  private static final String postWithHeader =
+          "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + asciiWithExtendedCharactersSerialized.length + "\n\n";
+  private static final String postWithExtendedCharacters = postWithHeader + asciiWithExtendedCharacters;
+
+  @Test
+  public void testThatExtendedCharacterSetParses() {
+    final RequestParser parser = RequestParser.parserFor(toByteBuffer(postWithExtendedCharacters));
+
+    assertTrue(parser.hasFullRequest());
+    assertTrue(parser.hasCompleted());
+    assertEquals(postWithExtendedCharacters, parser.fullRequest().toString());
+  }
+
+  @Test
+  public void testThatShortRequestWithExtendedCharacterSetParses() {
+    final int postFullLength = postWithExtendedCharacters.length();
+    final String shortRequest = postWithExtendedCharacters.substring(0, postFullLength - 2);
+    final String remainingRequest = postWithExtendedCharacters.substring(postFullLength - 2);
+
+    final RequestParser parser = RequestParser.parserFor(toByteBuffer(shortRequest));
+
+    parser.parseNext(toByteBuffer(remainingRequest));
+
+    assertTrue(parser.hasFullRequest());
+    assertTrue(parser.hasCompleted());
+    assertEquals(postWithExtendedCharacters, parser.fullRequest().toString());
   }
 
   private String multipleRequestBuilder(final int amount) {

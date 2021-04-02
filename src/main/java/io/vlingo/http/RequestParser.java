@@ -55,6 +55,30 @@ public class RequestParser {
     virtualStateParser.includes(requestContent).parse();
   }
 
+  private static String header = "==========";
+
+  @Override
+  public String toString() {
+
+    final StringBuilder builder = new StringBuilder();
+
+    builder.append(header).append(" REQUEST PARSER CONTEXT:\n");
+
+    builder.append(virtualStateParser.method.name).append(" ").append(virtualStateParser.uri).append("\n");
+
+    for (final RequestHeader header : virtualStateParser.headers) {
+      builder.append(header.name).append(": ").append(header.value).append("\n");
+    }
+
+    builder.append("\n").append(virtualStateParser.body != null ? virtualStateParser.body.content() : "");
+
+    builder.append(header).append("\n").append("DANGLING:\n").append(virtualStateParser.requestText).append("\n");
+
+    builder.append(header).append(" END\n");
+
+    return builder.toString();
+  }
+
   private RequestParser(final ByteBuffer requestContent) {
     this.virtualStateParser = new VirtualStateParser().includes(requestContent).parse();
   }
@@ -69,7 +93,7 @@ public class RequestParser {
 
     // DO NOT RESET: (1) contentQueue, (2) position, (3) requestText
 
-    private final Queue<String> contentQueue;
+    private final Queue<ContentPacket> contentQueue;
     private int position;
     private String requestText;
 
@@ -77,6 +101,7 @@ public class RequestParser {
 
     private Body body;
     private int contentLength;
+    private int contentExtraLength;
     private boolean continuation;
     private Step currentStep;
     private List<Request> fullRequests;
@@ -141,10 +166,12 @@ public class RequestParser {
     VirtualStateParser includes(final ByteBuffer requestContent) {
       outOfContentTime = 0;
       final String requestContentText = Converters.bytesToText(requestContent.array(), 0, requestContent.limit());
+      final int utf8ExtraLength = requestContent.remaining() - requestContentText.length();
       if (contentQueue.isEmpty()) {
+        contentExtraLength += utf8ExtraLength;
         requestText = requestText.concat(requestContentText);
       } else {
-        contentQueue.add(requestContentText);
+        contentQueue.add(new ContentPacket(requestContentText, utf8ExtraLength));
       }
       return this;
     }
@@ -191,7 +218,9 @@ public class RequestParser {
           requestText = compact();
           return Optional.empty();
         }
-        requestText = compact().concat(contentQueue.poll());
+        final ContentPacket packet = contentQueue.poll();
+        contentExtraLength += packet.utf8ExtraLength;
+        requestText = compact().concat(packet.content);
         return nextLine(errorResult, errorMessage);
       } else if (lineBreak == 0) {
         possibleCarriageReturnIndex = 0;
@@ -241,16 +270,18 @@ public class RequestParser {
       continuation = false;
       if (contentLength > 0) {
         final int endIndex = position + contentLength;
-        if (requestText.length() < endIndex) {
+        if (requestText.length() + contentExtraLength < endIndex) {
           if (contentQueue.isEmpty()) {
             requestText = compact();
             return true;
           }
-          requestText = compact() + contentQueue.poll();
+          final ContentPacket packet = contentQueue.poll();
+          requestText = compact() + packet.content;
+          contentExtraLength += packet.utf8ExtraLength;
           parseBody();
         } else {
-          body = Body.from(requestText.substring(position, endIndex));
-          position += contentLength;
+          body = Body.from(requestText.substring(position, endIndex - contentExtraLength));
+          position += (contentLength - contentExtraLength);
           nextStep();
         }
       } else {
@@ -327,6 +358,7 @@ public class RequestParser {
 
       this.body = null;
       this.contentLength = 0;
+      this.contentExtraLength = 0;
       this.continuation = false;
       this.method = null;
       this.outOfContentTime = 0;
