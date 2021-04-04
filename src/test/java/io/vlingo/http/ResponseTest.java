@@ -7,12 +7,24 @@
 
 package io.vlingo.http;
 
-import static io.vlingo.http.Response.Status.*;
-import static io.vlingo.http.ResponseHeader.*;
+import static io.vlingo.http.Response.Status.Continue;
+import static io.vlingo.http.Response.Status.NoContent;
+import static io.vlingo.http.Response.Status.NotModified;
+import static io.vlingo.http.Response.Status.Ok;
+import static io.vlingo.http.ResponseHeader.CacheControl;
 import static io.vlingo.http.ResponseHeader.ContentLength;
+import static io.vlingo.http.ResponseHeader.ContentType;
+import static io.vlingo.http.ResponseHeader.ETag;
+import static io.vlingo.http.ResponseHeader.headers;
+import static io.vlingo.http.ResponseHeader.of;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
+
+import io.vlingo.http.Header.Headers;
+import io.vlingo.wire.message.Converters;
 
 public class ResponseTest {
 
@@ -111,6 +123,21 @@ public class ResponseTest {
     final String facsimile = "HTTP/1.1 304 Not Modified\n\n";
 
     assertEquals(facsimile, response.toString());
+  }
+
+  @Test
+  public void testExtendedCharactersContentLength() {
+    final String asciiWithExtendedCharacters = ExtendedCharactersFixture.asciiWithExtendedCharacters();
+
+    final Response response = Response.of(Response.Status.Ok, Headers.empty(), asciiWithExtendedCharacters);
+
+    final int contentLength = Integer.parseInt(response.headerValueOr(RequestHeader.ContentLength, "0"));
+
+    assertFalse(contentLength == 0);
+
+    assertTrue(asciiWithExtendedCharacters.length() < contentLength);
+
+    assertEquals(Converters.textToBytes(asciiWithExtendedCharacters).length, contentLength);
   }
 }
 

@@ -232,6 +232,26 @@ public class RequestTest {
               .toString());
   }
 
+  @Test
+  public void testExtendedCharactersContentLength() {
+    final String asciiWithExtendedCharacters = ExtendedCharactersFixture.asciiWithExtendedCharacters();
+
+    final Request request =
+            Request
+              .has(POST)
+              .uri("/one/two/")
+              .header(RequestHeader.Host, "test.com")
+              .body(asciiWithExtendedCharacters);
+
+    final int contentLength = Integer.parseInt(request.headerValueOr(RequestHeader.ContentLength, "0"));
+
+    assertFalse(contentLength == 0);
+
+    assertTrue(asciiWithExtendedCharacters.length() < contentLength);
+
+    assertEquals(Converters.textToBytes(asciiWithExtendedCharacters).length, contentLength);
+  }
+
   @Before
   public void setUp() {
     requestOneHeader = "GET / HTTP/1.1\nHost: test.com\n\n";
