@@ -36,9 +36,11 @@ public class ResourceFailureTest {
 
   private final ByteBuffer buffer = ByteBufferAllocator.allocate(1024);
   private Client client;
+  @SuppressWarnings("unused")
   private int count;
   private int port;
   private FailResource resource;
+  @SuppressWarnings("unused")
   private Response response;
   private Server server;
   private World world;
