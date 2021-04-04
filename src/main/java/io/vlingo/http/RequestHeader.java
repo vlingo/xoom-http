@@ -7,6 +7,8 @@
 
 package io.vlingo.http;
 
+import io.vlingo.wire.message.Converters;
+
 /**
  * The standard HTTP request header along with standard type names and
  * convenience factory methods for frequently used headers.
@@ -96,7 +98,7 @@ public class RequestHeader extends Header {
   }
 
   public static RequestHeader contentLength(final String body) {
-    return new RequestHeader(ContentLength, String.valueOf(body.length()));
+    return new RequestHeader(ContentLength, String.valueOf(Converters.encodedLength(body)));
   }
 
   public static RequestHeader contentLength(final byte[] body) {

@@ -157,7 +157,7 @@ public class Response {
     if (!entity.isComplex()) {
       final Header header = headers.headerOf(ResponseHeader.ContentLength);
       if (header == null && !status.isInformational() && status != Status.NoContent && status != Status.NotModified) {
-        headers.add(ResponseHeader.of(ResponseHeader.ContentLength, Integer.toString(entity.content().length())));
+        headers.add(ResponseHeader.of(ResponseHeader.ContentLength, Integer.toString(Converters.encodedLength(entity.content()))));
       }
     }
     return headers;

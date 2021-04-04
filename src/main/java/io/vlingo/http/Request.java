@@ -133,8 +133,8 @@ public class Request {
     this.version = version;
     this.body = body;
 
-    if (body != null && body.hasContent() && headers.headerOf("Content-Length") == null) {
-      this.headers = headers.and("Content-Length", body.content().length() + "");
+    if (body != null && body.hasContent() && headers.headerOf(RequestHeader.ContentLength) == null) {
+      this.headers = headers.and(RequestHeader.contentLength(body.content()));
     } else {
       this.headers = headers;
     }
