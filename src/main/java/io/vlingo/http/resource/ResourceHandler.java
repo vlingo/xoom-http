@@ -13,6 +13,10 @@ import io.vlingo.actors.Stage;
 import io.vlingo.common.Scheduler;
 import io.vlingo.http.ContentType;
 import io.vlingo.http.Context;
+import io.vlingo.http.Header.Headers;
+import io.vlingo.http.Response;
+import io.vlingo.http.Response.Status;
+import io.vlingo.http.ResponseHeader;
 
 /**
  * The abstract base class of all classes that represent REST resources
@@ -93,6 +97,30 @@ public abstract class ResourceHandler {
    */
   protected ContentType contentType() {
     return ContentType.of("text/plain", "us-ascii");
+  }
+
+  /**
+   * Answer a {@code Response} with the {@code status} and {@code entity}
+   * with a {@code Content-Type} header per my {@code contentType()}, which
+   * may be overridden.
+   * @param status the Status of the Response
+   * @param entity the String entity of the Response
+   * @return Response
+   */
+  protected Response entityResponseOf(final Status status, final String entity) {
+    return entityResponseOf(status, Headers.empty(), entity);
+  }
+
+  /**
+   * Answer a {@code Response} with the {@code status}, {@code headers}, and {@code entity}
+   * with a {@code Content-Type} header per my {@code contentType()}, which may be overridden.
+   * @param status the Status of the Response
+   * @param headers the {@code Headers<ResponseHeader>} to which the {@code Content-Type} header is appended
+   * @param entity the String entity of the Response
+   * @return Response
+   */
+  protected Response entityResponseOf(final Status status, final Headers<ResponseHeader> headers, final String entity) {
+    return Response.of(status, headers.and(contentType().toResponseHeader()), entity);
   }
 
   /**
