@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>io.vlingo</groupId>
-  <artifactId>vlingo-http</artifactId>
+  <groupId>io.vlingo.xoom</groupId>
+  <artifactId>xoom-http</artifactId>
   <version>1.6.1-SNAPSHOT</version>
-  <name>vlingo-http</name>
+  <name>xoom-http</name>
   <description>Reactive, scalable, and resilient HTTP servers and RESTful services running on vlingo/cluster and vlingo/actors.</description>
-  <url>https://github.com/vlingo/vlingo-http</url>
+  <url>https://github.com/vlingo/xoom-http</url>
   <licenses>
     <license>
       <name>Mozilla Public License 2.0</name>
@@ -22,9 +22,9 @@
     </developer>
   </developers>
   <scm>
-    <connection>scm:git:git://github.com/vlingo/vlingo-http.git</connection>
-    <developerConnection>scm:git:ssh://github.com/vlingo/vlingo-http.git</developerConnection>
-    <url>http://github.com/vlingo/vlingo-http/tree/master</url>
+    <connection>scm:git:git://github.com/vlingo/xoom-http.git</connection>
+    <developerConnection>scm:git:ssh://github.com/vlingo/xoom-http.git</developerConnection>
+    <url>http://github.com/vlingo/xoom-http/tree/master</url>
   </scm>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -45,7 +45,7 @@
           </execution>
         </executions>
         <configuration>
-          <mainClass>io.vlingo.http.resource.ServerBootstrap</mainClass>
+          <mainClass>io.vlingo.xoom.http.resource.ServerBootstrap</mainClass>
         </configuration>
       </plugin>
       <plugin>
@@ -114,18 +114,18 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.vlingo</groupId>
-      <artifactId>vlingo-common</artifactId>
+      <groupId>io.vlingo.xoom</groupId>
+      <artifactId>xoom-common</artifactId>
       <version>1.6.1-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>io.vlingo</groupId>
-      <artifactId>vlingo-actors</artifactId>
+      <groupId>io.vlingo.xoom</groupId>
+      <artifactId>xoom-actors</artifactId>
       <version>1.6.1-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>io.vlingo</groupId>
-      <artifactId>vlingo-wire</artifactId>
+      <groupId>io.vlingo.xoom</groupId>
+      <artifactId>xoom-wire</artifactId>
       <version>1.6.1-SNAPSHOT</version>
     </dependency>
     <dependency>
@@ -226,7 +226,7 @@
         <repository>
           <id>github</id>
           <name>GitHub Packages</name>
-          <url>https://maven.pkg.github.com/vlingo/vlingo-platform</url>
+          <url>https://maven.pkg.github.com/vlingo/xoom-platform</url>
         </repository>
       </distributionManagement>
     </profile>
@@ -237,7 +237,7 @@
         <repository>
           <id>github</id>
           <name>GitHub Packages</name>
-          <url>https://maven.pkg.github.com/vlingo/vlingo-platform</url>
+          <url>https://maven.pkg.github.com/vlingo/xoom-platform</url>
         </repository>
       </repositories>
     </profile>

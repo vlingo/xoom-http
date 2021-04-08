@@ -14,7 +14,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     outputs:
-      vlingo_version: ${{ steps.version.outputs.vlingo_version }}
+      xoom_version: ${{ steps.version.outputs.xoom_version }}
 
     steps:
       - uses: actions/checkout@v2
@@ -33,7 +33,7 @@ jobs:
 
       - name: Determine version
         id: version
-        run: echo "::set-output name=vlingo_version::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
+        run: echo "::set-output name=xoom_version::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
 
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots -Pgithub-releases install -Dtest=\!SecureClientTest
@@ -53,7 +53,7 @@ jobs:
           SLACK_CHANNEL: ci-cd
           SLACK_USERNAME: Bob the Builder
           SLACK_ICON: 'https://vlingo.io/wp-content/uploads/cropped-vlingo-favicon-180x180.png'
-          SLACK_FOOTER: '${{ github.repository }}:${{ steps.version.outputs.vlingo_version }}'
+          SLACK_FOOTER: '${{ github.repository }}:${{ steps.version.outputs.xoom_version }}'
 
   deploy-github:
     name: Deploy to GitHub
@@ -95,7 +95,7 @@ jobs:
           SLACK_ICON: 'https://vlingo.io/wp-content/uploads/cropped-vlingo-favicon-180x180.png'
           SLACK_FOOTER: '${{ github.repository }}'
           SLACK_TITLE: 'GitHub Deployment'
-          SLACK_MESSAGE: ':rocket: ${{ needs.build.outputs.vlingo_version }}'
+          SLACK_MESSAGE: ':rocket: ${{ needs.build.outputs.xoom_version }}'
 
   deploy-central:
     name: Deploy to Maven Central
@@ -147,4 +147,4 @@ jobs:
           SLACK_ICON: 'https://vlingo.io/wp-content/uploads/cropped-vlingo-favicon-180x180.png'
           SLACK_FOOTER: '${{ github.repository }}'
           SLACK_TITLE: 'Sonatype Deployment'
-          SLACK_MESSAGE: ':rocket: ${{ needs.build.outputs.vlingo_version }}'
+          SLACK_MESSAGE: ':rocket: ${{ needs.build.outputs.xoom_version }}'
