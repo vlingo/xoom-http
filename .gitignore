@@ -13,3 +13,6 @@ jmeter_log*
 .idea/
 *.iml
 *.iws
+
+#Java version management tools
+.java-version

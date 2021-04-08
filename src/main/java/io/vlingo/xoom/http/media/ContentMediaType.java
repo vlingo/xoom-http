@@ -58,6 +58,8 @@ public class ContentMediaType extends MediaTypeDescriptor {
     return new ContentMediaType(mimeTypes.application.name(), "xml");
   }
 
+  public static  ContentMediaType PlainText() { return new ContentMediaType(mimeTypes.text.name(), "plain"); }
+
   public static ContentMediaType parseFromDescriptor(String contentMediaTypeDescriptor) {
     return MediaTypeParser.parseFrom(contentMediaTypeDescriptor,
       new MediaTypeDescriptor.Builder<>(ContentMediaType::new));

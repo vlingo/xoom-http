@@ -6,6 +6,10 @@ public class DefaultMediaTypeMapper  {
 
   private static MediaTypeMapper instance = buildInstance();
 
+  private DefaultMediaTypeMapper() {
+    // no-op
+  }
+
   private static MediaTypeMapper buildInstance() {
     return new MediaTypeMapper.Builder()
       .addMapperFor(ContentMediaType.Json(), DefaultJsonMapper.instance)
