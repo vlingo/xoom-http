@@ -7,6 +7,8 @@
 
 package io.vlingo.http.resource;
 
+import io.vlingo.xoom.http.resource.Mapper;
+
 public class DefaultTextPlainMapper implements Mapper {
   public static final Mapper instance = new DefaultTextPlainMapper();
   
