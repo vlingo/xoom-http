@@ -5,9 +5,7 @@
 // was not distributed with this file, You can obtain
 // one at https://mozilla.org/MPL/2.0/.
 
-package io.vlingo.http.resource;
-
-import io.vlingo.xoom.http.resource.Mapper;
+package io.vlingo.xoom.http.resource;
 
 public class DefaultTextPlainMapper implements Mapper {
   public static final Mapper instance = new DefaultTextPlainMapper();
