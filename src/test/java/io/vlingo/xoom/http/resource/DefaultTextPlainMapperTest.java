@@ -1,7 +1,5 @@
-package io.vlingo.http.resource;
+package io.vlingo.xoom.http.resource;
 
-import junit.framework.TestCase;
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
