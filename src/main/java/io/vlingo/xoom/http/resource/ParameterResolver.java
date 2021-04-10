@@ -1,5 +1,6 @@
 package io.vlingo.xoom.http.resource;
 
+import io.vlingo.xoom.http.PostRequestBody;
 import io.vlingo.xoom.http.media.ContentMediaType;
 import io.vlingo.xoom.http.Header;
 import io.vlingo.xoom.http.Request;
@@ -38,13 +39,25 @@ class ParameterResolver<T> {
       mapper.from(request.body.toString(), bodyClass)));
   }
 
+  @SuppressWarnings("unchecked")
   public static <T> ParameterResolver<T> body(final Class<T> bodyClass, final MediaTypeMapper mediaTypeMapper) {
+    if (bodyClass.isAssignableFrom(PostRequestBody.class)) {
+      return (ParameterResolver<T>) new ParameterResolver<PostRequestBody>(Type.BODY, PostRequestBody.class, ((request, mappedParameters) -> {
+        // This is a fall-back when content-type not provided for backwards compat for curl/cmd line users
+        final String bodyMediaType = bodyMediaTypeOrFallback(request);
+        return new PostRequestBody(request.body, ContentMediaType.parseFromDescriptor(bodyMediaType));
+      }));
+    }
     return new ParameterResolver<T>(Type.BODY, bodyClass, ((request, mappedParameters) -> {
       // This is a fall-back when content-type not provided for backwards compat for curl/cmd line users
-      String assumedBodyContentType = ContentMediaType.Json().toString();
-      String bodyMediaType = request.headerValueOr(RequestHeader.ContentType, assumedBodyContentType);
+      final String bodyMediaType = bodyMediaTypeOrFallback(request);
       return mediaTypeMapper.from(request.body.toString(), ContentMediaType.parseFromDescriptor(bodyMediaType), bodyClass);
     }));
+  }
+
+  private static String bodyMediaTypeOrFallback(final Request request) {
+    String assumedBodyContentType = ContentMediaType.Json().toString();
+    return request.headerValueOr(RequestHeader.ContentType, assumedBodyContentType);
   }
 
   public static ParameterResolver<Header> header(final String headerName) {

@@ -60,6 +60,13 @@ public class ContentMediaType extends MediaTypeDescriptor {
 
   public static  ContentMediaType PlainText() { return new ContentMediaType(mimeTypes.text.name(), "plain"); }
 
+  public static ContentMediaType BinaryContent() { return new ContentMediaType(mimeTypes.application.name(), "octet-stream"); }
+
+  public static ContentMediaType CompressedZipContent() { return new ContentMediaType(mimeTypes.application.name(), "gzip"); }
+
+  public static ContentMediaType CompressedTarContent() { return new ContentMediaType(mimeTypes.application.name(), "octet-stream"); }
+
+
   public static ContentMediaType parseFromDescriptor(String contentMediaTypeDescriptor) {
     return MediaTypeParser.parseFrom(contentMediaTypeDescriptor,
       new MediaTypeDescriptor.Builder<>(ContentMediaType::new));
