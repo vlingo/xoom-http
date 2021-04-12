@@ -17,6 +17,11 @@ import java.util.Queue;
 import io.vlingo.xoom.http.Header.Headers;
 import io.vlingo.xoom.wire.message.Converters;
 
+/***
+ * This implementation lacks a validation of very large requests against a predefined
+ * max request size: https://github.com/vlingo/xoom-http/issues/82
+ * 
+ */
 public class ResponseParser {
   private final VirtualStateParser virtualStateParser;
 

@@ -7,6 +7,8 @@
 
 package io.vlingo.xoom.http;
 
+import java.util.Arrays;
+
 public class BinaryBody implements Body {
 
   public final byte[] binaryContent;
@@ -38,5 +40,18 @@ public class BinaryBody implements Body {
 
   BinaryBody() {
     this.binaryContent = new byte[0];
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    BinaryBody that = (BinaryBody) o;
+    return Arrays.equals(binaryContent, that.binaryContent);
+  }
+
+  @Override
+  public int hashCode() {
+    return Arrays.hashCode(binaryContent);
   }
 }

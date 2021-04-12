@@ -30,6 +30,7 @@ public class RequestHeader extends Header {
   public static final String Connection = "Connection";
   public static final String Cookie = "Cookie";
   public static final String ContentLength = "Content-Length";
+  public static final String ContentEncoding = "Content-Encoding";
   public static final String ContentMD5 = "Content-MD5";
   public static final String ContentType = "Content-Type";
   public static final String Date = "Date";
@@ -111,6 +112,12 @@ public class RequestHeader extends Header {
 
   public static RequestHeader correlationId(final String correlationId) {
     return new RequestHeader(XCorrelationID, correlationId);
+  }
+
+  public static RequestHeader contentEncoding(final String ... encodingMethod) {
+    return (encodingMethod.length > 0) ?
+       new RequestHeader(ContentEncoding, String.join(",", encodingMethod)) :
+       new RequestHeader(ContentEncoding, "");
   }
 
   public static RequestHeader host(final String value) {

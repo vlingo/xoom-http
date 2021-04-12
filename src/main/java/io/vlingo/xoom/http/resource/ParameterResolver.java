@@ -1,9 +1,14 @@
+// Copyright © 2012-2021 VLINGO LABS. All rights reserved.
+//
+// This Source Code Form is subject to the terms of the
+// Mozilla Public License, v. 2.0. If a copy of the MPL
+// was not distributed with this file, You can obtain
+// one at https://mozilla.org/MPL/2.0/.
+
 package io.vlingo.xoom.http.resource;
 
+import io.vlingo.xoom.http.*;
 import io.vlingo.xoom.http.media.ContentMediaType;
-import io.vlingo.xoom.http.Header;
-import io.vlingo.xoom.http.Request;
-import io.vlingo.xoom.http.RequestHeader;
 
 import java.util.function.BiFunction;
 
@@ -38,13 +43,27 @@ class ParameterResolver<T> {
       mapper.from(request.body.toString(), bodyClass)));
   }
 
+  @SuppressWarnings("unchecked")
   public static <T> ParameterResolver<T> body(final Class<T> bodyClass, final MediaTypeMapper mediaTypeMapper) {
+    if (bodyClass.isAssignableFrom(RequestData.class)) {
+      return (ParameterResolver<T>) new ParameterResolver<RequestData>(Type.BODY, RequestData.class, ((request, mappedParameters) -> {
+        // This is a fall-back when content-type not provided for backwards compat for curl/cmd line users
+        final String bodyMediaType = bodyMediaTypeOrFallback(request);
+        final RequestHeader contentEncodingHeader = request.headers.headerOfOrDefault(ResponseHeader.ContentEncoding, RequestHeader.contentEncoding());
+        final ContentEncoding contentEncoding = ContentEncoding.parseFromHeader(contentEncodingHeader.value);
+        return new RequestData(request.body, ContentMediaType.parseFromDescriptor(bodyMediaType), contentEncoding);
+      }));
+    }
     return new ParameterResolver<T>(Type.BODY, bodyClass, ((request, mappedParameters) -> {
       // This is a fall-back when content-type not provided for backwards compat for curl/cmd line users
-      String assumedBodyContentType = ContentMediaType.Json().toString();
-      String bodyMediaType = request.headerValueOr(RequestHeader.ContentType, assumedBodyContentType);
+      final String bodyMediaType = bodyMediaTypeOrFallback(request);
       return mediaTypeMapper.from(request.body.toString(), ContentMediaType.parseFromDescriptor(bodyMediaType), bodyClass);
     }));
+  }
+
+  private static String bodyMediaTypeOrFallback(final Request request) {
+    String assumedBodyContentType = ContentMediaType.Json().toString();
+    return request.headerValueOr(RequestHeader.ContentType, assumedBodyContentType);
   }
 
   public static ParameterResolver<Header> header(final String headerName) {

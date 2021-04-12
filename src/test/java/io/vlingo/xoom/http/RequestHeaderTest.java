@@ -67,4 +67,28 @@ public class RequestHeaderTest {
     assertEquals(RequestHeader.AcceptDatetime, header.name);
     assertEquals("Thu, 31 May 2007 20:35:00 GMT", header.value);
   }
+
+  @Test
+  public void testContentEncodingHeaderFromString() {
+    final RequestHeader header = RequestHeader.from("Content-Encoding: deflate, gzip");
+
+    assertEquals(RequestHeader.ContentEncoding, header.name);
+    assertEquals("deflate, gzip", header.value);
+  }
+
+  @Test
+  public void testContentEncodingJoinsMethods() {
+    final RequestHeader header = RequestHeader.contentEncoding("foo", "bar");
+
+    assertEquals(RequestHeader.ContentEncoding, header.name);
+    assertEquals("foo,bar", header.value);
+  }
+
+  @Test
+  public void testContentEncodingEmpty() {
+    final RequestHeader header = RequestHeader.contentEncoding();
+
+    assertEquals(RequestHeader.ContentEncoding, header.name);
+    assertEquals("", header.value);
+  }
 }

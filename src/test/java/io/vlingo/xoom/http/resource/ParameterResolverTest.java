@@ -1,3 +1,10 @@
+// Copyright © 2012-2021 VLINGO LABS. All rights reserved.
+//
+// This Source Code Form is subject to the terms of the
+// Mozilla Public License, v. 2.0. If a copy of the MPL
+// was not distributed with this file, You can obtain
+// one at https://mozilla.org/MPL/2.0/.
+
 package io.vlingo.xoom.http.resource;
 
 import io.vlingo.xoom.http.*;
@@ -36,6 +43,32 @@ public class ParameterResolverTest {
 
     assertEquals("my-post", result);
     assertEquals(ParameterResolver.Type.PATH, resolver.type);
+  }
+
+  @Test
+  public void bodyContentRequest() {
+    final byte[] content = new byte[]{0xD, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF};
+    final String binaryMediaTypeDescriptor = "application/octet-stream";
+
+    final ContentMediaType binaryMediaType = ContentMediaType.parseFromDescriptor(binaryMediaTypeDescriptor);
+    Request binaryRequest = Request.has(Method.POST)
+      .and(Version.Http1_1)
+      .and(URI.create("/user/my-post"))
+      .and(RequestHeader.from("Host:www.vlingo.io"))
+      .and(RequestHeader.contentType(binaryMediaTypeDescriptor))
+      .and(RequestHeader.contentEncoding(ContentEncodingMethod.GZIP.descriptor))
+      .and(Body.from(content.clone(), Body.Encoding.None));
+
+    final ParameterResolver<RequestData> resolver = ParameterResolver.body(RequestData.class);
+
+    final RequestData result = resolver.apply(binaryRequest, mappedParameters);
+    final RequestData expected = new RequestData(
+      Body.from(content.clone(), Body.Encoding.None),
+      binaryMediaType,
+      new ContentEncoding(ContentEncodingMethod.GZIP));
+
+    assertEquals(expected, result);
+    assertEquals(ParameterResolver.Type.BODY, resolver.type);
   }
 
   @Test
