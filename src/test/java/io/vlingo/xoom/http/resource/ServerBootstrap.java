@@ -51,9 +51,9 @@ public class ServerBootstrap {
           instance.server.stop();
 
           System.out.println("\n");
-          System.out.println("==============================");
-          System.out.println("Stopping vlingo/http Server...");
-          System.out.println("==============================");
+          System.out.println("===================================");
+          System.out.println("Stopping VLINGO XOOM Http Server...");
+          System.out.println("===================================");
         }
       }
     });

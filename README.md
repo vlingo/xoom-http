@@ -37,9 +37,9 @@ Reactive, scalable, and resilient HTTP servers and RESTful services running on X
   * Supports Server-Sent Events [See SSE on Wikipedia](https://en.wikipedia.org/wiki/Server-sent_events)
 2. To run the Server:
   * [Use Server#startWith() to start the Server actor](https://github.com/vlingo/xoom-http/blob/master/src/main/java/io/vlingo/xoom/http/resource/Server.java)
-  * The light-qualityFactor Server is meant to be run inside vlingo/cluster nodes that require RESTful HTTP support.
+  * The light-qualityFactor Server is meant to be run inside VLINGO XOOM Cluster nodes that require RESTful HTTP support.
 3. See the following for usage examples:
-  * [vlingo/http properties file](https://github.com/vlingo/xoom-http/blob/master/src/test/resources/xoom-http.properties)
+  * [VLINGO XOOM Http properties file](https://github.com/vlingo/xoom-http/blob/master/src/test/resources/xoom-http.properties)
   * [The user resource sample](https://github.com/vlingo/xoom-http/blob/master/src/main/java/io/vlingo/xoom/http/sample/user/UserResource.java)
   * [The user profile resource sample](https://github.com/vlingo/xoom-http/blob/master/src/main/java/io/vlingo/xoom/http/sample/user/ProfileResource.java)
 

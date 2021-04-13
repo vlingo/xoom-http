@@ -68,7 +68,7 @@ public class ResourceDispatcherGenerator implements AutoCloseable {
 
 
   Result generateFor(final String handlerProtocol) {
-    System.out.println("vlingo/http: Generating handler dispatcher for " + (type == DynaType.Main ? "main":"test") + ": " + handlerProtocol);
+    System.out.println("XOOM: Generating handler dispatcher for " + (type == DynaType.Main ? "main":"test") + ": " + handlerProtocol);
     
     final String relativePathToClass = toFullPath(handlerProtocol);
     final String relativePathToClassFile = rootOfClasses + relativePathToClass + ".class";

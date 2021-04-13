@@ -154,7 +154,7 @@ public class Loader {
 
       return resourceFor(resourceName, resourceHandlerClass, handlerPoolSize, resourceActions);
     } catch (Exception e) {
-      System.out.println("vlingo/http: Failed to load resource: " + resourceName + " because: " + e.getMessage());
+      System.out.println("XOOM: Failed to load resource: " + resourceName + " because: " + e.getMessage());
       throw e;
     }
   }
@@ -199,7 +199,7 @@ public class Loader {
       final ConfigurationResource<?> resource = resourceFor(resourceName, FeedResource.class, handlerPoolSize, actions);
       feedResources.put(resourceName, resource);
     } catch (Exception e) {
-      final String message = "vlingo/http: Failed to load feed resource: " + resourceName + " because: " + e.getMessage();
+      final String message = "XOOM: Failed to load feed resource: " + resourceName + " because: " + e.getMessage();
       System.out.println(message);
       e.printStackTrace();
       throw new IllegalArgumentException(message, e);
@@ -260,7 +260,7 @@ public class Loader {
       final ConfigurationResource<?> resource = resourceFor(resourceName, SseStreamResource.class, handlerPoolSize, actions);
       sseResources.put(resourceName, resource);
     } catch (Exception e) {
-      System.out.println("vlingo/http: Failed to load SSE resource: " + streamResourceName + " because: " + e.getMessage());
+      System.out.println("XOOM: Failed to load SSE resource: " + streamResourceName + " because: " + e.getMessage());
       e.printStackTrace();
       throw e;
     }
@@ -309,7 +309,7 @@ public class Loader {
         staticFilesResources.put(resourceName, resource);
       }
     } catch (Exception e) {
-      System.out.println("vlingo/http: Failed to load static files resource: " + staticFilesResource + " because: " + e.getMessage());
+      System.out.println("XOOM: Failed to load static files resource: " + staticFilesResource + " because: " + e.getMessage());
       e.printStackTrace();
       throw e;
     }
@@ -393,7 +393,7 @@ public class Loader {
 
         resourceActions.add(new Action(actionId, method, uri, to, mapper));
       } catch (Exception e) {
-        System.out.println("vlingo/http: Failed to load resource: " + resourceName + " action:" + actionName + " because: " + e.getMessage());
+        System.out.println("XOOM: Failed to load resource: " + resourceName + " action:" + actionName + " because: " + e.getMessage());
         throw e;
       }
     }
