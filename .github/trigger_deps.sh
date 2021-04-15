@@ -42,7 +42,7 @@ MINOR=$(echo $VERSION | cut -f 2 -d '.')
 PATCH=$(echo $VERSION | cut -f 3 -d '.')
 NEW_VERSION=$MAJOR.$MINOR.$(($PATCH + 1))-SNAPSHOT
 
-for dependency in "xoom-cluster";
+for dependency in "xoom-cluster" "xoom-graphql";
 do
     trigger_dependency $dependency $VERSION $NEW_VERSION
 done
