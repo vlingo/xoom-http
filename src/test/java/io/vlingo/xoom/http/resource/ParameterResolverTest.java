@@ -72,6 +72,32 @@ public class ParameterResolverTest {
   }
 
   @Test
+  public void bodyContentMultipart) {
+    final byte[] content = new byte[]{0xD, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF};
+    final String binaryMediaTypeDescriptor = "application/octet-stream";
+
+    final ContentMediaType binaryMediaType = ContentMediaType.parseFromDescriptor(binaryMediaTypeDescriptor);
+    Request binaryRequest = Request.has(Method.POST)
+      .and(Version.Http1_1)
+      .and(URI.create("/user/my-post"))
+      .and(RequestHeader.from("Host:www.vlingo.io"))
+      .and(RequestHeader.contentType(binaryMediaTypeDescriptor))
+      .and(RequestHeader.contentEncoding(ContentEncodingMethod.GZIP.descriptor))
+      .and(Body.from(content.clone(), Body.Encoding.None));
+
+    final ParameterResolver<RequestData> resolver = ParameterResolver.body(RequestData.class);
+
+    final RequestData result = resolver.apply(binaryRequest, mappedParameters);
+    final RequestData expected = new RequestData(
+      Body.from(content.clone(), Body.Encoding.None),
+      binaryMediaType,
+      new ContentEncoding(ContentEncodingMethod.GZIP));
+
+    assertEquals(expected, result);
+    assertEquals(ParameterResolver.Type.BODY, resolver.type);
+  }
+
+  @Test
   public void body() {
     final ParameterResolver<NameData> resolver = ParameterResolver.body(NameData.class);
 
