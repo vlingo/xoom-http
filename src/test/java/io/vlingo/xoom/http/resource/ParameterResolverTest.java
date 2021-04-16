@@ -16,6 +16,7 @@ import org.junit.Test;
 import java.net.URI;
 import java.util.Collections;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 public class ParameterResolverTest {
@@ -67,7 +68,9 @@ public class ParameterResolverTest {
       binaryMediaType,
       new ContentEncoding(ContentEncodingMethod.GZIP));
 
-    assertEquals(expected, result);
+    assertEquals(expected.contentEncoding, result.contentEncoding);
+    assertEquals(expected.mediaType, result.mediaType);
+    assertArrayEquals(expected.body.binaryContent(), result.body.binaryContent());
     assertEquals(ParameterResolver.Type.BODY, resolver.type);
   }
 
