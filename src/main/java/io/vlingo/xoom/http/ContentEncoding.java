@@ -39,4 +39,17 @@ public class ContentEncoding {
   public static ContentEncoding none() {
     return new ContentEncoding();
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    ContentEncoding that = (ContentEncoding) o;
+    return Arrays.equals(encodingMethods, that.encodingMethods);
+  }
+
+  @Override
+  public int hashCode() {
+    return Arrays.hashCode(encodingMethods);
+  }
 }

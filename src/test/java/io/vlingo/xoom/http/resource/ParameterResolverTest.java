@@ -72,28 +72,33 @@ public class ParameterResolverTest {
   }
 
   @Test
-  public void bodyContentMultipart) {
-    final byte[] content = new byte[]{0xD, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF};
-    final String binaryMediaTypeDescriptor = "application/octet-stream";
+  public void bodyContentFormData() {
+    final String content = "--boundary\n" +
+      "Content-Disposition: form-data; name=\"field1\"\n\n" +
+      "value1\n" + "--boundary\n" +
+      "Content-Disposition: form-data; name=\"field2\"; filename=\"example.txt\"\n\n" +
+      "value2\n" + "--boundary--";
 
-    final ContentMediaType binaryMediaType = ContentMediaType.parseFromDescriptor(binaryMediaTypeDescriptor);
+    final String binaryMediaTypeDescriptor = "multipart/form-data;boundary=\"boundary\"";
+
     Request binaryRequest = Request.has(Method.POST)
       .and(Version.Http1_1)
       .and(URI.create("/user/my-post"))
       .and(RequestHeader.from("Host:www.vlingo.io"))
       .and(RequestHeader.contentType(binaryMediaTypeDescriptor))
-      .and(RequestHeader.contentEncoding(ContentEncodingMethod.GZIP.descriptor))
-      .and(Body.from(content.clone(), Body.Encoding.None));
+      .and(Body.from(content));
 
     final ParameterResolver<RequestData> resolver = ParameterResolver.body(RequestData.class);
 
     final RequestData result = resolver.apply(binaryRequest, mappedParameters);
     final RequestData expected = new RequestData(
-      Body.from(content.clone(), Body.Encoding.None),
-      binaryMediaType,
-      new ContentEncoding(ContentEncodingMethod.GZIP));
+      Body.from(content),
+      ContentMediaType.parseFromDescriptor(binaryMediaTypeDescriptor),
+      ContentEncoding.none());
 
-    assertEquals(expected, result);
+    assertEquals(expected.mediaType, result.mediaType);
+    assertEquals(expected.contentEncoding, result.contentEncoding);
+    assertEquals(expected.body.content(), result.body.content());
     assertEquals(ParameterResolver.Type.BODY, resolver.type);
   }
 
