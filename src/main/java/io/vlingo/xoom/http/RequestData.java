@@ -6,9 +6,7 @@
 // one at https://mozilla.org/MPL/2.0/.
 package io.vlingo.xoom.http;
 
-
 import io.vlingo.xoom.http.media.ContentMediaType;
-
 import java.util.Objects;
 
 /***
@@ -19,7 +17,7 @@ public class RequestData {
 
   public final Body body;
   public final ContentMediaType mediaType;
-  public ContentEncoding contentEncoding;
+  public final ContentEncoding contentEncoding;
 
   public RequestData(final Body body,
                      final ContentMediaType mediaType,
