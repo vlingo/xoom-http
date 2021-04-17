@@ -16,6 +16,7 @@ import org.junit.Test;
 import java.net.URI;
 import java.util.Collections;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 public class ParameterResolverTest {
@@ -67,7 +68,40 @@ public class ParameterResolverTest {
       binaryMediaType,
       new ContentEncoding(ContentEncodingMethod.GZIP));
 
-    assertEquals(expected, result);
+    assertEquals(expected.contentEncoding, result.contentEncoding);
+    assertEquals(expected.mediaType, result.mediaType);
+    assertArrayEquals(expected.body.binaryContent(), result.body.binaryContent());
+    assertEquals(ParameterResolver.Type.BODY, resolver.type);
+  }
+
+  @Test
+  public void bodyContentFormData() {
+    final String content = "--boundary\n" +
+      "Content-Disposition: form-data; name=\"field1\"\n\n" +
+      "value1\n" + "--boundary\n" +
+      "Content-Disposition: form-data; name=\"field2\"; filename=\"example.txt\"\n\n" +
+      "value2\n" + "--boundary--";
+
+    final String binaryMediaTypeDescriptor = "multipart/form-data;boundary=\"boundary\"";
+
+    Request binaryRequest = Request.has(Method.POST)
+      .and(Version.Http1_1)
+      .and(URI.create("/user/my-post"))
+      .and(RequestHeader.from("Host:www.vlingo.io"))
+      .and(RequestHeader.contentType(binaryMediaTypeDescriptor))
+      .and(Body.from(content));
+
+    final ParameterResolver<RequestData> resolver = ParameterResolver.body(RequestData.class);
+
+    final RequestData result = resolver.apply(binaryRequest, mappedParameters);
+    final RequestData expected = new RequestData(
+      Body.from(content),
+      ContentMediaType.parseFromDescriptor(binaryMediaTypeDescriptor),
+      ContentEncoding.none());
+
+    assertEquals(expected.mediaType, result.mediaType);
+    assertEquals(expected.contentEncoding, result.contentEncoding);
+    assertEquals(expected.body.content(), result.body.content());
     assertEquals(ParameterResolver.Type.BODY, resolver.type);
   }
 
