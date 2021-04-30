@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.vlingo</groupId>
   <artifactId>vlingo-http</artifactId>
-  <version>1.7.5</version>
+  <version>1.7.6-SNAPSHOT</version>
   <name>vlingo-http</name>
   <description>Reactive, scalable, and resilient HTTP servers and RESTful services running on VLINGO XOOM Cluster and VLINGO XOOM Actors.</description>
   <url>https://github.com/vlingo/xoom-http</url>
