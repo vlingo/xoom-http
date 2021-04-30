@@ -13,7 +13,7 @@ Docs: https://docs.vlingo.io/xoom-http
     <dependency>
       <groupId>io.vlingo.xoom</groupId>
       <artifactId>xoom-http</artifactId>
-      <version>1.7.0</version>
+      <version>1.7.5</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>
@@ -21,7 +21,7 @@ Docs: https://docs.vlingo.io/xoom-http
 
 ```gradle
 dependencies {
-    compile 'io.vlingo.xoom:xoom-http:1.7.0'
+    compile 'io.vlingo.xoom:xoom-http:1.7.5'
 }
 ```
 
