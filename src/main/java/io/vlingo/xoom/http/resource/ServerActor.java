@@ -354,7 +354,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
     private Request enrichRequest(final RequestResponseContext<?> requestResponseContext, final Request request) {
       try {
         request.headers.add(RequestHeader.of(XForwardedFor, requestResponseContext.remoteAddress()));
-      } catch (UnsupportedOperationException exception) {
+      } catch (final UnsupportedOperationException exception) {
         logger().error("Unable to enrich request headers");
       }
       return request;
