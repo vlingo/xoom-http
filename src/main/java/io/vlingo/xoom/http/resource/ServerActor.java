@@ -7,6 +7,7 @@
 
 package io.vlingo.xoom.http.resource;
 
+import java.net.InetSocketAddress;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,6 +44,8 @@ import io.vlingo.xoom.wire.fdx.bidirectional.ServerRequestResponseChannel;
 import io.vlingo.xoom.wire.message.BasicConsumerByteBuffer;
 import io.vlingo.xoom.wire.message.ConsumerByteBuffer;
 import io.vlingo.xoom.wire.message.ConsumerByteBufferPool;
+
+import static io.vlingo.xoom.http.RequestHeader.XForwardedFor;
 
 public class ServerActor extends Actor implements Server, HttpRequestChannelConsumerProvider, Scheduled<Object> {
   static final String ChannelName = "server-request-response-channel";
@@ -323,7 +326,8 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
         Context context = null;
 
         while (parser.hasFullRequest()) {
-          context = consume(requestResponseContext, parser.fullRequest(), wasIncompleteContent);
+          final Request enrichedRequest = enrichRequest(requestResponseContext, parser.fullRequest());
+          context = consume(requestResponseContext, enrichedRequest, wasIncompleteContent);
         }
 
         if (parser.isMissingContent() && !requestsMissingContent.containsKey(requestResponseContext.id())) {
@@ -346,6 +350,16 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
         buffer.release();
       }
     }
+
+    private Request enrichRequest(final RequestResponseContext<?> requestResponseContext, final Request request) {
+      try {
+        request.headers.add(RequestHeader.of(XForwardedFor, requestResponseContext.remoteAddress()));
+      } catch (final UnsupportedOperationException exception) {
+        logger().error("Unable to enrich request headers");
+      }
+      return request;
+    }
+
 
     @Override
     public void consume(final RequestResponseContext<?> requestResponseContext, final Request request) {

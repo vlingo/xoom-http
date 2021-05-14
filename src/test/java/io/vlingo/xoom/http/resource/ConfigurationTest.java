@@ -1,12 +1,21 @@
 package io.vlingo.xoom.http.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import org.junit.Test;
-
+import io.vlingo.xoom.common.Tuple2;
+import io.vlingo.xoom.http.*;
+import io.vlingo.xoom.http.Header.Headers;
 import io.vlingo.xoom.http.resource.Configuration.Sizing;
 import io.vlingo.xoom.http.resource.Configuration.Timing;
+import org.junit.Test;
+
+import java.net.URI;
+
+import static io.vlingo.xoom.http.Filters.noResponseFilters;
+import static io.vlingo.xoom.http.Method.POST;
+import static io.vlingo.xoom.http.Response.Status.Ok;
+import static io.vlingo.xoom.http.Version.Http1_1;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class ConfigurationTest {
 
@@ -29,7 +38,7 @@ public class ConfigurationTest {
   }
 
   @Test
-  public void testThatConfigurationConfirgures() {
+  public void testThatConfigurationConfigures() {
     final Configuration configuration =
       Configuration.define()
         .withPort(9000)
@@ -40,7 +49,9 @@ public class ConfigurationTest {
         .with(Timing.define()
           .withProbeInterval(30)
           .withProbeTimeout(40)
-          .withRequestMissingContentTimeout(200));
+          .withRequestMissingContentTimeout(200))
+        .with(Filters.are(singletonList(DUMMY_FILTER),
+          noResponseFilters()));
 
     assertNotNull(configuration);
     assertEquals(9000, configuration.port());
@@ -54,5 +65,24 @@ public class ConfigurationTest {
     assertEquals(30, configuration.timing().probeInterval);
     assertEquals(40, configuration.timing().probeTimeout);
     assertEquals(200, configuration.timing().requestMissingContentTimeout);
+
+    assertNotNull(configuration.filters());
+    assertEquals(POST, configuration.filters().process(REQUEST).method);
+    assertEquals(Ok, configuration.filters().process(RESPONSE).status);
   }
+
+  private static final Request REQUEST = Request.from(Method.GET, URI.create("/"), Http1_1, Headers.empty(), Body.empty());
+
+  private static final Response RESPONSE = Response.of(Ok, Body.empty());
+
+  private static final RequestFilter DUMMY_FILTER = new RequestFilter() {
+    @Override
+    public Tuple2<Request, Boolean> filter(final Request request) {
+      return Tuple2.from(Request.from(POST, URI.create("/"), Http1_1, Headers.empty(), Body.Empty), false);
+    }
+
+    @Override
+    public void stop() {
+    }
+  };
 }

@@ -9,6 +9,8 @@
 
 package io.vlingo.xoom.http.resource;
 
+import io.vlingo.xoom.http.Filters;
+
 import java.util.Properties;
 
 public class Configuration {
@@ -17,6 +19,7 @@ public class Configuration {
   private int port;
   private Sizing sizing;
   private Timing timing;
+  private Filters filters;
 
   public static Configuration define() {
     instance = new Configuration();
@@ -43,6 +46,11 @@ public class Configuration {
     return this;
   }
 
+  public Configuration with(final Filters filters) {
+    this.filters = filters;
+    return this;
+  }
+
   public int port() {
     return this.port;
   }
@@ -55,10 +63,15 @@ public class Configuration {
     return this.timing;
   }
 
+  public Filters filters() {
+    return filters;
+  }
+
   private Configuration() {
     this.port = 8080;
     this.sizing = Sizing.define();
     this.timing = new Timing(4, 2, 100);
+    this.filters = Filters.none();
   }
 
   private Configuration(final Properties properties) {
