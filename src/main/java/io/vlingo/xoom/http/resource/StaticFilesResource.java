@@ -64,8 +64,7 @@ public class StaticFilesResource extends ResourceHandler {
   }
 
   private boolean isNotEmptyOrStreamContentType(String path) {
-    final String contentType = new MimetypesFileTypeMap().getContentType(Paths.get(path).toFile());
-    return !Objects.equals(contentType, "application/octet-stream");
+    return !Objects.equals(guessContentType(path), "application/octet-stream");
   }
 
   private String cleanPath(String path) {
