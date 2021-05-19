@@ -26,7 +26,6 @@ import static io.vlingo.xoom.http.ResponseHeader.ContentLength;
  * Serves static file resources. Note that the current limit of 2GB file sizes.
  */
 public class StaticFilesResource extends ResourceHandler {
-  private final static InputStream INDEX_IN = new ByteArrayInputStream("index.html".getBytes());
   private String rootPath;
 
   /**
@@ -78,12 +77,10 @@ public class StaticFilesResource extends ResourceHandler {
         return new File(res.toURI()).isFile();
 
       //jar:file:/C:/.../some.jar!/...
-      //resource:somePath/...
       try (InputStream in = getClass().getResourceAsStream(path)) {
         byte[] bytes = new byte[2];
-        //read the content for GraalVM native image resource: if it's a directory, the file contains index.html
         //read a char: if it's a directory, input.read returns -1
-        if (in.read() == INDEX_IN.read() || in.read(bytes) == -1) {
+        if (in.read(bytes) == -1) {
           return false;
         }
       }
