@@ -1,4 +1,4 @@
-package io.vlingo.xoom.http.implnative;
+package io.vlingo.xoom.http.nativebuild;
 
 import io.vlingo.xoom.actors.World;
 import io.vlingo.xoom.http.Filters;
