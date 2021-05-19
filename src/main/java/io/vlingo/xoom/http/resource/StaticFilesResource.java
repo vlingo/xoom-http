@@ -11,13 +11,13 @@ import io.vlingo.xoom.http.*;
 import org.apache.commons.io.IOUtils;
 
 import javax.activation.MimetypesFileTypeMap;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Objects;
 
 import static io.vlingo.xoom.http.Response.Status.*;
 import static io.vlingo.xoom.http.ResponseHeader.ContentLength;
@@ -26,6 +26,7 @@ import static io.vlingo.xoom.http.ResponseHeader.ContentLength;
  * Serves static file resources. Note that the current limit of 2GB file sizes.
  */
 public class StaticFilesResource extends ResourceHandler {
+  private final static InputStream INDEX_IN = new ByteArrayInputStream("index.html".getBytes());
   private String rootPath;
 
   /**
@@ -55,16 +56,11 @@ public class StaticFilesResource extends ResourceHandler {
     ).stream()
       .map(this::cleanPath)
       .filter(this::isFile)
-      .filter(this::isNotEmptyOrStreamContentType)
       .findFirst()
       .map(this::fileResponse)
       .orElseGet(this::notFound);
 
     completes().with(response);
-  }
-
-  private boolean isNotEmptyOrStreamContentType(String path) {
-    return !Objects.equals(guessContentType(path), "application/octet-stream");
   }
 
   private String cleanPath(String path) {
@@ -78,19 +74,21 @@ public class StaticFilesResource extends ResourceHandler {
         return false;
       }
 
-      if (res.getProtocol().equals("jar")) {
-        //jar:file:/C:/.../some.jar!/...
-        try (InputStream in = getClass().getResourceAsStream(path)) {
-          byte[] bytes = new byte[2];
-          //read a char: if it's a directory, input.read returns -1
-          if (in.read(bytes) == -1) {
-            return false;
-          }
-        }
+      if (!Arrays.asList("jar", "resource").contains(res.getProtocol()))
+        return new File(res.toURI()).isFile();
 
-        return true;
-      } else
-        return res.getProtocol().equals("resource") || new File(res.toURI()).isFile();
+      //jar:file:/C:/.../some.jar!/...
+      //resource:somePath/...
+      try (InputStream in = getClass().getResourceAsStream(path)) {
+        byte[] bytes = new byte[2];
+        //read the content for GraalVM native image resource: if it's a directory, the file contains index.html
+        //read a char: if it's a directory, input.read returns -1
+        if (in.read() == INDEX_IN.read() || in.read(bytes) == -1) {
+          return false;
+        }
+      }
+
+      return true;
 
     } catch (Throwable e) {
       return false;
