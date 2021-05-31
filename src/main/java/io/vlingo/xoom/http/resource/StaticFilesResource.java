@@ -11,6 +11,7 @@ import io.vlingo.xoom.http.*;
 import org.apache.commons.io.IOUtils;
 
 import javax.activation.MimetypesFileTypeMap;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,12 +31,14 @@ public class StaticFilesResource extends ResourceHandler {
   /**
    * Constructs my default state.
    */
-  public StaticFilesResource() { }
+  public StaticFilesResource() {
+  }
 
   /**
    * Completes with {@code Ok} and the file content or {@code NotFound}.
-   * @param contentFile the String name of the content file to be served
-   * @param root the String root path of the static content
+   *
+   * @param contentFile   the String name of the content file to be served
+   * @param root          the String root path of the static content
    * @param validSubPaths the String indicating the valid file paths under the root
    */
   public void serveFile(final String contentFile, final String root, final String validSubPaths) {
@@ -70,12 +73,11 @@ public class StaticFilesResource extends ResourceHandler {
         return false;
       }
 
-      if (!res.getProtocol().equals("jar")) {
+      if (!Arrays.asList("jar", "resource").contains(res.getProtocol()))
         return new File(res.toURI()).isFile();
-      }
 
       //jar:file:/C:/.../some.jar!/...
-      try(InputStream in = getClass().getResourceAsStream(path)) {
+      try (InputStream in = getClass().getResourceAsStream(path)) {
         byte[] bytes = new byte[2];
         //read a char: if it's a directory, input.read returns -1
         if (in.read(bytes) == -1) {
@@ -84,6 +86,7 @@ public class StaticFilesResource extends ResourceHandler {
       }
 
       return true;
+
     } catch (Throwable e) {
       return false;
     }
@@ -92,13 +95,13 @@ public class StaticFilesResource extends ResourceHandler {
   private String withIndexHtmlAppended(final String path) {
     final StringBuilder builder = new StringBuilder(path);
 
-      if (!path.endsWith("/")) {
-        builder.append("/");
-      }
+    if (!path.endsWith("/")) {
+      builder.append("/");
+    }
 
-      builder.append("index.html");
+    builder.append("index.html");
 
-      return builder.toString();
+    return builder.toString();
   }
 
   private byte[] readFile(final String path) throws IOException {
@@ -118,8 +121,7 @@ public class StaticFilesResource extends ResourceHandler {
   private Response fileResponse(String path) {
     try {
       final byte[] fileContent = readFile(path);
-      return Response.of(
-        Ok,
+      return Response.of(Ok,
         Header.Headers.of(
           ResponseHeader.of(RequestHeader.ContentType, guessContentType(path)),
           ResponseHeader.of(ContentLength, fileContent.length)),
