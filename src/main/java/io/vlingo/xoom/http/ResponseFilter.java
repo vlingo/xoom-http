@@ -23,8 +23,8 @@ public abstract class ResponseFilter extends Filter {
    * or as the final {@code Response}, and a {@code Boolean} indicating whether or not the
    * chain should continue or be short circuited. If the {@code Boolean} is true, the chain
    * will continue; if false, it will be short circuited.
-   * @param request the Request to filter
+   * @param response the Response to filter
    * @return {@code Tuple2<Request,Boolean>}
    */
-  public abstract Tuple2<Response,Boolean> filter(final Response request);
+  public abstract Tuple2<Response,Boolean> filter(final Response response);
 }
