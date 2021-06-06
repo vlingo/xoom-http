@@ -87,7 +87,7 @@ public class SinglePageApplicationResource extends ResourceHandler {
   }
 
   private Completes<Response> serve(String... pathSegments) {
-    String path = Paths.get(rootPath, pathSegments).toString();
+    String path = Paths.get(rootPath, pathSegments).toString().replace("\\", "/");
     URL res = getClass().getResource(path);
     String contentType = null;
     if (res == null || path.equals(rootPath)) {
