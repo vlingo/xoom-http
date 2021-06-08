@@ -7,7 +7,8 @@
 
 package io.vlingo.xoom.http.resource;
 
-import java.net.InetSocketAddress;
+import static io.vlingo.xoom.http.RequestHeader.XForwardedFor;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,8 +45,6 @@ import io.vlingo.xoom.wire.fdx.bidirectional.ServerRequestResponseChannel;
 import io.vlingo.xoom.wire.message.BasicConsumerByteBuffer;
 import io.vlingo.xoom.wire.message.ConsumerByteBuffer;
 import io.vlingo.xoom.wire.message.ConsumerByteBufferPool;
-
-import static io.vlingo.xoom.http.RequestHeader.XForwardedFor;
 
 public class ServerActor extends Actor implements Server, HttpRequestChannelConsumerProvider, Scheduled<Object> {
   static final String ChannelName = "server-request-response-channel";
