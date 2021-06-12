@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.vlingo.xoom</groupId>
   <artifactId>xoom-http</artifactId>
-  <version>1.8.0</version>
+  <version>1.8.1-SNAPSHOT</version>
   <name>xoom-http</name>
   <description>Reactive, scalable, and resilient HTTP servers and RESTful services running on VLINGO XOOM Cluster and VLINGO XOOM Actors.</description>
   <url>https://github.com/vlingo/xoom-http</url>
@@ -117,17 +117,17 @@
     <dependency>
       <groupId>io.vlingo.xoom</groupId>
       <artifactId>xoom-common</artifactId>
-      <version>1.8.0</version>
+      <version>1.8.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>io.vlingo.xoom</groupId>
       <artifactId>xoom-actors</artifactId>
-      <version>1.8.0</version>
+      <version>1.8.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>io.vlingo.xoom</groupId>
       <artifactId>xoom-wire</artifactId>
-      <version>1.8.0</version>
+      <version>1.8.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.sun.activation</groupId>
