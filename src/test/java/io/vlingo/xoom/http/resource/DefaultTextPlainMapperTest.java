@@ -1,8 +1,8 @@
 package io.vlingo.xoom.http.resource;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
 
 public class DefaultTextPlainMapperTest {
 
@@ -15,6 +15,7 @@ public class DefaultTextPlainMapperTest {
   @Test(expected = IllegalArgumentException.class)
   public void testDeserializationToNonStringFails() {
     DefaultTextPlainMapper mapper = new DefaultTextPlainMapper();
+    @SuppressWarnings("unused")
     ObjectForTest cannotBeDeserialized = mapper.from("some string", ObjectForTest.class);
   }
 

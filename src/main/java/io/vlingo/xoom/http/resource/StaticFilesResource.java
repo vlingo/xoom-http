@@ -7,11 +7,11 @@
 
 package io.vlingo.xoom.http.resource;
 
-import io.vlingo.xoom.http.*;
-import org.apache.commons.io.IOUtils;
+import static io.vlingo.xoom.http.Response.Status.InternalServerError;
+import static io.vlingo.xoom.http.Response.Status.NotFound;
+import static io.vlingo.xoom.http.Response.Status.Ok;
+import static io.vlingo.xoom.http.ResponseHeader.ContentLength;
 
-import javax.activation.MimetypesFileTypeMap;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,8 +19,15 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-import static io.vlingo.xoom.http.Response.Status.*;
-import static io.vlingo.xoom.http.ResponseHeader.ContentLength;
+import javax.activation.MimetypesFileTypeMap;
+
+import org.apache.commons.io.IOUtils;
+
+import io.vlingo.xoom.http.Body;
+import io.vlingo.xoom.http.Header;
+import io.vlingo.xoom.http.RequestHeader;
+import io.vlingo.xoom.http.Response;
+import io.vlingo.xoom.http.ResponseHeader;
 
 /**
  * Serves static file resources. Note that the current limit of 2GB file sizes.
