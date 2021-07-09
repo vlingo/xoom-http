@@ -50,6 +50,7 @@ public class SinglePageApplicationResource extends ResourceHandler {
     final RequestHandler2.Handler2<String, String> serve2 = this::serve;
     final RequestHandler3.Handler3<String, String, String> serve3 = this::serve;
     final RequestHandler4.Handler4<String, String, String, String> serve4 = this::serve;
+    final RequestHandler5.Handler5<String, String, String, String, String> serve5 = this::serve;
 
     return resource("ui", 10,
         get("/")
@@ -73,7 +74,14 @@ public class SinglePageApplicationResource extends ResourceHandler {
             .param(String.class)
             .param(String.class)
             .param(String.class)
-            .handle(serve4)
+            .handle(serve4),
+        get(contextPath + "/{path1}/{path2}/{path3}/{path4}/{file}")
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .handle(serve5)
       );
   }
 
@@ -88,7 +96,11 @@ public class SinglePageApplicationResource extends ResourceHandler {
 
   private Completes<Response> serve(String... pathSegments) {
     String path = Paths.get(rootPath, pathSegments).toString().replace("\\", "/");
+    if((path.indexOf("/static") != -1))
+      path = rootPath + path.substring(path.indexOf("/static"));
+    
     URL res = getClass().getResource(path);
+
     String contentType = null;
     if (res == null || path.equals(rootPath)) {
       path = indexPagePath;
