@@ -13,10 +13,7 @@ import java.nio.file.Paths;
 
 import static io.vlingo.xoom.http.Header.Headers.of;
 import static io.vlingo.xoom.http.RequestHeader.ContentType;
-import static io.vlingo.xoom.http.Response.Status.InternalServerError;
-import static io.vlingo.xoom.http.Response.Status.MovedPermanently;
-import static io.vlingo.xoom.http.Response.Status.NotFound;
-import static io.vlingo.xoom.http.Response.Status.Ok;
+import static io.vlingo.xoom.http.Response.Status.*;
 import static io.vlingo.xoom.http.ResponseHeader.ContentLength;
 import static io.vlingo.xoom.http.ResponseHeader.of;
 import static io.vlingo.xoom.http.resource.ResourceBuilder.get;
@@ -51,6 +48,9 @@ public class SinglePageApplicationResource extends ResourceHandler {
     final RequestHandler3.Handler3<String, String, String> serve3 = this::serve;
     final RequestHandler4.Handler4<String, String, String, String> serve4 = this::serve;
     final RequestHandler5.Handler5<String, String, String, String, String> serve5 = this::serve;
+    final RequestHandler6.Handler6<String, String, String, String, String, String> serve6 = this::serve;
+    final RequestHandler7.Handler7<String, String, String, String, String, String, String> serve7 = this::serve;
+    final RequestHandler8.Handler8<String, String, String, String, String, String, String, String> serve8 = this::serve;
 
     return resource("ui", 10,
         get("/")
@@ -81,7 +81,34 @@ public class SinglePageApplicationResource extends ResourceHandler {
             .param(String.class)
             .param(String.class)
             .param(String.class)
-            .handle(serve5)
+            .handle(serve5),
+      get(contextPath + "/{path1}/{path2}/{path3}/{path4}/{path5}/{file}")
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .handle(serve6),
+      get(contextPath + "/{path1}/{path2}/{path3}/{path4}/{path5}/{path6}/{file}")
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .handle(serve7),
+      get(contextPath + "/{path1}/{path2}/{path3}/{path4}/{path5}/{path6}/{path7}/{file}")
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .param(String.class)
+            .handle(serve8)
       );
   }
 
