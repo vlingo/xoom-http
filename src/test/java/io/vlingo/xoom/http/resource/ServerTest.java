@@ -155,8 +155,8 @@ public abstract class ServerTest extends ResourceTestFixtures {
   }
 
   @Test
-  public void testThatServerRespondsPermanentRedirectWithNoContentLengthHeader() {
-    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerRespondsPermanentRedirectWithNoContentLengthHeader");
+  public void testThatServerRespondsPermanentRedirect() {
+    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerRespondsPermanentRedirect");
 
     if (skipTests) {
       System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
@@ -178,11 +178,12 @@ public abstract class ServerTest extends ResourceTestFixtures {
     assertNotNull(response);
     assertEquals(PermanentRedirect.name(), response.status.name());
     assertEquals(1, progress.consumeCount.get());
+    assertEquals("0", response.headers.headerOf("Content-Length").value);
   }
 
   @Test
-  public void testThatServerRespondsOkWithNoContentLengthHeader() {
-    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerRespondsOkWithNoContentLengthHeader");
+  public void testThatServerRespondsOk() {
+    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerRespondsOk");
 
     if (skipTests) {
       System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
@@ -204,6 +205,7 @@ public abstract class ServerTest extends ResourceTestFixtures {
     assertNotNull(response);
     assertEquals(Ok.name(), response.status.name());
     assertEquals(1, progress.consumeCount.get());
+    assertEquals("0", response.headers.headerOf("Content-Length").value);
   }
 
   @Test
