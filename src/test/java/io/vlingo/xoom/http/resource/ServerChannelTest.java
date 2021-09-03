@@ -14,14 +14,6 @@ public class ServerChannelTest extends ServerTest {
 
   @Override
   protected Server startServer() {
-    System.out.println(">>>>>>>>>>>>>>>>>>>>> ServerChannelTest");
-
-    // tests using ServerRequestResponseChannel have
-    // intermittent failures on the CI
-    if (System.getenv().getOrDefault("CI", null) != null) {
-      skipTests = true;
-    }
-
     return Server.startWith(world.stage(), resources, serverPort, new Sizing(1, 1, 100, 10240), new Timing(1, 1, 1000));
   }
 }

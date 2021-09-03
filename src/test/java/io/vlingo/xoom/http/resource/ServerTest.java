@@ -40,7 +40,6 @@ public abstract class ServerTest extends ResourceTestFixtures {
   private static final AtomicInteger baseServerPort = new AtomicInteger(10_000 + random.nextInt(50_000));
 
   protected int serverPort;
-  protected boolean skipTests;
 
   private ClientRequestResponseChannel client;
   private ResponseChannelConsumer consumer;
@@ -49,13 +48,6 @@ public abstract class ServerTest extends ResourceTestFixtures {
 
   @Test
   public void testThatServerHandlesThrowables() {
-    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerHandlesThrowables");
-
-    if (skipTests) {
-      System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
-      return;
-    }
-
     final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
 
     final String request = getExceptionRequest("1");
@@ -74,13 +66,6 @@ public abstract class ServerTest extends ResourceTestFixtures {
 
   @Test
   public void testThatServerDispatchesRequests() throws Exception {
-    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerDispatchesRequests");
-
-    if (skipTests) {
-      System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
-      return;
-    }
-
     final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
 
     final String request = postRequest(uniqueJohnDoe());
@@ -117,13 +102,6 @@ public abstract class ServerTest extends ResourceTestFixtures {
 
   @Test
   public void testThatServerDispatchesManyRequests() throws Exception {
-    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerDispatchesManyRequests");
-
-    if (skipTests) {
-      System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
-      return;
-    }
-
     final long startTime = System.currentTimeMillis();
 
     final AccessSafely consumeCalls = progress.expectConsumeTimes(TOTAL_REQUESTS_RESPONSES);
@@ -156,13 +134,6 @@ public abstract class ServerTest extends ResourceTestFixtures {
 
   @Test
   public void testThatServerRespondsPermanentRedirect() {
-    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerRespondsPermanentRedirect");
-
-    if (skipTests) {
-      System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
-      return;
-    }
-
     final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
 
     final String request = putRequest("u-123", uniqueJohnDoe());
@@ -183,13 +154,6 @@ public abstract class ServerTest extends ResourceTestFixtures {
 
   @Test
   public void testThatServerRespondsOk() {
-    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerRespondsOk");
-
-    if (skipTests) {
-      System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
-      return;
-    }
-
     final AccessSafely consumeCalls = progress.expectConsumeTimes(1);
 
     final String request = putRequest("u-456", uniqueJohnDoe());
@@ -210,13 +174,6 @@ public abstract class ServerTest extends ResourceTestFixtures {
 
   @Test
   public void testThatServerClosesChannelAfterSingleRequest() {
-    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerClosesChannelAfterSingleRequest");
-
-    if (skipTests) {
-      System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
-      return;
-    }
-
     int totalResponses = 0;
     final int maxRequests = 10;
 
@@ -249,7 +206,6 @@ public abstract class ServerTest extends ResourceTestFixtures {
 
     User.resetId();
 
-    skipTests = false;
     serverPort = baseServerPort.getAndIncrement();
     server = startServer();
     assertTrue(server.startUp().await(500L));
