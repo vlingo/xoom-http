@@ -96,11 +96,11 @@ public abstract class ServerTest extends ResourceTestFixtures {
     assertEquals(1, progress.consumeCount.get());
     assertNotNull(createdResponse.headers.headerOf(ResponseHeader.Location));
 
+    final AccessSafely moreConsumeCalls = progress.expectConsumeTimes(1);
     final String getUserMessage = "GET " + createdResponse.headerOf(ResponseHeader.Location).value + " HTTP/1.1\nHost: vlingo.io\nConnection: keep-alive\n\n";
 
     client.requestWith(toByteBuffer(getUserMessage));
 
-    final AccessSafely moreConsumeCalls = progress.expectConsumeTimes(1);
     while (moreConsumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
@@ -155,8 +155,8 @@ public abstract class ServerTest extends ResourceTestFixtures {
   }
 
   @Test
-  public void testThatServerRespondsPermanentRedirectWithNoContentLengthHeader() {
-    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerRespondsPermanentRedirectWithNoContentLengthHeader");
+  public void testThatServerRespondsPermanentRedirect() {
+    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerRespondsPermanentRedirect");
 
     if (skipTests) {
       System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
@@ -178,11 +178,12 @@ public abstract class ServerTest extends ResourceTestFixtures {
     assertNotNull(response);
     assertEquals(PermanentRedirect.name(), response.status.name());
     assertEquals(1, progress.consumeCount.get());
+    assertEquals("0", response.headers.headerOf("Content-Length").value);
   }
 
   @Test
-  public void testThatServerRespondsOkWithNoContentLengthHeader() {
-    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerRespondsOkWithNoContentLengthHeader");
+  public void testThatServerRespondsOk() {
+    System.out.println(">>>>>>>>>>>>>>>>>>>>> testThatServerRespondsOk");
 
     if (skipTests) {
       System.out.println(">>>>>>>>>>>>>>>>>>>>> skipped");
@@ -204,6 +205,7 @@ public abstract class ServerTest extends ResourceTestFixtures {
     assertNotNull(response);
     assertEquals(Ok.name(), response.status.name());
     assertEquals(1, progress.consumeCount.get());
+    assertEquals("0", response.headers.headerOf("Content-Length").value);
   }
 
   @Test

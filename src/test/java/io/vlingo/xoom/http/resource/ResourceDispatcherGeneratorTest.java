@@ -26,6 +26,7 @@ public class ResourceDispatcherGeneratorTest {
   private Action actionGetUser;
   private Action actionGetUsers;
   private Action actionQueryUserError;
+  private Action actionPutUser;
   private List<Action> actions;
   private ConfigurationResource<?> resource;
 
@@ -68,6 +69,7 @@ public class ResourceDispatcherGeneratorTest {
     actionGetUser = new Action(3, "GET", "/users/{userId}", "queryUser(String userId)", null);
     actionGetUsers = new Action(4, "GET", "/users", "queryUsers()", null);
     actionQueryUserError = new Action(5, "GET", "/users/{userId}/error", "queryUserError(String userId)", null);
+    actionPutUser = new Action(6, "PUT", "/users/{userId}", "changeUser(String userId, body:io.vlingo.xoom.http.sample.user.UserData userData)", null);
 
     actions =
             Arrays.asList(
@@ -76,7 +78,8 @@ public class ResourceDispatcherGeneratorTest {
                     actionPatchUserName,
                     actionGetUser,
                     actionGetUsers,
-                    actionQueryUserError);
+                    actionQueryUserError,
+                    actionPutUser);
 
     Class<? extends ResourceHandler> resourceHandlerClass = null;
 

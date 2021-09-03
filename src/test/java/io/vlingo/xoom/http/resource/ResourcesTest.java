@@ -36,15 +36,15 @@ public class ResourcesTest {
     
     for (Action action : user.actions) {
       ++countUserActions;
-      
-      assertTrue(action.method.isPOST() || action.method.isPATCH() || action.method.isGET());
+
+      assertTrue(action.method.isPOST() || action.method.isPATCH() || action.method.isPUT() || action.method.isGET());
       
       assertNotNull(action.uri);
       assertNotNull(action.to);
       assertNotNull(action.mapper);
     }
     
-    assertEquals(6, countUserActions);
+    assertEquals(7, countUserActions);
     
     final ConfigurationResource<?> profile = (ConfigurationResource<?>) resources.resourceOf("profile");
     
@@ -102,6 +102,7 @@ public class ResourcesTest {
                               .also("PATCH", "/users/{userId}/name", "changeName(String userId, body:io.vlingo.xoom.http.sample.user.NameData nameData)")
                               .also("GET", "/users/{userId}", "queryUser(String userId)")
                               .also("GET", "/users", "queryUsers()")
+                              .also("PUT", "/users/{userId}", "changeUser(String userId, body:io.vlingo.xoom.http.sample.user.UserData userData)")
                               .thatsAll()),
                    ConfigurationResource.defining("profile", ProfileResource.class, 5,
                       Actions.canBe("PUT", "/users/{userId}/profile", "define(String userId, body:io.vlingo.xoom.http.sample.user.ProfileData profileData)", "io.vlingo.xoom.http.sample.user.ProfileDataMapper")
