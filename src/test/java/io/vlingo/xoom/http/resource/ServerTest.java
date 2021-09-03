@@ -96,11 +96,11 @@ public abstract class ServerTest extends ResourceTestFixtures {
     assertEquals(1, progress.consumeCount.get());
     assertNotNull(createdResponse.headers.headerOf(ResponseHeader.Location));
 
+    final AccessSafely moreConsumeCalls = progress.expectConsumeTimes(1);
     final String getUserMessage = "GET " + createdResponse.headerOf(ResponseHeader.Location).value + " HTTP/1.1\nHost: vlingo.io\nConnection: keep-alive\n\n";
 
     client.requestWith(toByteBuffer(getUserMessage));
 
-    final AccessSafely moreConsumeCalls = progress.expectConsumeTimes(1);
     while (moreConsumeCalls.totalWrites() < 1) {
       client.probeChannel();
     }
