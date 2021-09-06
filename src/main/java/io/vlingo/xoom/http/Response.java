@@ -7,6 +7,7 @@
 
 package io.vlingo.xoom.http;
 
+import java.util.Collection;
 import java.util.function.Function;
 
 import io.vlingo.xoom.http.Header.Headers;
@@ -107,6 +108,13 @@ public class Response {
   public Response include(final Header header) {
     if (header != null && headerOf(header.name) == null) {
       headers.and(ResponseHeader.of(header.name, header.value));
+    }
+    return this;
+  }
+
+  public Response includeAll(final Collection<ResponseHeader> headers) {
+    for (final Header header : headers) {
+      include(header);
     }
     return this;
   }
