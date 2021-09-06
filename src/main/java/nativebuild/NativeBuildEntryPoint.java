@@ -1,12 +1,13 @@
 package nativebuild;
 
+import org.graalvm.nativeimage.c.function.CEntryPoint;
+import org.graalvm.nativeimage.c.type.CCharPointer;
+import org.graalvm.nativeimage.c.type.CTypeConversion;
+
 import io.vlingo.xoom.actors.World;
 import io.vlingo.xoom.http.Filters;
 import io.vlingo.xoom.http.resource.Configuration;
 import io.vlingo.xoom.http.resource.Server;
-import org.graalvm.nativeimage.c.function.CEntryPoint;
-import org.graalvm.nativeimage.c.type.CCharPointer;
-import org.graalvm.nativeimage.c.type.CTypeConversion;
 
 public final class NativeBuildEntryPoint {
   @CEntryPoint(name = "Java_io_vlingo_xoom_httpnative_Native_start")
@@ -14,6 +15,7 @@ public final class NativeBuildEntryPoint {
     final String nameString = CTypeConversion.toJavaString(name);
     World world = World.startWithDefaults(nameString);
 
+    @SuppressWarnings("unused")
     Server server =
       Server.startWith(
         world.stage(),
