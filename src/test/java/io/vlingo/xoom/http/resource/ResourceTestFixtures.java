@@ -77,6 +77,10 @@ public abstract class ResourceTestFixtures {
     return "HTTP/1.1 201 CREATED\nContent-Length: " + body.length() + "\n\n" + body;
   }
 
+  protected String getUsersOriginHeader() {
+    return "GET /users HTTP/1.1\nHost: vlingo.io\nOrigin: hello.cors" + "\n\n";
+  }
+
   protected String postRequestCloseFollowing(final String body) {
     return "POST /users HTTP/1.1\nHost: vlingo.io\nContent-Length: " + body.length() + "\nConnection: close" + "\n\n" + body;
   }
