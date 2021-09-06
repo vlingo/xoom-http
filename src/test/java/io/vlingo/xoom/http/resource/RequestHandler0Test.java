@@ -9,25 +9,36 @@
 
 package io.vlingo.xoom.http.resource;
 
-import io.vlingo.xoom.http.*;
-import io.vlingo.xoom.http.sample.user.NameData;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import static io.vlingo.xoom.common.Completes.withSuccess;
+import static io.vlingo.xoom.http.Response.of;
+import static io.vlingo.xoom.http.Response.Status.Created;
+import static io.vlingo.xoom.http.resource.ParameterResolver.body;
+import static io.vlingo.xoom.http.resource.ParameterResolver.header;
+import static io.vlingo.xoom.http.resource.ParameterResolver.path;
+import static io.vlingo.xoom.http.resource.ParameterResolver.query;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.net.URI;
 import java.util.Collections;
 
-import static io.vlingo.xoom.common.Completes.withSuccess;
-import static io.vlingo.xoom.http.Response.Status.Created;
-import static io.vlingo.xoom.http.Response.of;
-import static io.vlingo.xoom.http.resource.ParameterResolver.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import io.vlingo.xoom.http.Body;
+import io.vlingo.xoom.http.Header;
+import io.vlingo.xoom.http.Method;
+import io.vlingo.xoom.http.Request;
+import io.vlingo.xoom.http.RequestHeader;
+import io.vlingo.xoom.http.Response;
+import io.vlingo.xoom.http.Version;
+import io.vlingo.xoom.http.sample.user.NameData;
 
 public class RequestHandler0Test extends RequestHandlerTestBase {
 
   @Rule
+  @SuppressWarnings("deprecation")
   public ExpectedException thrown = ExpectedException.none();
 
   @Test

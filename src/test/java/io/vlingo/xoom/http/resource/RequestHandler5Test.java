@@ -34,6 +34,7 @@ import io.vlingo.xoom.http.resource.RequestHandler5.Handler5;
 
 public class RequestHandler5Test extends RequestHandlerTestBase {
   @Rule
+  @SuppressWarnings("deprecation")
   public ExpectedException thrown = ExpectedException.none();
 
   private <T, R, U, I, J> RequestHandler5<T, R, U, I, J> createRequestHandler(Method method,

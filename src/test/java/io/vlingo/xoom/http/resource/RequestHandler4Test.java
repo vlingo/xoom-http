@@ -40,6 +40,7 @@ import io.vlingo.xoom.http.sample.user.NameData;
 
 public class RequestHandler4Test extends RequestHandlerTestBase {
   @Rule
+  @SuppressWarnings("deprecation")
   public ExpectedException thrown = ExpectedException.none();
 
   private <T, R, U, I> RequestHandler4<T, R, U, I> createRequestHandler(Method method, String path,
