@@ -79,11 +79,22 @@ public class Filters {
    * @return Response
    */
   public Response process(final Response response) {
+    return process(null, response);
+  }
+
+  /**
+   * Answer the {@code Response} resulting from any filtering, possibly
+   * using {@code request} if not {@code null}.
+   * @param request the Request that may be null or may possibly be used for transforming the Response
+   * @param response the Response outgoing from a ResourceHandler
+   * @return Response
+   */
+  public Response process(final Request request, final Response response) {
     if (stopped) return response;
 
     Response current = response;
     for (final ResponseFilter filter : responseFilters) {
-      final Tuple2<Response, Boolean> answer = filter.filter(current);
+      final Tuple2<Response, Boolean> answer = request == null ? filter.filter(current) : filter.filter(request, current);
       if (!answer._2) {
         return answer._1;
       }
