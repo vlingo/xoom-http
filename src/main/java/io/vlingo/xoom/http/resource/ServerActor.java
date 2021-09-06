@@ -448,7 +448,7 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
       Response debugResponse = null;
       try {
         final Response unfilteredResponse = (Response) response;
-        final Response filtered = filters.process(unfilteredResponse);
+        final Response filtered = filters.process(request, unfilteredResponse);
         final Response completedResponse = filtered.include(correlationId);
         debugResponse = completedResponse;
         final boolean closeAfterResponse = closeAfterResponse(unfilteredResponse);
