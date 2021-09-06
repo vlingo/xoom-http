@@ -9,10 +9,12 @@ package io.vlingo.xoom.http;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,6 +36,19 @@ import io.vlingo.xoom.http.sample.user.ProfileResource;
 public class FiltersTest {
   private static final Random random = new Random();
   private static AtomicInteger PORT_TO_USE = new AtomicInteger(1_000 + random.nextInt(45_000));
+
+  private static String headerAcceptOriginAll = "*";
+  private static String responseHeaderAcceptAllHeaders = "X-Requested-With, Content-Type, Content-Length";
+  private static String responseHeaderAcceptMethodsAll = "POST,GET,PUT,PATCH,DELETE";
+
+  private static String headerAcceptOriginHelloWorld = "hello.world";
+  private static String responseHeaderAcceptHeadersHelloWorld = "X-Requested-With, Content-Type, Content-Length";
+  private static String responseHeaderAcceptMethodsHelloWorld = "POST,GET";
+
+  private static String headerAcceptOriginHelloCORS = "hello.cors";
+  private static String responseHeaderAcceptHeadersHelloCORS = "Content-Type, Content-Length";
+  private static String responseHeaderAcceptMethodsHelloCORS = "POST,GET,PUT";
+
 
   private int port;
 
@@ -93,6 +108,90 @@ public class FiltersTest {
     assertTrue(filter1.stopped);
     assertTrue(filter2.stopped);
     assertTrue(filter3.stopped);
+  }
+
+  @Test
+  public void testThatCORSOriginAllAllowed() {
+    final CORSResponseFilter filter = new CORSResponseFilter();
+
+    final List<ResponseHeader> headers =
+            Arrays.asList(
+                    ResponseHeader.of(ResponseHeader.AccessControlAllowOrigin, headerAcceptOriginAll),
+                    ResponseHeader.of(ResponseHeader.AccessControlAllowHeaders, responseHeaderAcceptAllHeaders),
+                    ResponseHeader.of(ResponseHeader.AccessControlAllowMethods, responseHeaderAcceptMethodsAll));
+
+    filter.originHeadersFor(headerAcceptOriginAll, headers);
+
+    final Request request1 = Request.has(Method.GET).and(RequestHeader.of(RequestHeader.Origin, headerAcceptOriginAll));
+
+    final Response response1 = Response.of(Status.Ok).include(ResponseHeader.contentLength(0));
+
+    final Tuple2<Response, Boolean> filteredResponse = filter.filter(request1, response1);
+
+    assertTrue(filteredResponse._2);
+    assertEquals(headerAcceptOriginAll, filteredResponse._1.headerOf(ResponseHeader.AccessControlAllowOrigin).value);
+    assertEquals(responseHeaderAcceptAllHeaders, filteredResponse._1.headerOf(ResponseHeader.AccessControlAllowHeaders).value);
+    assertEquals(responseHeaderAcceptMethodsAll, filteredResponse._1.headerOf(ResponseHeader.AccessControlAllowMethods).value);
+  }
+
+
+  @Test
+  public void testThatCORSOriginSomeAllowed() {
+    final CORSResponseFilter filter = new CORSResponseFilter();
+
+    final List<ResponseHeader> headersHelloWorld =
+            Arrays.asList(
+                    ResponseHeader.of(ResponseHeader.AccessControlAllowOrigin, headerAcceptOriginHelloWorld),
+                    ResponseHeader.of(ResponseHeader.AccessControlAllowHeaders, responseHeaderAcceptHeadersHelloWorld),
+                    ResponseHeader.of(ResponseHeader.AccessControlAllowMethods, responseHeaderAcceptMethodsHelloWorld));
+
+    final List<ResponseHeader> headersHelloCORS =
+            Arrays.asList(
+                    ResponseHeader.of(ResponseHeader.AccessControlAllowOrigin, headerAcceptOriginHelloCORS),
+                    ResponseHeader.of(ResponseHeader.AccessControlAllowHeaders, responseHeaderAcceptHeadersHelloCORS),
+                    ResponseHeader.of(ResponseHeader.AccessControlAllowMethods, responseHeaderAcceptMethodsHelloCORS));
+
+    filter.originHeadersFor(headerAcceptOriginHelloWorld, headersHelloWorld);
+    filter.originHeadersFor(headerAcceptOriginHelloCORS, headersHelloCORS);
+
+    //////////////// request: hello.world
+
+    final Request requestHelloWorld = Request.has(Method.GET).and(RequestHeader.of(RequestHeader.Origin, headerAcceptOriginHelloWorld));
+
+    final Response responseHelloWorld = Response.of(Status.Ok).include(ResponseHeader.contentLength(0));
+
+    final Tuple2<Response, Boolean> helloWorldFilteredResponse = filter.filter(requestHelloWorld, responseHelloWorld);
+
+    assertTrue(helloWorldFilteredResponse._2);
+    assertEquals(headerAcceptOriginHelloWorld, helloWorldFilteredResponse._1.headerOf(ResponseHeader.AccessControlAllowOrigin).value);
+    assertEquals(responseHeaderAcceptHeadersHelloWorld, helloWorldFilteredResponse._1.headerOf(ResponseHeader.AccessControlAllowHeaders).value);
+    assertEquals(responseHeaderAcceptMethodsHelloWorld, helloWorldFilteredResponse._1.headerOf(ResponseHeader.AccessControlAllowMethods).value);
+
+    //////////////// request: hello.cors
+
+    final Request requestHelloCORS = Request.has(Method.GET).and(RequestHeader.of(RequestHeader.Origin, headerAcceptOriginHelloCORS));
+
+    final Response responseHelloCORS = Response.of(Status.Ok).include(ResponseHeader.contentLength(0));
+
+    final Tuple2<Response, Boolean> helloCORSFilteredResponse = filter.filter(requestHelloCORS, responseHelloCORS);
+
+    assertTrue(helloCORSFilteredResponse._2);
+    assertEquals(headerAcceptOriginHelloCORS, helloCORSFilteredResponse._1.headerOf(ResponseHeader.AccessControlAllowOrigin).value);
+    assertEquals(responseHeaderAcceptHeadersHelloCORS, helloCORSFilteredResponse._1.headerOf(ResponseHeader.AccessControlAllowHeaders).value);
+    assertEquals(responseHeaderAcceptMethodsHelloCORS, helloCORSFilteredResponse._1.headerOf(ResponseHeader.AccessControlAllowMethods).value);
+
+    //////////////// request: *
+
+    final Request requestAll = Request.has(Method.GET).and(RequestHeader.of(RequestHeader.Origin, headerAcceptOriginAll));
+
+    final Response responseAll = Response.of(Status.Ok).include(ResponseHeader.contentLength(0));
+
+    final Tuple2<Response, Boolean> allFilteredResponse = filter.filter(requestAll, responseAll);
+
+    assertTrue(allFilteredResponse._2);
+    assertNull(headerAcceptOriginAll, allFilteredResponse._1.headerValueOr(ResponseHeader.AccessControlAllowOrigin, null));
+    assertNull(responseHeaderAcceptAllHeaders, allFilteredResponse._1.headerValueOr(ResponseHeader.AccessControlAllowHeaders, null));
+    assertNull(responseHeaderAcceptMethodsAll, allFilteredResponse._1.headerValueOr(ResponseHeader.AccessControlAllowMethods, null));
   }
 
   @Test
