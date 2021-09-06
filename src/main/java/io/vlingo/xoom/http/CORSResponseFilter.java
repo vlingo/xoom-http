@@ -14,6 +14,8 @@ import java.util.Map;
 import io.vlingo.xoom.common.Tuple2;
 
 public class CORSResponseFilter extends ResponseFilter {
+  private final String AnyOrigin = "*";
+
   private final Map<String, List<ResponseHeader>> originHeaders;
 
   public CORSResponseFilter() {
@@ -28,6 +30,13 @@ public class CORSResponseFilter extends ResponseFilter {
    * @param responseHeaders the {@code List<ResponseHeader>} to set in the Responses for {@code ORIGIN: URI}
    */
   public void originHeadersFor(final String originURI, final List<ResponseHeader> responseHeaders) {
+    if (originURI == null || originURI.isEmpty()) {
+      throw new IllegalArgumentException("The origin URI must not be null or empty.");
+    }
+    if (responseHeaders == null || responseHeaders.isEmpty()) {
+      throw new IllegalArgumentException("The response headers must not be null or empty.");
+    }
+
     originHeaders.put(originURI, responseHeaders);
   }
 
@@ -50,8 +59,8 @@ public class CORSResponseFilter extends ResponseFilter {
 
     if (origin != null) {
       for (final String uri : originHeaders.keySet()) {
-        if (uri.equals(origin)) {
-          response.includeAll(originHeaders.get(origin));
+        if (uri.equals(AnyOrigin) || uri.equals(origin)) {
+          response.includeAll(originHeaders.get(uri));
           break;
         }
       }
