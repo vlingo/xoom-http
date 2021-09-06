@@ -37,7 +37,7 @@ public class FiltersTest {
   private static final Random random = new Random();
   private static AtomicInteger PORT_TO_USE = new AtomicInteger(1_000 + random.nextInt(45_000));
 
-  private static String headerAcceptOriginAll = "*";
+  private static String headerAcceptOriginAny = "*";
   private static String responseHeaderAcceptAllHeaders = "X-Requested-With, Content-Type, Content-Length";
   private static String responseHeaderAcceptMethodsAll = "POST,GET,PUT,PATCH,DELETE";
 
@@ -111,27 +111,42 @@ public class FiltersTest {
   }
 
   @Test
-  public void testThatCORSOriginAllAllowed() {
+  public void testThatCORSOriginAnyAllowed() {
     final CORSResponseFilter filter = new CORSResponseFilter();
 
     final List<ResponseHeader> headers =
             Arrays.asList(
-                    ResponseHeader.of(ResponseHeader.AccessControlAllowOrigin, headerAcceptOriginAll),
+                    ResponseHeader.of(ResponseHeader.AccessControlAllowOrigin, headerAcceptOriginAny),
                     ResponseHeader.of(ResponseHeader.AccessControlAllowHeaders, responseHeaderAcceptAllHeaders),
                     ResponseHeader.of(ResponseHeader.AccessControlAllowMethods, responseHeaderAcceptMethodsAll));
 
-    filter.originHeadersFor(headerAcceptOriginAll, headers);
+    filter.originHeadersFor(headerAcceptOriginAny, headers);
 
-    final Request request1 = Request.has(Method.GET).and(RequestHeader.of(RequestHeader.Origin, headerAcceptOriginAll));
+    //////////////// request: *
 
-    final Response response1 = Response.of(Status.Ok).include(ResponseHeader.contentLength(0));
+    final Request requestAny = Request.has(Method.GET).and(RequestHeader.of(RequestHeader.Origin, headerAcceptOriginAny));
 
-    final Tuple2<Response, Boolean> filteredResponse = filter.filter(request1, response1);
+    final Response responseAny = Response.of(Status.Ok).include(ResponseHeader.contentLength(0));
 
-    assertTrue(filteredResponse._2);
-    assertEquals(headerAcceptOriginAll, filteredResponse._1.headerOf(ResponseHeader.AccessControlAllowOrigin).value);
-    assertEquals(responseHeaderAcceptAllHeaders, filteredResponse._1.headerOf(ResponseHeader.AccessControlAllowHeaders).value);
-    assertEquals(responseHeaderAcceptMethodsAll, filteredResponse._1.headerOf(ResponseHeader.AccessControlAllowMethods).value);
+    final Tuple2<Response, Boolean> anyFilteredResponse = filter.filter(requestAny, responseAny);
+
+    assertTrue(anyFilteredResponse._2);
+    assertEquals(headerAcceptOriginAny, anyFilteredResponse._1.headerValueOr(ResponseHeader.AccessControlAllowOrigin, null));
+    assertEquals(responseHeaderAcceptAllHeaders, anyFilteredResponse._1.headerValueOr(ResponseHeader.AccessControlAllowHeaders, null));
+    assertEquals(responseHeaderAcceptMethodsAll, anyFilteredResponse._1.headerValueOr(ResponseHeader.AccessControlAllowMethods, null));
+
+    //////////////// request: hello.world
+
+    final Request requestHelloWorld = Request.has(Method.GET).and(RequestHeader.of(RequestHeader.Origin, headerAcceptOriginHelloWorld));
+
+    final Response responseHelloWorld = Response.of(Status.Ok).include(ResponseHeader.contentLength(0));
+
+    final Tuple2<Response, Boolean> helloWorldFilteredResponse = filter.filter(requestHelloWorld, responseHelloWorld);
+
+    assertTrue(helloWorldFilteredResponse._2);
+    assertEquals(headerAcceptOriginAny, helloWorldFilteredResponse._1.headerOf(ResponseHeader.AccessControlAllowOrigin).value);
+    assertEquals(responseHeaderAcceptAllHeaders, helloWorldFilteredResponse._1.headerOf(ResponseHeader.AccessControlAllowHeaders).value);
+    assertEquals(responseHeaderAcceptMethodsAll, helloWorldFilteredResponse._1.headerOf(ResponseHeader.AccessControlAllowMethods).value);
   }
 
 
@@ -182,16 +197,16 @@ public class FiltersTest {
 
     //////////////// request: *
 
-    final Request requestAll = Request.has(Method.GET).and(RequestHeader.of(RequestHeader.Origin, headerAcceptOriginAll));
+    final Request requestAny = Request.has(Method.GET).and(RequestHeader.of(RequestHeader.Origin, headerAcceptOriginAny));
 
-    final Response responseAll = Response.of(Status.Ok).include(ResponseHeader.contentLength(0));
+    final Response responseAny = Response.of(Status.Ok).include(ResponseHeader.contentLength(0));
 
-    final Tuple2<Response, Boolean> allFilteredResponse = filter.filter(requestAll, responseAll);
+    final Tuple2<Response, Boolean> anyFilteredResponse = filter.filter(requestAny, responseAny);
 
-    assertTrue(allFilteredResponse._2);
-    assertNull(headerAcceptOriginAll, allFilteredResponse._1.headerValueOr(ResponseHeader.AccessControlAllowOrigin, null));
-    assertNull(responseHeaderAcceptAllHeaders, allFilteredResponse._1.headerValueOr(ResponseHeader.AccessControlAllowHeaders, null));
-    assertNull(responseHeaderAcceptMethodsAll, allFilteredResponse._1.headerValueOr(ResponseHeader.AccessControlAllowMethods, null));
+    assertTrue(anyFilteredResponse._2);
+    assertNull(headerAcceptOriginAny, anyFilteredResponse._1.headerValueOr(ResponseHeader.AccessControlAllowOrigin, null));
+    assertNull(responseHeaderAcceptAllHeaders, anyFilteredResponse._1.headerValueOr(ResponseHeader.AccessControlAllowHeaders, null));
+    assertNull(responseHeaderAcceptMethodsAll, anyFilteredResponse._1.headerValueOr(ResponseHeader.AccessControlAllowMethods, null));
   }
 
   @Test
