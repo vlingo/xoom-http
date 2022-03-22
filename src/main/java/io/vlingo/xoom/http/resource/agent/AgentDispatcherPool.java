@@ -16,9 +16,6 @@ import io.vlingo.xoom.http.resource.Resources;
 
 public class AgentDispatcherPool extends AbstractDispatcherPool {
 
-  private AtomicLong dispatcherPoolIndex;
-  private long dispatcherPoolSize;
-
   public AgentDispatcherPool(final Stage stage, final Resources resources, final int dispatcherPoolSize) {
     super(stage, resources, dispatcherPoolSize);
 

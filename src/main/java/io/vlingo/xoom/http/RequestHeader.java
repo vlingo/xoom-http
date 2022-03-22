@@ -59,7 +59,6 @@ public class RequestHeader extends Header {
   // Common non-standard request header names
   public static final String XRequestedWith = "X-Requested-With";
   public static final String DNT = "DNT";
-  public static final String XForwardedFor = "X-Forwarded-For";
   public static final String XForwardedHost = "X-Forwarded-Host";
   public static final String XForwardedProto = "X-Forwarded-Proto";
   public static final String FrontEndHttps = "Front-End-Https";

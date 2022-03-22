@@ -76,8 +76,14 @@ public class ResponseParser {
   //=========================================
   // VirtualStateParser
   //=========================================
+  static class Responses{
+    protected List<Response> fullResponses;
+    protected ListIterator<Response> fullResponsesIterator;
+    protected Headers<ResponseHeader> headers;
+    protected Response.Status status;
+  }
 
-  static class VirtualStateParser {
+  static class VirtualStateParser extends  Responses{
     private static class OutOfContentException extends RuntimeException { private static final long serialVersionUID = 1L; }
 
     private enum Step { NotStarted, StatusLine, Headers, Body, Completed };
@@ -98,12 +104,8 @@ public class ResponseParser {
     private int contentExtraLength;
     private boolean continuation;
     private Step currentStep;
-    private List<Response> fullResponses;
-    private ListIterator<Response> fullResponsesIterator;
-    private Headers<ResponseHeader> headers;
     private boolean keepAlive;
     private long outOfContentTime;
-    private Response.Status status;
     private boolean stream;
     private Version version;
 

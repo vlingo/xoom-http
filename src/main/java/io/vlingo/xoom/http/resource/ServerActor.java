@@ -7,8 +7,6 @@
 
 package io.vlingo.xoom.http.resource;
 
-import static io.vlingo.xoom.http.RequestHeader.XForwardedFor;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -252,8 +250,6 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
 
 
   private static class ServerDispatcherPool extends AbstractDispatcherPool {
-    private AtomicLong dispatcherPoolIndex;
-    private int dispatcherPoolSize;
 
     ServerDispatcherPool(final Stage stage, final Resources resources, final int dispatcherPoolSize) {
       super(stage, resources, dispatcherPoolSize);
@@ -349,6 +345,8 @@ public class ServerActor extends Actor implements Server, HttpRequestChannelCons
         buffer.release();
       }
     }
+
+    public static final String XForwardedFor = "X-Forwarded-For";
 
     private Request enrichRequest(final RequestResponseContext<?> requestResponseContext, final Request request) {
       try {

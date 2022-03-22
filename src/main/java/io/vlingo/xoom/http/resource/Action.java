@@ -619,8 +619,16 @@ public final class Action {
 
       final String methodName = to.substring(0, openParen);
       final String[] rawParameters = to.substring(openParen + 1, closeParen).split(",");
-      final List<MethodParameter> parameters = new ArrayList<>(rawParameters.length);
+      List<MethodParameter> parameter = new ArrayList<>(rawParameters.length);
 
+      parameter = getTheParameters(rawParameters);
+
+      return Tuple2.from(methodName, parameter);
+    }
+
+    private List<MethodParameter> getTheParameters(String[] rawParameters)
+    {
+      final List<MethodParameter> parameters = new ArrayList<>(rawParameters.length);
       for (String rawParameter : rawParameters) {
         rawParameter = rawParameter.trim();
         if (!rawParameter.isEmpty()) {
@@ -633,8 +641,7 @@ public final class Action {
           }
         }
       }
-
-      return Tuple2.from(methodName, parameters);
+      return parameters;
     }
 
     private String qualifiedType(String possiblyUnqualifiedType) {

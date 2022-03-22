@@ -9,6 +9,8 @@ package io.vlingo.xoom.http.resource;
 
 import io.vlingo.xoom.actors.Stage;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * A pool of {@code Dispatcher} instances.
  */
@@ -29,6 +31,9 @@ public interface DispatcherPool {
    */
   static abstract class AbstractDispatcherPool implements DispatcherPool {
     protected final Dispatcher[] dispatcherPool;
+
+    protected AtomicLong dispatcherPoolIndex;
+    protected long dispatcherPoolSize;
 
     protected AbstractDispatcherPool(final Stage stage, final Resources resources, final int dispatcherPoolSize) {
       this.dispatcherPool = new Dispatcher[dispatcherPoolSize];
