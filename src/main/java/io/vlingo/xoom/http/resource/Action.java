@@ -619,9 +619,9 @@ public final class Action {
 
       final String methodName = to.substring(0, openParen);
       final String[] rawParameters = to.substring(openParen + 1, closeParen).split(",");
-      List<MethodParameter> parameter = new ArrayList<>(rawParameters.length);
+      //List<MethodParameter> parameter = new ArrayList<>(rawParameters.length);
 
-      parameter = getTheParameters(rawParameters);
+      List<MethodParameter> parameter = getTheParameters(rawParameters);
 
       return Tuple2.from(methodName, parameter);
     }
