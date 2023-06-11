@@ -2,7 +2,7 @@
 
 [![Javadocs](http://javadoc.io/badge/io.vlingo.xoom/xoom-http.svg?color=brightgreen)](http://javadoc.io/doc/io.vlingo.xoom/xoom-http) [![Build](https://github.com/vlingo/xoom-http/workflows/Build/badge.svg)](https://github.com/vlingo/xoom-http/actions?query=workflow%3ABuild) [![Download](https://img.shields.io/maven-central/v/io.vlingo.xoom/xoom-http?label=maven)](https://search.maven.org/artifact/io.vlingo.xoom/xoom-http) [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/vlingo-platform-java/http)
 
-The VLINGO XOOM platform SDK Reactive, scalable, high-throughput, and resilient HTTP server supporting RESTful services running on XOOM LATTICE and XOOM ACTORS.
+The VLINGO XOOM platform SDK Reactive, scalable, high-throughput, and resilient HTTP server supporting REST (RESTful) services running on XOOM LATTICE and XOOM ACTORS.
 
 Docs: https://docs.vlingo.io/xoom-http
 
