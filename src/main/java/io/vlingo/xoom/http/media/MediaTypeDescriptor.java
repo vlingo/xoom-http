@@ -50,10 +50,10 @@ public abstract class MediaTypeDescriptor {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    MediaTypeDescriptor that = (MediaTypeDescriptor) o;
+  public boolean equals(Object object) {
+    if (this == object) return true;
+    if (object == null || getClass() != object.getClass()) return false;
+    MediaTypeDescriptor that = (MediaTypeDescriptor) object;
     return Objects.equals(mimeType, that.mimeType) &&
       Objects.equals(mimeSubType, that.mimeSubType) &&
       Objects.equals(parameters, that.parameters);
