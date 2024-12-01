@@ -207,8 +207,8 @@ public class Header {
       return builder.toString();
     }
 
-    Headers(final int initialCapactiy) {
-      super(initialCapactiy);
+    Headers(final int initialCapacity) {
+      super(initialCapacity);
     }
   }
 }
